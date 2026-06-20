@@ -3,78 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Henkilökohtainen Talousseuranta</title>
+    <title>Talousseuranta</title>
     <style>
-        :root { --bg: #121212; --card: #1c1c1e; --accent: #34c759; --text: #ffffff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 500px; margin: auto; }
+        :root { --bg: #000; --card: #1c1c1e; --accent: #34c759; --text: #fff; --subtext: #8e8e93; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 16px; max-width: 500px; margin: auto; }
         .card { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 20px; }
-        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none; font-size: 16px; }
+        h1, h2 { margin-top: 0; }
+        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none; font-size: 16px; box-sizing: border-box; }
         input, select { background: #2c2c2e; color: white; }
-        button { background: var(--accent); color: black; font-weight: bold; cursor: pointer; }
-        .item { padding: 10px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        button { background: var(--accent); color: #000; font-weight: 600; cursor: pointer; }
+        .row { display: flex; gap: 10px; }
+        .item { padding: 12px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .meta { font-size: 12px; color: var(--subtext); }
+        .import-btn { background: #007aff; color: #fff; }
     </style>
 </head>
 <body>
 
-    <h1>Budjettityökalu</h1>
+    <h1>Talousseuranta</h1>
 
     <div class="card">
-        <h3>Lisää merkintä</h3>
-        <select id="type"><option value="Meno">Meno</option><option value="Tulo">Tulo</option></select>
-        <input type="text" id="desc" placeholder="Selite">
-        <input type="number" id="sum" placeholder="Summa">
-        <button onclick="addEntry()">Tallenna</button>
+        <h2>Lisää uusi</h2>
+        <select id="type"><option>Meno</option><option>Tulo</option></select>
+        <input type="date" id="date">
+        <input type="text" id="desc" placeholder="Selite (esim. Ruoka)">
+        <input type="number" id="sum" placeholder="Summa (€)">
+        <button onclick="addEntry()">Tallenna merkintä</button>
     </div>
 
     <div class="card">
-        <h3>Toiminnot</h3>
-        <button onclick="exportCSV()" style="background:#007aff; color:white;">Vie CSV</button>
-        <input type="file" id="importFile" style="background:none;">
-        <button onclick="importCSV()" style="background:#ff9500; color:white;">Tuo CSV (Merge)</button>
+        <h2>Datan hallinta</h2>
+        <button onclick="exportCSV()">Vie CSV-tiedostoksi</button>
+        <input type="file" id="fileInput" accept=".csv" style="display:none">
+        <button class="import-btn" onclick="document.getElementById('fileInput').click()">Valitse CSV tuotavaksi</button>
+        <button class="import-btn" onclick="importCSV()">Suorita tuonti (Merge)</button>
     </div>
 
     <div class="card">
-        <h3>Merkinnät</h3>
+        <h2>Merkinnät</h2>
         <div id="list"></div>
     </div>
 
     <script>
+        document.getElementById('date').valueAsDate = new Date();
         let state = JSON.parse(localStorage.getItem('budget_data')) || [];
 
         function render() {
             const list = document.getElementById('list');
-            list.innerHTML = state.map(i => `<div class='item'><span>${i.desc}</span><span>${i.sum}€</span></div>`).join('');
+            list.innerHTML = state.slice().reverse().map(i => `
+                <div class='item'>
+                    <div><strong>${i.desc}</strong><br><span class='meta'>${i.date} | ${i.type}</span></div>
+                    <div>${i.type === 'Meno' ? '-' : '+'}${i.sum}€</div>
+                </div>
+            `).join('');
         }
 
         function addEntry() {
-            const desc = document.getElementById('desc').value;
-            const sum = document.getElementById('sum').value;
-            if(!desc || !sum) return;
-            state.push({ desc, sum });
+            const d = { type: document.getElementById('type').value, date: document.getElementById('date').value, desc: document.getElementById('desc').value, sum: document.getElementById('sum').value };
+            if(!d.desc || !d.sum) return alert("Täytä kentät!");
+            state.push(d);
             localStorage.setItem('budget_data', JSON.stringify(state));
             render();
         }
 
         function exportCSV() {
-            const csv = state.map(i => `${i.desc};${i.sum}`).join('\n');
+            const csv = state.map(i => `${i.date};${i.type};${i.desc};${i.sum}`).join('\n');
             const blob = new Blob(['\ufeff', csv], {type: 'text/csv'});
-            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'talous.csv'; a.click();
+            a.href = URL.createObjectURL(blob);
+            a.download = 'budjetti.csv';
+            a.click();
         }
 
         function importCSV() {
-            const file = document.getElementById('importFile').files[0];
+            const file = document.getElementById('fileInput').files[0];
+            if(!file) return alert("Valitse tiedosto!");
             const reader = new FileReader();
             reader.onload = (e) => {
                 const rows = e.target.result.split('\n');
                 rows.forEach(row => {
-                    const [desc, sum] = row.split(';');
-                    if(desc && sum) state.push({ desc, sum });
+                    const [date, type, desc, sum] = row.split(';');
+                    if(desc && sum) state.push({date, type, desc, sum});
                 });
                 localStorage.setItem('budget_data', JSON.stringify(state));
                 render();
-                alert('Tuotu!');
+                alert('Data tuotu!');
             };
             reader.readAsText(file);
         }
