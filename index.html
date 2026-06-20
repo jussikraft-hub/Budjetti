@@ -2,51 +2,84 @@
 <html lang="fi">
 <head>
     <meta charset="UTF-8">
-    <title>Budjetti</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Henkilökohtainen Talousseuranta</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; background: #f4f4f9; }
-        .box { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input, button { width: 100%; padding: 10px; margin: 5px 0; }
+        :root { --bg: #121212; --card: #1c1c1e; --accent: #34c759; --text: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 500px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 20px; }
+        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none; font-size: 16px; }
+        input, select { background: #2c2c2e; color: white; }
+        button { background: var(--accent); color: black; font-weight: bold; cursor: pointer; }
+        .item { padding: 10px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-    <div class="box">
+    <h1>Budjettityökalu</h1>
+
+    <div class="card">
         <h3>Lisää merkintä</h3>
+        <select id="type"><option value="Meno">Meno</option><option value="Tulo">Tulo</option></select>
         <input type="text" id="desc" placeholder="Selite">
         <input type="number" id="sum" placeholder="Summa">
-        <button onclick="save()">Tallenna</button>
+        <button onclick="addEntry()">Tallenna</button>
     </div>
 
-    <div class="box">
+    <div class="card">
+        <h3>Toiminnot</h3>
+        <button onclick="exportCSV()" style="background:#007aff; color:white;">Vie CSV</button>
+        <input type="file" id="importFile" style="background:none;">
+        <button onclick="importCSV()" style="background:#ff9500; color:white;">Tuo CSV (Merge)</button>
+    </div>
+
+    <div class="card">
         <h3>Merkinnät</h3>
         <div id="list"></div>
     </div>
 
     <script>
-        // Ladataan data heti sivun latautuessa
-        function load() {
-            const data = localStorage.getItem('budjetti_data');
-            if (data) {
-                document.getElementById('list').innerHTML = data;
-            }
+        let state = JSON.parse(localStorage.getItem('budget_data')) || [];
+
+        function render() {
+            const list = document.getElementById('list');
+            list.innerHTML = state.map(i => `<div class='item'><span>${i.desc}</span><span>${i.sum}€</span></div>`).join('');
         }
 
-        function save() {
+        function addEntry() {
             const desc = document.getElementById('desc').value;
             const sum = document.getElementById('sum').value;
-            if (!desc || !sum) return alert("Täytä kentät!");
-
-            const div = document.createElement('div');
-            div.innerHTML = `${desc}: ${sum}€`;
-            document.getElementById('list').appendChild(div);
-            
-            // Tallennetaan listan sisältö
-            localStorage.setItem('budjetti_data', document.getElementById('list').innerHTML);
-            alert("Tallennettu!");
+            if(!desc || !sum) return;
+            state.push({ desc, sum });
+            localStorage.setItem('budget_data', JSON.stringify(state));
+            render();
         }
 
-        window.onload = load;
+        function exportCSV() {
+            const csv = state.map(i => `${i.desc};${i.sum}`).join('\n');
+            const blob = new Blob(['\ufeff', csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'talous.csv'; a.click();
+        }
+
+        function importCSV() {
+            const file = document.getElementById('importFile').files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const rows = e.target.result.split('\n');
+                rows.forEach(row => {
+                    const [desc, sum] = row.split(';');
+                    if(desc && sum) state.push({ desc, sum });
+                });
+                localStorage.setItem('budget_data', JSON.stringify(state));
+                render();
+                alert('Tuotu!');
+            };
+            reader.readAsText(file);
+        }
+
+        render();
     </script>
 </body>
 </html>
