@@ -1,0 +1,1299 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sointulappu Generaattori Ultimate</title>
+    <style>
+        /* --- CSS Muuttujat Oletusarvoilla --- */
+        :root {
+            /* Otsikko (Kappale) */
+            --title-font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            --title-size: 24px;
+            --title-color: #1a1a1a;
+            --title-weight: bold;
+            --title-style: normal;
+            --title-decoration: none;
+            --title-align: center;
+
+            /* Otsikko (Artisti) */
+            --artist-font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            --artist-size: 18px;
+            --artist-color: #333333;
+            --artist-weight: normal;
+            --artist-style: normal;
+            --artist-decoration: none;
+            --artist-align: center;
+
+            /* Lisätiedot (Capo, Tempo, Info) */
+            --info-font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            --info-size: 12px;
+            --info-color: #555555;
+            --info-weight: normal;
+            --info-style: normal;
+            --info-decoration: none;
+
+            /* Soinnut & Sanat Pääfontti (Monospace) */
+            --main-font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+
+            /* Soinnut */
+            --chord-size: 14px;
+            --chord-color: #000000;
+            --chord-weight: bold;
+            --chord-style: normal;
+            --chord-decoration: none;
+
+            /* Sanat (Lyriikka) */
+            --lyric-size: 14px;
+            --lyric-color: #333333;
+            --lyric-weight: normal;
+            --lyric-style: normal;
+            --lyric-decoration: none;
+
+            /* Osioiden Otsikot ([Verse]...) */
+            --section-header-font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            --section-header-size: 13px;
+            --section-header-color: #666666;
+            --section-header-weight: bold;
+            --section-header-style: italic;
+            --section-header-decoration: none;
+
+            /* Yleiset */
+            --line-height: 1.8;
+        }
+
+        /* --- Perusasetukset & Layout --- */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 10px; 
+            background-color: #f0f2f5; 
+            color: #333;
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            -webkit-text-size-adjust: 100%; /* Prevent font scaling in iOS */
+        }
+        .container {
+            max-width: 100%; 
+            margin: 10px auto; 
+            background-color: #fff;
+            padding: 20px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); 
+            border-radius: 8px;
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px;
+        }
+        .left-panel { 
+            width: 100%; 
+            max-width: 600px; 
+            margin: 0 auto;
+        }
+        .right-panel { 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        /* --- Otsikot & Tekstit --- */
+        h1, h2, h3 { 
+            margin-bottom: 0.8em; 
+            font-weight: 600; 
+        }
+        h1 { 
+            margin-bottom: 1em; 
+            text-align: center; 
+            font-size: 1.6em; 
+        }
+        quartets
+            margin-top: 1.5em; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 8px; 
+            font-size: 1.3em; 
+        }
+        h3 { 
+            margin: 0; 
+            font-size: 1.1em; 
+            display: inline; 
+        }
+        p { 
+            margin-bottom: 1em; 
+            color: #555; 
+            font-size: 0.95em; 
+        }
+
+        /* --- Lomakekentät & Asetukset --- */
+        fieldset { 
+            border: none; 
+            padding: 0; 
+            margin: 0 0 20px 0;
+        }
+        legend { 
+            font-weight: 600; 
+            padding: 0 10px; 
+            margin-left: 5px; 
+            color: #333; 
+            width: auto; 
+            border: none; 
+        }
+
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: 500; 
+            font-size: 0.9em; 
+            color: #444; 
+        }
+        input[type="text"], 
+        input[type="number"], 
+        textarea, 
+        select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 1em; 
+            margin-bottom: 15px; 
+            touch-action: manipulation; /* Improve touch precision */
+        }
+        textarea { 
+            min-height: 120px; 
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; 
+            white-space: pre; 
+            overflow: auto; 
+        }
+        input[type="color"] { 
+            height: 44px; /* Larger tap target for touch */
+            padding: 5px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 15px; 
+        }
+
+        .style-controls-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+            gap: 15px; 
+        }
+        .control-group { 
+            margin-bottom: 5px; 
+        }
+
+        /* B/I/U Napit */
+        .format-toggles { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 15px; 
+            margin-top: 5px; 
+        }
+        .format-toggle { 
+            font-family: sans-serif; 
+            width: 44px; /* Larger tap target */
+            height: 44px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            background-color: #f8f9fa; 
+            cursor: pointer; 
+            transition: background-color 0.2s, border-color 0.2s; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 0; 
+            font-size: 16px; 
+            line-height: 1; 
+            touch-action: manipulation;
+        }
+        .format-toggle:hover { 
+            background-color: #e9ecef; 
+        }
+        .format-toggle.active { 
+            background-color: #007bff; 
+            border-color: #0056b3; 
+            color: white; 
+        }
+        .format-toggle b { 
+            font-weight: bold; 
+        } 
+        .format-toggle i { 
+            font-style: italic; 
+        } 
+        .format-toggle u { 
+            text-decoration: underline; 
+        }
+
+        /* Transponointi */
+        .transpose-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+        }
+        .transpose-controls button { 
+            padding: 10px 16px; 
+            font-size: 1.1em; 
+            min-width: 48px; 
+            background-color: #e9ecef; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background-color 0.2s; 
+            touch-action: manipulation;
+        }
+        .transpose-controls button:hover { 
+            background-color: #dee2e6; 
+        }
+        .transpose-controls span { 
+            font-weight: bold; 
+            font-size: 1.1em; 
+            min-width: 60px; 
+            text-align: center; 
+            padding: 10px; 
+            background-color: #f8f9fa; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+        }
+
+        /* Toimintopainikkeet */
+        .button-group { 
+            display: flex; 
+            gap: 12px; 
+            margin: 20px 0; 
+            flex-wrap: wrap; 
+        }
+        .action-button { 
+            padding: 14px 24px; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 1.1em; 
+            font-weight: 500; 
+            transition: all 0.2s ease; 
+            flex-grow: 1; 
+            text-align: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            touch-action: manipulation;
+        }
+        .action-button:hover { 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15); 
+            transform: translateY(-1px); 
+        }
+        .action-button:active { 
+            transform: translateY(0px); 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        }
+        #convertButton { 
+            background-color: #007bff; 
+        } 
+        #convertButton:hover { 
+            background-color: #0056b3; 
+        }
+        #printButton { 
+            background-color: #5cb85c; 
+        } 
+        #printButton:hover { 
+            background-color: #4cae4c; 
+        }
+        #copyButton { 
+            background-color: #6c757d; 
+        } 
+        #copyButton:hover { 
+            background-color: #5a6268; 
+        }
+        #copyButton.copied { 
+            background-color: #28a745; 
+        }
+
+        /* --- Details/Summary (Supistettavat osiot) --- */
+        details { 
+            border-radius: 6px; 
+            padding: 0 0 10px 0; 
+            margin-bottom: 15px; 
+            background-color: #fdfdfd; 
+            border: 1px solid #e0e0e0; 
+            overflow: hidden; 
+        }
+        details > summary { 
+            font-weight: 600; 
+            cursor: pointer; 
+            padding: 12px 15px; 
+            list-style: none; 
+            position: relative; 
+            background-color: #f9f9f9; 
+            border-bottom: 1px solid #e0e0e0; 
+            margin-bottom: 10px; 
+            transition: background-color 0.2s; 
+        }
+        details > summary:hover { 
+            background-color: #f1f1f1;
+        }
+        details > summary::before { 
+            content: '▶'; 
+            position: absolute; 
+            left: 15px; 
+            top: 50%; 
+            transform: translateY(-50%) rotate(0deg); 
+            font-size: 0.8em; 
+            transition: transform 0.2s ease-in-out; 
+            display: inline-block; 
+            margin-right: 8px; 
+        }
+        details[open] > summary::before { 
+            transform: translateY(-50%) rotate(90deg); 
+        }
+        details > summary h3 { 
+            margin-left: 15px; 
+            color: #333; 
+        }
+        details > *:not(summary) { 
+            padding-left: 15px; 
+            padding-right: 15px; 
+        }
+
+        /* --- Oikea Paneeli: Esikatselu --- */
+        .preview-options { 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+
+        #outputSheetWrapper {
+            border: 1px dashed #ccc;
+            padding: 20px;
+            margin: 0 auto;
+            background-color: #fff;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+
+        /* Oletuskoko (iPad-ystävällinen) */
+        #outputSheetWrapper.preview-default {
+            width: 100%; 
+            max-width: none; 
+            height: auto; 
+            min-height: 400px;
+            aspect-ratio: auto; 
+            border: 1px solid #ddd;
+            overflow: visible; 
+            padding: 20px;
+            display: block;
+        }
+        #outputSheetWrapper.preview-default #outputSheet {
+            overflow: visible;
+            min-height: auto;
+            flex-grow: 0;
+        }
+
+        /* Koko-luokat (A4, iPad) */
+        #outputSheetWrapper.preview-a4-portrait { 
+            width: 100%; 
+            max-width: 650px; 
+            aspect-ratio: 210 / 297; 
+        }
+        #outputSheetWrapper.preview-a4-landscape { 
+            width: 100%; 
+            max-width: 800px; 
+            aspect-ratio: 297 / 210; 
+        }
+        #outputSheetWrapper.preview-ipad-portrait { 
+            width: 100%; 
+            max-width: 600px; 
+            aspect-ratio: 3 / 4; 
+        }
+        #outputSheetWrapper.preview-ipad-landscape { 
+            width: 100%; 
+            max-width: 750px; 
+            aspect-ratio: 4 / 3; 
+        }
+
+        #outputSheetWrapper:not(.preview-default) {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #outputSheet {
+            background-color: transparent; 
+            border: none; 
+            padding: 0;
+            box-shadow: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+        }
+
+        /* Esikatselun yläosat (Otsikko & Info) */
+        #previewTitleHeader {
+            margin-bottom: 20px; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        #previewTitleHeader h2 { 
+            font-family: var(--title-font-family); 
+            font-size: var(--title-size); 
+            color: var(--title-color); 
+            font-weight: var(--title-weight); 
+            font-style: var(--title-style); 
+            text-decoration: var(--title-decoration); 
+            text-align: var(--title-align); 
+            margin: 0 0 5px 0; 
+        }
+        #previewTitleHeader h3 { 
+            font-family: var(--artist-font-family); 
+            font-size: var(--artist-size); 
+            color: var(--artist-color); 
+            font-weight: var(--artist-weight); 
+            font-style: var(--artist-style); 
+            text-decoration: var(--artist-decoration); 
+            text-align: var(--artist-align); 
+            margin: 0; 
+        }
+        #previewTitleHeader:empty { 
+            display: none; 
+        }
+
+        #previewInfo {
+            font-family: var(--info-font-family); 
+            font-size: var(--info-size); 
+            color: var(--info-color); 
+            font-weight: var(--info-weight); 
+            font-style: var(--info-style); 
+            text-decoration: var(--info-decoration);
+            margin-bottom: 20px; 
+            white-space: pre-wrap; 
+            line-height: 1.5; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        #previewInfo:empty { 
+            display: none; 
+            border: none; 
+            margin-bottom: 0; 
+            padding-bottom: 0;
+        }
+
+        /* Soinnut & Sanat PRE-elementti */
+        #outputSheet pre { 
+            font-family: var(--main-font-family); 
+            line-height: var(--line-height); 
+            margin: 0; 
+            padding: 0; 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            font-size: var(--lyric-size); 
+            color: var(--lyric-color); 
+            font-weight: var(--lyric-weight); 
+            font-style: var(--lyric-style); 
+            text-decoration: var(--lyric-decoration); 
+        }
+        #outputSheet pre .chord { 
+            font-family: inherit; 
+            font-size: var(--chord-size); 
+            color: var(--chord-color); 
+            font-weight: var(--chord-weight); 
+            font-style: var(--chord-style); 
+            text-decoration: var(--chord-decoration); 
+        }
+        #outputSheet pre .section-header { 
+            display: block; 
+            margin: 0.8em 0 0.3em 0; 
+            font-family: var(--section-header-font-family); 
+            font-size: var(--section-header-size); 
+            color: var(--section-header-color); 
+            font-weight: var(--section-header-weight); 
+            font-style: var(--section-header-style); 
+            text-decoration: var(--section-header-decoration); 
+            line-height: 1.4; 
+        }
+        #outputSheet pre .meta { 
+            font-style: italic; 
+            color: #777; 
+            font-size: 0.9em; 
+            font-family: sans-serif; 
+        }
+
+        /* --- Tulostusnäkymä (Pääikkuna) --- */
+        @media print { 
+            body { 
+                padding: 0; 
+                margin: 0; 
+                background-color: #fff; 
+            } 
+            .container { 
+                max-width: 100%; 
+                margin: 0; 
+                padding: 0; 
+                box-shadow: none; 
+                border: none; 
+                border-radius: 0; 
+                display: block;
+            } 
+            .left-panel, 
+            .right-panel .preview-options, 
+            .button-group, 
+            h1, 
+            h2, 
+            p, 
+            fieldset, 
+            details > summary { 
+                display: none !important; 
+            } 
+            details { 
+                border: none; 
+                padding: 0; 
+                margin: 0; 
+            } 
+            details[open] { 
+                display: block 
+            } 
+            .right-panel { 
+                flex: none; 
+                width: 100%; 
+            } 
+            #outputSheetWrapper { 
+                width: 100% !important; 
+                height: auto !important; 
+                aspect-ratio: auto !important; 
+                border: none !important; 
+                padding: 10mm !important; 
+                margin: 0 !important; 
+                overflow: visible !important; 
+                display: block !important; 
+            } 
+            #outputSheet { 
+                width: 100%; 
+                border: none; 
+                padding: 0; 
+                box-shadow: none; 
+                overflow: visible !important; 
+                height: auto !important; 
+                flex-grow: 0; 
+                min-height: auto; 
+            } 
+            #previewTitleHeader h2, 
+            #previewTitleHeader h3, 
+            #previewInfo, 
+            #outputSheet pre, 
+            #outputSheet pre .chord, 
+            #outputSheet pre .section-header, 
+            #outputSheet pre .meta { 
+                color: #000 !important; 
+            } 
+        }
+
+        /* iPad-specific adjustments */
+        @media only screen and (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                padding: 15px;
+            }
+            .left-panel, .right-panel {
+                max-width: 100%;
+            }
+            input[type="text"], 
+            input[type="number"], 
+            textarea, 
+            select {
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <h1>Sointulappu Generaattori</h1>
+            <fieldset>
+                <legend>Syöte</legend>
+                <label for="inputText">Liitä soinnut ja sanat:</label>
+                <textarea id="inputText" rows="10" placeholder="Liitä teksti tähän..."></textarea>
+            </fieldset>
+            <fieldset>
+                <legend>Perusasetukset</legend>
+                <label for="songTitleInput">Kappaleen nimi:</label>
+                <input type="text" id="songTitleInput">
+                <label for="artistNameInput">Artisti:</label>
+                <input type="text" id="artistNameInput">
+                <div class="transpose-controls">
+                    <label style="margin-bottom:0; margin-right: 5px;">Transponointi:</label>
+                    <button id="transposeDown" title="Transponoi alas (-1)">–</button>
+                    <span id="transposeValue">0</span>
+                    <button id="transposeUp" title="Transponoi ylös (+1)">+</button>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Muotoilut</legend>
+                <details open>
+                    <summary><h3>Otsikko (Kappale)</h3></summary>
+                    <div class="style-controls-grid">
+                        <div class="control-group"> 
+                            <label for="titleFont">Fontti:</label> 
+                            <select id="titleFont">
+                                <option value="Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace" selected>Consolas/Monaco</option>
+                                <option value="'Courier New', Courier, monospace">Courier New</option>
+                                <option value="'Lucida Console', 'Lucida Sans Typewriter', monaco, 'Bitstream Vera Sans Mono', monospace">Lucida Console</option>
+                                <option value="'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace">Source Code Pro</option>
+                                <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                                <option value="monospace">Yleinen Monospace</option>
+                            </select>
+                        </div>
+                        <div class="control-group"> 
+                            <label for="titleSize">Koko (px):</label> 
+                            <input type="number" id="titleSize" value="24" min="10" max="72"> 
+                        </div>
+                        <div class="control-group"> 
+                            <label for="titleColor">Väri:</label> 
+                            <input type="color" id="titleColor" value="#1a1a1a"> 
+                        </div>
+                    </div>
+                    <div class="format-toggles"> 
+                        <button class="format-toggle active" data-format="bold" data-target="title"><b>B</b></button> 
+                        <button class="format-toggle" data-format="italic" data-target="title"><i>I</i></button> 
+                        <button class="format-toggle" data-format="underline" data-target="title"><u>U</u></button> 
+                    </div>
+                </details>
+                <details open>
+                    <summary><h3>Otsikko (Artisti)</h3></summary>
+                    <div class="style-controls-grid">
+                        <div class="control-group"> 
+                            <label for="artistFont">Fontti:</label> 
+                            <select id="artistFont">
+                                <option value="Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace" selected>Consolas/Monaco</option>
+                                <option value="'Courier New', Courier, monospace">Courier New</option>
+                                <option value="'Lucida Console', 'Lucida Sans Typewriter', monaco, 'Bitstream Vera Sans Mono', monospace">Lucida Console</option>
+                                <option value="'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace">Source Code Pro</option>
+                                <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                                <option value="monospace">Yleinen Monospace</option>
+                            </select>
+                        </div>
+                        <div class="control-group"> 
+                            <label for="artistSize">Koko (px):</label> 
+                            <input type="number" id="artistSize" value="18" min="8" max="48"> 
+                        </div>
+                        <div class="control-group"> 
+                            <label for="artistColor">Väri:</label> 
+                            <input type="color" id="artistColor" value="#333333"> 
+                        </div>
+                    </div>
+                    <div class="format-toggles"> 
+                        <button class="format-toggle" data-format="bold" data-target="artist"><b>B</b></button> 
+                        <button class="format-toggle" data-format="italic" data-target="artist"><i>I</i></button> 
+                        <button class="format-toggle" data-format="underline" data-target="artist"><u>U</u></button> 
+                    </div>
+                </details>
+                <details open>
+                    <summary><h3>Lisätiedot (Capo, Tempo...)</h3></summary>
+                    <label for="capoInput">Capo (fret):</label> 
+                    <input type="number" id="capoInput" min="0" max="12" placeholder="Esim. 3">
+                    <label for="tempoInput">Tempo (BPM):</label> 
+                    <input type="number" id="tempoInput" min="30" max="300" placeholder="Esim. 120">
+                    <label for="infoInput">Muut tiedot (esim. vire):</label> 
+                    <textarea id="infoInput" rows="2" placeholder="Esim. Vire: Standard E"></textarea>
+                    <div class="style-controls-grid">
+                        <div class="control-group"> 
+                            <label for="infoFont">Fontti:</label> 
+                            <select id="infoFont">
+                                <option value="Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace" selected>Consolas/Monaco</option>
+                                <option value="'Courier New', Courier, monospace">Courier New</option>
+                                <option value="'Lucida Console', 'Lucida Sans Typewriter', monaco, 'Bitstream Vera Sans Mono', monospace">Lucida Console</option>
+                                <option value="'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace">Source Code Pro</option>
+                                <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                                <option value="monospace">Yleinen Monospace</option>
+                            </select>
+                        </div>
+                        <div class="control-group"> 
+                            <label for="infoSize">Koko (px):</label> 
+                            <input type="number" id="infoSize" value="12" min="8" max="24"> 
+                        </div>
+                        <div class="control-group"> 
+                            <label for="infoColor">Väri:</label> 
+                            <input type="color" id="infoColor" value="#555555"> 
+                        </div>
+                    </div>
+                    <div class="format-toggles"> 
+                        <button class="format-toggle" data-format="bold" data-target="info"><b>B</b></button> 
+                        <button class="format-toggle" data-format="italic" data-target="info"><i>I</i></button> 
+                        <button class="format-toggle" data-format="underline" data-target="info"><u>U</u></button> 
+                    </div>
+                </details>
+                <details open>
+                    <summary><h3>Soinnut & Sanat</h3></summary>
+                    <div class="control-group" style="margin-bottom: 20px;"> 
+                        <label for="mainFontSelect">Pääfontti (Monospace):</label> 
+                        <select id="mainFontSelect">
+                            <option value="Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace" selected>Consolas/Monaco</option>
+                            <option value="'Courier New', Courier, monospace">Courier New</option>
+                            <option value="'Lucida Console', 'Lucida Sans Typewriter', monaco, 'Bitstream Vera Sans Mono', monospace">Lucida Console</option>
+                            <option value="'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace">Source Code Pro</option>
+                            <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                            <option value="monospace">Yleinen Monospace</option>
+                        </select>
+                    </div>
+                    <div class="style-controls-grid">
+                        <div class="control-group">
+                            <label>Soinnut:</label>
+                            <input type="number" id="chordSize" value="14" min="8" max="36" title="Sointujen koko (px)">
+                            <input type="color" id="chordColor" value="#000000" title="Sointujen väri">
+                            <div class="format-toggles"> 
+                                <button class="format-toggle active" data-format="bold" data-target="chord"><b>B</b></button> 
+                                <button class="format-toggle" data-format="italic" data-target="chord"><i>I</i></button> 
+                                <button class="format-toggle" data-format="underline" data-target="chord"><u>U</u></button> 
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>Sanat:</label>
+                            <input type="number" id="lyricSize" value="14" min="8" max="36" title="Sanojen koko (px)">
+                            <input type="color" id="lyricColor" value="#333333" title="Sanojen väri">
+                            <div class="format-toggles"> 
+                                <button class="format-toggle" data-format="bold" data-target="lyric"><b>B</b></button> 
+                                <button class="format-toggle" data-format="italic" data-target="lyric"><i>I</i></button> 
+                                <button class="format-toggle" data-format="underline" data-target="lyric"><u>U</u></button> 
+                            </div>
+                        </div>
+                    </div>
+                </details>
+                <details open>
+                    <summary><h3>Osioiden Otsikot ([Verse]...)</h3></summary>
+                    <div class="style-controls-grid">
+                        <div class="control-group"> 
+                            <label for="sectionHeaderFont">Fontti:</label> 
+                            <select id="sectionHeaderFont">
+                                <option value="Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace" selected>Consolas/Monaco</option>
+                                <option value="'Courier New', Courier, monospace">Courier New</option>
+                                <option value="'Lucida Console', 'Lucida Sans Typewriter', monaco, 'Bitstream Vera Sans Mono', monospace">Lucida Console</option>
+                                <option value="'Source Code Pro', Menlo, Monaco, Consolas, 'Courier New', monospace">Source Code Pro</option>
+                                <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                                <option value="monospace">Yleinen Monospace</option>
+                            </select>
+                        </div>
+                        <div class="control-group"> 
+                            <label for="sectionHeaderSize">Koko (px):</label> 
+                            <input type="number" id="sectionHeaderSize" value="13" min="8" max="36"> 
+                        </div>
+                        <div class="control-group"> 
+                            <label for="sectionHeaderColor">Väri:</label> 
+                            <input type="color" id="sectionHeaderColor" value="#666666"> 
+                        </div>
+                    </div>
+                    <div class="format-toggles"> 
+                        <button class="format-toggle active" data-format="bold" data-target="sectionHeader"><b>B</b></button> 
+                        <button class="format-toggle active" data-format="italic" data-target="sectionHeader"><i>I</i></button> 
+                        <button class="format-toggle" data-format="underline" data-target="sectionHeader"><u>U</u></button> 
+                    </div>
+                </details>
+            </fieldset>
+            <div class="button-group">
+                <button id="convertButton" class="action-button">Päivitä esikatselu</button>
+                <button id="copyButton" class="action-button">Kopioi leikepöydälle</button>
+                <button id="printButton" class="action-button">Avaa tulostusikkuna</button>
+            </div>
+        </div>
+        <div class="right-panel">
+            <h2>Esikatselu</h2>
+            <div class="preview-options">
+                <label for="previewSize" style="margin-bottom: 0;">Esikatselun koko:</label>
+                <select id="previewSize">
+                    <option value="preview-default">Oletus (Leveä)</option>
+                    <option value="preview-a4-portrait">A4 Pysty</option>
+                    <option value="preview-a4-landscape">A4 Vaaka</option>
+                    <option value="preview-ipad-portrait" selected>iPad Pysty</option>
+                    <option value="preview-ipad-landscape">iPad Vaaka</option>
+                </select>
+            </div>
+            <div id="outputSheetWrapper" class="preview-ipad-portrait">
+                <div id="previewTitleHeader">
+                    <h2 id="previewSongTitle"></h2>
+                    <h3 id="previewArtistName"></h3>
+                </div>
+                <div id="previewInfo"></div>
+                <div id="outputSheet">
+                    <pre id="formattedContent"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // === Globaalit muuttujat ===
+        let currentTranspose = 0;
+        let lastFormattedHtml = '';
+        let lastTransposedText = '';
+
+        // === DOM Elementit ===
+        const Elements = {
+            inputText: document.getElementById('inputText'),
+            convertButton: document.getElementById('convertButton'),
+            printButton: document.getElementById('printButton'),
+            copyButton: document.getElementById('copyButton'),
+            outputSheetWrapper: document.getElementById('outputSheetWrapper'),
+            outputSheet: document.getElementById('outputSheet'),
+            outputContent: document.getElementById('formattedContent'),
+            previewTitleHeader: document.getElementById('previewTitleHeader'),
+            previewSongTitle: document.getElementById('previewSongTitle'),
+            previewArtistName: document.getElementById('previewArtistName'),
+            previewInfo: document.getElementById('previewInfo'),
+            transposeDownBtn: document.getElementById('transposeDown'),
+            transposeUpBtn: document.getElementById('transposeUp'),
+            transposeValueSpan: document.getElementById('transposeValue'),
+            songTitleInput: document.getElementById('songTitleInput'),
+            artistNameInput: document.getElementById('artistNameInput'),
+            capoInput: document.getElementById('capoInput'),
+            tempoInput: document.getElementById('tempoInput'),
+            infoInput: document.getElementById('infoInput'),
+            mainFontSelect: document.getElementById('mainFontSelect'),
+            titleFont: document.getElementById('titleFont'),
+            titleSize: document.getElementById('titleSize'),
+            titleColor: document.getElementById('titleColor'),
+            artistFont: document.getElementById('artistFont'),
+            artistSize: document.getElementById('artistSize'),
+            artistColor: document.getElementById('artistColor'),
+            infoFont: document.getElementById('infoFont'),
+            infoSize: document.getElementById('infoSize'),
+            infoColor: document.getElementById('infoColor'),
+            chordSize: document.getElementById('chordSize'),
+            chordColor: document.getElementById('chordColor'),
+            lyricSize: document.getElementById('lyricSize'),
+            lyricColor: document.getElementById('lyricColor'),
+            sectionHeaderFont: document.getElementById('sectionHeaderFont'),
+            sectionHeaderSize: document.getElementById('sectionHeaderSize'),
+            sectionHeaderColor: document.getElementById('sectionHeaderColor'),
+            previewSizeSelect: document.getElementById('previewSize'),
+            formatToggles: document.querySelectorAll('.format-toggle'),
+            controls: document.querySelectorAll('.left-panel select, .left-panel input, .left-panel textarea, .left-panel button.format-toggle')
+        };
+
+        // === Transponointilogiikka ===
+        const scaleSharp = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const scaleFlat = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+        const sharpToFlat = {'C#':'Db', 'D#':'Eb', 'F#':'Gb', 'G#':'Ab', 'A#':'Bb'};
+        const flatToSharp = {'Db':'C#', 'Eb':'D#', 'Gb':'F#', 'Ab':'G#', 'Bb':'A#'};
+        function transposeNote(note, amount) { 
+            if (!note) return ''; 
+            const originalNote = note.toUpperCase(); 
+            let root = originalNote[0]; 
+            let accidental = ''; 
+            if (originalNote.length > 1 && (originalNote[1] === '#' || originalNote[1] === 'B')) { 
+                accidental = (originalNote[1] === 'B') ? 'b' : originalNote[1]; 
+            } 
+            if (accidental === 'b') { 
+                const equivSharp = flatToSharp[root + accidental]; 
+                if (equivSharp) { 
+                    root = equivSharp[0]; 
+                    accidental = '#'; 
+                } else { 
+                    if (root + accidental === 'CB') root = 'B'; 
+                    else if (root + accidental === 'FB') root = 'E'; 
+                    accidental = ''; 
+                } 
+            } 
+            const noteWithSharp = root + (accidental === '#' ? '#' : ''); 
+            let originalIndex = scaleSharp.indexOf(noteWithSharp); 
+            if (originalIndex === -1) return note; 
+            let newIndex = ((originalIndex + amount % 12) + 12) % 12; 
+            let useFlat = (originalNote.length > 1 && originalNote[1] === 'B' && root !== 'C' && root !== 'F'); 
+            const newNoteSharp = scaleSharp[newIndex]; 
+            if (useFlat && newNoteSharp.includes('#')) { 
+                return sharpToFlat[newNoteSharp] || newNoteSharp; 
+            } else { 
+                return newNoteSharp; 
+            } 
+        }
+        function transposeChord(chord, amount) { 
+            if (amount === 0) return chord; 
+            const trimmedChord = chord.trim(); 
+            if (!trimmedChord || trimmedChord === 'N.C.' || trimmedChord === '%') return chord; 
+            const match = trimmedChord.match(/^([A-Ga-g])([#bB]?)([^/]*?)?(?:(\/)([A-Ga-g])([#bB]?))?$/); 
+            if (!match) return chord; 
+            const root = match[1]; 
+            const accidental = match[2] || ''; 
+            const quality = match[3] || ''; 
+            const slash = match[4] || ''; 
+            const bassRoot = match[5] || ''; 
+            const bassAccidental = match[6] || ''; 
+            const newRoot = transposeNote(root + accidental.replace('B','b'), amount); 
+            const newBass = bassRoot ? transposeNote(bassRoot + bassAccidental.replace('B','b'), amount) : ''; 
+            const leadingSpace = chord.match(/^\s*/)[0]; 
+            const trailingSpace = chord.match(/\s*$/)[0]; 
+            return leadingSpace + newRoot + quality + (newBass ? slash + newBass : '') + trailingSpace; 
+        }
+
+        // === Sointujen ja tekstin formatointi ===
+        function isLikelyChordStandalone(segment) { 
+            const cleanSegment = segment.replace(/\(.*?\)/g, '').trim(); 
+            if (!cleanSegment) return false; 
+            if (cleanSegment === '|' || cleanSegment === '-') return true; 
+            const chordRegex = /^[A-Ga-g][#bB]?(m|min|m|M|maj|Maj|dim|aug|sus|add|°|ø|\d)*(\/[A-Ga-g][#bB]?)?(\(.*\))?$|^[A-Z]\.?C\.?$|^%$/; 
+            return chordRegex.test(cleanSegment); 
+        }
+        function formatAndTransposeText(rawText, transposeAmount) {
+            const lines = rawText.split('\n');
+            const formattedLinesHtml = [];
+            const transposedLinesText = [];
+            const sectionHeaderRegex = /^\[(.*)\]$/;
+            const metadataRegex = /^(tuning|capo|key|tempo|artist|title|tabbed by|email)\s*:/i;
+            const onlyWhitespaceRegex = /^\s*$/;
+
+            for (const line of lines) {
+                let currentFormattedLine = line;
+                let currentTransposedLine = line;
+                const trimmedLine = line.trim();
+                let isConfirmedChordLine = false;
+                let isSpecialLine = false;
+
+                if (onlyWhitespaceRegex.test(line)) {
+                    currentTransposedLine = '';
+                    isSpecialLine = true;
+                } else if (sectionHeaderRegex.test(trimmedLine)) {
+                    const headerContent = trimmedLine.match(sectionHeaderRegex)[1];
+                    currentFormattedLine = `<span class="section-header">[${headerContent}]</span>`;
+                    currentTransposedLine = `\n${trimmedLine}\n`;
+                    isSpecialLine = true;
+                } else if (metadataRegex.test(trimmedLine) || trimmedLine.startsWith('---') || trimmedLine.startsWith('===')) {
+                    currentFormattedLine = `<span class="meta">${line}</span>`;
+                    currentTransposedLine = '';
+                    isSpecialLine = true;
+                }
+
+                if (!isSpecialLine) {
+                    const parts = line.split(/(\s+)/).filter(Boolean);
+                    let lineContainsOnlyChordsAndWhitespace = true;
+                    let hasAnyChord = false;
+                    let tempFormattedLine = '';
+                    let tempTransposedLine = '';
+
+                    for (const part of parts) {
+                        if (onlyWhitespaceRegex.test(part)) {
+                            tempFormattedLine += part;
+                            tempTransposedLine += part;
+                        } else {
+                            const trimmedPart = part.trim();
+                            const isChord = isLikelyChordStandalone(trimmedPart);
+                            if (isChord) {
+                                const transposed = transposeChord(trimmedPart, transposeAmount);
+                                const leadingSpace = part.match(/^\s*/)[0];
+                                const trailingSpace = part.match(/\s*$/)[0];
+                                tempFormattedLine += `${leadingSpace}<span class="chord">${transposed}</span>${trailingSpace}`;
+                                tempTransposedLine += part.replace(trimmedPart, transposed);
+                                hasAnyChord = true;
+                            } else {
+                                lineContainsOnlyChordsAndWhitespace = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (lineContainsOnlyChordsAndWhitespace && hasAnyChord) {
+                        isConfirmedChordLine = true;
+                        currentFormattedLine = tempFormattedLine;
+                        currentTransposedLine = tempTransposedLine;
+                    }
+                }
+
+                formattedLinesHtml.push(currentFormattedLine);
+                if (isConfirmedChordLine) {
+                    transposedLinesText.push(currentTransposedLine.trimEnd());
+                } else if (sectionHeaderRegex.test(trimmedLine)) {
+                    transposedLinesText.push(currentTransposedLine.trimEnd());
+                } else if (!isSpecialLine && !onlyWhitespaceRegex.test(line)) {
+                    transposedLinesText.push(line.trimEnd());
+                }
+            }
+
+            lastFormattedHtml = formattedLinesHtml.join('\n');
+            finalizeTransposedText(transposedLinesText.join('\n'));
+            return { html: lastFormattedHtml };
+        }
+
+        // === Tyylien päivitys ===
+        function applyStyles() {
+            const rootStyle = document.documentElement.style;
+            const getFormatValue = (target, format) => { 
+                const btn = document.querySelector(`.format-toggle[data-target='${target}'][data-format='${format}']`); 
+                if (!btn) { 
+                    console.warn(`Format toggle button not found for target: ${target}, format: ${format}`); 
+                    if (format === 'bold') return 'normal'; 
+                    if (format === 'italic') return 'normal'; 
+                    if (format === 'underline') return 'none'; 
+                    return ''; 
+                } 
+                const isActive = btn.classList.contains('active'); 
+                if (format === 'bold') return isActive ? 'bold' : 'normal'; 
+                if (format === 'italic') return isActive ? 'italic' : 'normal'; 
+                if (format === 'underline') return isActive ? 'underline' : 'none'; 
+                return ''; 
+            };
+            try {
+                rootStyle.setProperty('--title-font-family', Elements.titleFont.value); 
+                rootStyle.setProperty('--title-size', Elements.titleSize.value + 'px'); 
+                rootStyle.setProperty('--title-color', Elements.titleColor.value); 
+                rootStyle.setProperty('--title-weight', getFormatValue('title', 'bold')); 
+                rootStyle.setProperty('--title-style', getFormatValue('title', 'italic')); 
+                rootStyle.setProperty('--title-decoration', getFormatValue('title', 'underline'));
+                rootStyle.setProperty('--artist-font-family', Elements.artistFont.value); 
+                rootStyle.setProperty('--artist-size', Elements.artistSize.value + 'px'); 
+                rootStyle.setProperty('--artist-color', Elements.artistColor.value); 
+                rootStyle.setProperty('--artist-weight', getFormatValue('artist', 'bold')); 
+                rootStyle.setProperty('--artist-style', getFormatValue('artist', 'italic')); 
+                rootStyle.setProperty('--artist-decoration', getFormatValue('artist', 'underline'));
+                rootStyle.setProperty('--info-font-family', Elements.infoFont.value); 
+                rootStyle.setProperty('--info-size', Elements.infoSize.value + 'px'); 
+                rootStyle.setProperty('--info-color', Elements.infoColor.value); 
+                rootStyle.setProperty('--info-weight', getFormatValue('info', 'bold')); 
+                rootStyle.setProperty('--info-style', getFormatValue('info', 'italic')); 
+                rootStyle.setProperty('--info-decoration', getFormatValue('info', 'underline'));
+                rootStyle.setProperty('--main-font-family', Elements.mainFontSelect.value);
+                rootStyle.setProperty('--chord-size', Elements.chordSize.value + 'px'); 
+                rootStyle.setProperty('--chord-color', Elements.chordColor.value); 
+                rootStyle.setProperty('--chord-weight', getFormatValue('chord', 'bold')); 
+                rootStyle.setProperty('--chord-style', getFormatValue('chord', 'italic')); 
+                rootStyle.setProperty('--chord-decoration', getFormatValue('chord', 'underline'));
+                rootStyle.setProperty('--lyric-size', Elements.lyricSize.value + 'px'); 
+                rootStyle.setProperty('--lyric-color', Elements.lyricColor.value); 
+                rootStyle.setProperty('--lyric-weight', getFormatValue('lyric', 'bold')); 
+                rootStyle.setProperty('--lyric-style', getFormatValue('lyric', 'italic')); 
+                rootStyle.setProperty('--lyric-decoration', getFormatValue('lyric', 'underline'));
+                rootStyle.setProperty('--section-header-font-family', Elements.sectionHeaderFont.value); 
+                rootStyle.setProperty('--section-header-size', Elements.sectionHeaderSize.value + 'px'); 
+                rootStyle.setProperty('--section-header-color', Elements.sectionHeaderColor.value); 
+                rootStyle.setProperty('--section-header-weight', getFormatValue('sectionHeader', 'bold')); 
+                rootStyle.setProperty('--section-header-style', getFormatValue('sectionHeader', 'italic')); 
+                rootStyle.setProperty('--section-header-decoration', getFormatValue('sectionHeader', 'underline'));
+                Elements.outputSheetWrapper.className = Elements.previewSizeSelect.value;
+            } catch (error) { 
+                console.error("Virhe tyylejä asettaessa (applyStyles):", error); 
+            }
+        }
+
+        // === Header & Info Päivitys ===
+        function updatePreviewHeadersAndInfo() { 
+            const title = Elements.songTitleInput.value.trim(); 
+            const artist = Elements.artistNameInput.value.trim(); 
+            Elements.previewSongTitle.textContent = title; 
+            Elements.previewArtistName.textContent = artist; 
+            Elements.previewTitleHeader.style.display = (title || artist) ? 'block' : 'none'; 
+            let infoText = ''; 
+            const capo = Elements.capoInput.value; 
+            const tempo = Elements.tempoInput.value; 
+            const otherInfo = Elements.infoInput.value.trim(); 
+            if (capo) infoText += `Capo: ${capo}\n`; 
+            if (tempo) infoText += `Tempo: ${tempo} BPM\n`; 
+            if (otherInfo) infoText += `${otherInfo}\n`; 
+            Elements.previewInfo.textContent = infoText.trim(); 
+            Elements.previewInfo.style.display = infoText.trim() ? 'block' : 'none'; 
+            Elements.previewTitleHeader.style.borderBottom = (title || artist) && infoText.trim() ? '1px solid #eee' : 'none'; 
+            Elements.previewInfo.style.borderBottom = infoText.trim() ? '1px solid #eee' : 'none'; 
+        }
+
+        // === Muodosta lopullinen tekstiversio leikepöydälle ===
+        function finalizeTransposedText(songBodyText) { 
+            let clipboardText = ''; 
+            const title = Elements.songTitleInput.value.trim(); 
+            const artist = Elements.artistNameInput.value.trim(); 
+            const capo = Elements.capoInput.value; 
+            const tempo = Elements.tempoInput.value; 
+            const otherInfo = Elements.infoInput.value.trim(); 
+            if (title) clipboardText += title + '\n'; 
+            if (artist) clipboardText += artist + '\n'; 
+            if (title || artist) clipboardText += '\n'; 
+            if (capo) clipboardText += `Capo: ${capo}\n`; 
+            if (tempo) clipboardText += `Tempo: ${tempo} BPM\n`; 
+            if (otherInfo) clipboardText += `${otherInfo}\n`; 
+            if (capo || tempo || otherInfo) clipboardText += '\n'; 
+            clipboardText += songBodyText; 
+            lastTransposedText = clipboardText; 
+        }
+
+        // === Päivitä Esikatselu -funktio ===
+        function updatePreview() { 
+            try { 
+                const rawText = Elements.inputText.value; 
+                const { html } = formatAndTransposeText(rawText, currentTranspose); 
+                Elements.outputContent.innerHTML = html; 
+                updatePreviewHeadersAndInfo(); 
+                applyStyles(); 
+            } catch (error) { 
+                console.error("Virhe esikatselua päivittäessä (updatePreview):", error); 
+                alert("Virhe esikatselun päivittämisessä. Tarkista syöte ja konsoli."); 
+            } 
+        }
+
+        // === Tapahtumankuuntelijat ===
+        Elements.convertButton.addEventListener('click', updatePreview);
+        Elements.transposeDownBtn.addEventListener('click', () => { 
+            currentTranspose--; 
+            Elements.transposeValueSpan.textContent = currentTranspose > 0 ? `+${currentTranspose}` : currentTranspose; 
+            updatePreview(); 
+        });
+        Elements.transposeUpBtn.addEventListener('click', () => { 
+            currentTranspose++; 
+            Elements.transposeValueSpan.textContent = currentTranspose > 0 ? `+${currentTranspose}` : currentTranspose; 
+            updatePreview(); 
+        });
+        [Elements.songTitleInput, Elements.artistNameInput, Elements.capoInput, Elements.tempoInput, Elements.infoInput].forEach(input => { 
+            input.addEventListener('input', () => { 
+                updatePreviewHeadersAndInfo(); 
+                if (lastFormattedHtml) { 
+                    try { 
+                        formatAndTransposeText(Elements.inputText.value, currentTranspose); 
+                    } catch(e){ 
+                        console.error("Error updating clipboard text:", e);
+                    } 
+                } 
+            }); 
+        });
+        Elements.formatToggles.forEach(button => { 
+            button.addEventListener('click', () => { 
+                button.classList.toggle('active'); 
+                applyStyles(); 
+            }); 
+        });
+        Elements.controls.forEach(control => { 
+            if (!control.classList.contains('format-toggle')) { 
+                const eventType = (control.tagName === 'SELECT' || control.type === 'color') ? 'change' : 'input'; 
+                control.addEventListener(eventType, applyStyles); 
+            } 
+        });
+        Elements.copyButton.addEventListener('click', async () => { 
+            if (!lastTransposedText && !Elements.inputText.value && !Elements.songTitleInput.value && !Elements.artistNameInput.value) { 
+                alert("Ei kopioitavaa sisältöä."); 
+                return; 
+            } 
+            if (!lastTransposedText) { 
+                try{ 
+                    formatAndTransposeText(Elements.inputText.value, currentTranspose); 
+                } catch(e){ 
+                    alert('Virhe tekstin muodostamisessa kopiointia varten.'); 
+                    return; 
+                } 
+            } 
+            try { 
+                await navigator.clipboard.writeText(lastTransposedText); 
+                Elements.copyButton.textContent = 'Kopioitu!'; 
+                Elements.copyButton.classList.add('copied'); 
+                setTimeout(() => { 
+                    Elements.copyButton.textContent = 'Kopioi leikepöydälle'; 
+                    Elements.copyButton.classList.remove('copied'); 
+                }, 1500); 
+            } catch (err) { 
+                console.error('Kopiointi epäonnistui: ', err); 
+                alert('Kopiointi epäonnistui.'); 
+            } 
+        });
+        Elements.printButton.addEventListener('click', () => { 
+            if (!lastFormattedHtml && !Elements.inputText.value && !Elements.songTitleInput.value && !Elements.artistNameInput.value) { 
+                alert("Ei tulostettavaa sisältöä."); 
+                return; 
+            } 
+            if (!lastFormattedHtml) { 
+                try { 
+                    const { html } = formatAndTransposeText(Elements.inputText.value, currentTranspose); 
+                    lastFormattedHtml = html; 
+                } catch(e){ 
+                    alert('Virhe tekstin muodostamisessa tulostusta varten.'); 
+                    return; 
+                } 
+            } 
+            const computedStyle = window.getComputedStyle(document.documentElement); 
+            const getStyleVar = (varName) => computedStyle.getPropertyValue(varName).trim(); 
+            let printWindowHtml = `<!DOCTYPE html><html lang="fi"><head><meta charset="UTF-8"><title>Tuloste</title><style>@page { margin: 10mm; } body { margin: 0; } .title-header h2 { font-family: ${getStyleVar('--title-font-family')}; font-size: ${getStyleVar('--title-size')}; color: ${getStyleVar('--title-color')}; font-weight: ${getStyleVar('--title-weight')}; font-style: ${getStyleVar('--title-style')}; text-decoration: ${getStyleVar('--title-decoration')}; text-align: ${getStyleVar('--title-align')}; margin: 0 0 5px 0; } .title-header h3 { font-family: ${getStyleVar('--artist-font-family')}; font-size: ${getStyleVar('--artist-size')}; color: ${getStyleVar('--artist-color')}; font-weight: ${getStyleVar('--artist-weight')}; font-style: ${getStyleVar('--artist-style')}; text-decoration: ${getStyleVar('--artist-decoration')}; text-align: ${getStyleVar('--artist-align')}; margin: 0; } .info-header { font-family: ${getStyleVar('--info-font-family')}; font-size: ${getStyleVar('--info-size')}; color: ${getStyleVar('--info-color')}; font-weight: ${getStyleVar('--info-weight')}; font-style: ${getStyleVar('--info-style')}; text-decoration: ${getStyleVar('--info-decoration')}; white-space: pre-wrap; line-height: 1.5; margin: 15px 0; padding-bottom: 10px; border-bottom: 1px solid #eee; } pre { font-family: ${getStyleVar('--main-font-family')}; line-height: ${getStyleVar('--line-height')}; margin: 0; white-space: pre-wrap; word-wrap: break-word; font-size: ${getStyleVar('--lyric-size')}; color: ${getStyleVar('--lyric-color')}; font-weight: ${getStyleVar('--lyric-weight')}; font-style: ${getStyleVar('--lyric-style')}; text-decoration: ${getStyleVar('--lyric-decoration')}; } .chord { font-family: inherit; font-size: ${getStyleVar('--chord-size')}; color: ${getStyleVar('--chord-color')}; font-weight: ${getStyleVar('--chord-weight')}; font-style: ${getStyleVar('--chord-style')}; text-decoration: ${getStyleVar('--chord-decoration')}; } .section-header { display: block; margin: 0.8em 0 0.3em 0; font-family: ${getStyleVar('--section-header-font-family')}; font-size: ${getStyleVar('--section-header-size')}; color: ${getStyleVar('--section-header-color')}; font-weight: ${getStyleVar('--section-header-weight')}; font-style: ${getStyleVar('--section-header-style')}; text-decoration: ${getStyleVar('--section-header-decoration')}; line-height: 1.4; } .meta { font-style: italic; color: #777; font-size: 0.9em; font-family: sans-serif; } @media print { body { margin: 0; } .title-header h2, .title-header h3, .info-header, pre, .chord, .section-header, .meta { color: #000 !important; } } </style></head><body>`; 
+            const title = Elements.songTitleInput.value.trim(); 
+            const artist = Elements.artistNameInput.value.trim(); 
+            if(title || artist) { 
+                printWindowHtml += `<div class="title-header">`; 
+                if(title) printWindowHtml += `<h2>${title}</h2>`; 
+                if(artist) printWindowHtml += `<h3>${artist}</h3>`; 
+                printWindowHtml += `</div>`; 
+            } 
+            let infoText = ''; 
+            const capo = Elements.capoInput.value; 
+            const tempo = Elements.tempoInput.value; 
+            const otherInfo = Elements.infoInput.value.trim(); 
+            if (capo) infoText += `Capo: ${capo}\n`; 
+            if (tempo) infoText += `Tempo: ${tempo} BPM\n`; 
+            if (otherInfo) infoText += `${otherInfo}\n`; 
+            if(infoText.trim()){ 
+                printWindowHtml += `<div class="info-header">${infoText.trim().replace(/</g, "<").replace(/>/g, ">")}</div>`; 
+            } 
+            printWindowHtml += `<pre>${lastFormattedHtml}</pre></body></html>`; 
+            const printWindow = window.open('', '_blank'); 
+            if (printWindow) { 
+                printWindow.document.open(); 
+                printWindow.document.write(printWindowHtml); 
+                printWindow.document.close(); 
+                printWindow.focus(); 
+            } else { 
+                alert("Ponnahdusikkunoiden esto saattaa olla päällä."); 
+            } 
+        });
+
+        // === Alustus ===
+        function initialize() {
+            Elements.songTitleInput.value = "My Heart Will Go On"; 
+            Elements.artistNameInput.value = "Celine Dion"; 
+            Elements.infoInput.value = "Key: E\nTuning: Standard"; 
+            Elements.tempoInput.value = "75";
+            Elements.inputText.value = `[Intro]\n F#    C#    B    C# \n E    B    Aadd9 Bsus4 B\n\n[Verse 1]\n E         B             A             B\n Every night in my dreams, I see you, I feel you\n E           B               A        B\n That is how I know you go on\n E           B              A             B\n Far across the distance and spaces between us\n E             B                 A      B\n You have come to show you go on\n\n[Chorus]\n C#m     B           A           B\n Near, far, wherever you are\n   C#m          B                  A     B\n I believe that the heart does go on\n C#m    B           A              B\n Once more, you open the door\n            C#m           B\n And you're here in my heart and\n    A             B      E\n My heart will go on and on\n\n[Instrumental]\n| E    | B    | A    | B    |\n| E    | B    | Aadd9| Bsus4 B |\n\n[Verse 2]\n E           B             A             B\n Love can touch us one time and last for a lifetime\n E            B               A      B\n And never let go till we're gone\n E            B               A              B\n Love was when I loved you, one true time I hold to\n E          B                A     B\n In my life we'll always go on\n\n[Chorus]\n C#m     B           A           B\n Near, far, wherever you are\n   C#m          B                  A     B\n I believe that the heart does go on\n C#m    B           A              B\n Once more, you open the door\n            C#m           B\n And you're here in my heart and\n    A             B      E\n My heart will go on and on\n\n[Solo] (Moduloi F-molliin tässä kohdassa usein)\n| Fm   | Eb   | Db   | Eb   |\n| Fm   | Eb   | Db   | Eb   |\n| Ab   | Eb   | Db   | Eb   |\n| Fm   | Eb   | Db Eb| Fm   |\n\n[Outro Chorus] Key: Ab\n Ab     Eb           Db           Eb\n Near, far, wherever you are (You are...)\n   Fm          Eb                  Db     Eb\n I believe that the heart does go on (Why does the heart go on...)\n Ab    Eb           Db              Eb\n Once more, you open the door\n            Fm           Eb\n And you're here in my heart and\n    Db             Eb      Ab\n My heart will go on and on\n\n[Ending]\n| Ab   | Eb   | Db   | Eb   |\n| Fm   | Eb   | Db   | Ab   |\n`;
+            Elements.transposeValueSpan.textContent = currentTranspose;
+            document.querySelectorAll('.format-toggle[data-target="title"][data-format="bold"]').forEach(b=>b.classList.add('active')); 
+            document.querySelectorAll('.format-toggle[data-target="chord"][data-format="bold"]').forEach(b=>b.classList.add('active')); 
+            document.querySelectorAll('.format-toggle[data-target="sectionHeader"][data-format="bold"]').forEach(b=>b.classList.add('active')); 
+            document.querySelectorAll('.format-toggle[data-target="sectionHeader"][data-format="italic"]').forEach(b=>b.classList.add('active'));
+            applyStyles(); 
+            updatePreview();
+        }
+
+        initialize();
+    </script>
+</body>
+</html>
