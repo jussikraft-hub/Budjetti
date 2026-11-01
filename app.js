@@ -280,8 +280,10 @@ class BudjettiApp {
     recent.forEach(t => {
       const cat = this.categories.getById(t.category);
       const isIncome = t.type === "income";
-      const sign = isIncome ? "+" : "-";
-      const color = isIncome ? "#9fbe8e" : "#d4566e";
+      const isCredit = t.amount < 0;
+      const sign = (isIncome || isCredit) ? "+" : "-";
+      const color = (isIncome || isCredit) ? "#9fbe8e" : "#d4566e";
+      const displayAmt = Math.abs(t.amount);
 
       const item = document.createElement("div");
       item.className = "ledger-item";
@@ -305,7 +307,7 @@ class BudjettiApp {
           </div>
         </div>
         <span class="font-num" style="font-size: 12px; font-weight: 500; color: ${color};">
-          ${sign}${FinanceCalculator.formatCurrency(t.amount)}
+          ${sign}${FinanceCalculator.formatCurrency(displayAmt)}
         </span>
       `;
       container.appendChild(item);
@@ -351,8 +353,10 @@ class BudjettiApp {
     filtered.forEach(t => {
       const cat = this.categories.getById(t.category);
       const isIncome = t.type === "income";
-      const sign = isIncome ? "+" : "-";
-      const color = isIncome ? "#9fbe8e" : "#d4566e";
+      const isCredit = t.amount < 0;
+      const sign = (isIncome || isCredit) ? "+" : "-";
+      const color = (isIncome || isCredit) ? "#9fbe8e" : "#d4566e";
+      const displayAmt = Math.abs(t.amount);
 
       const row = document.createElement("div");
       row.className = "ledger-item";
@@ -372,7 +376,7 @@ class BudjettiApp {
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="font-num" style="font-size: 13px; font-weight: 500; color: ${color};">
-            ${sign}${FinanceCalculator.formatCurrency(t.amount)}
+            ${sign}${FinanceCalculator.formatCurrency(displayAmt)}
           </span>
           <button onclick="app.editTransaction('${t.id}')" title="Muokkaa kirjausta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px;">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
