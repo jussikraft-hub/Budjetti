@@ -343,5 +343,32 @@ class TestBudjettiApp(unittest.TestCase):
                     f"SAFE EXPORT RIKKOMUS: {desc} ('{pattern}') löytyi tiedostosta {rel_path}!"
                 )
 
+    def test_11_revision_6_vertical_lock_and_filter(self):
+        """Varmistaa Revisio 6:n pystysuuntaisen liikelukituksen, Päiväkirjan segmentoidun suodatuksen ja Plus-painikkeen Pikakuitti-valikon."""
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        self.assertIn("touch-action: pan-y", css, "CSS:stä puuttuu touch-action: pan-y!")
+        self.assertIn("overscroll-behavior-x: none", css, "CSS:stä puuttuu overscroll-behavior-x: none!")
+        self.assertIn("overflow-x: hidden", css, "CSS:stä puuttuu overflow-x: hidden!")
+
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # Päiväkirjan uusi suodatinrakenne
+        self.assertIn('id="btnFilterSubAll"', html)
+        self.assertIn('id="btnFilterSubMonth"', html)
+        self.assertIn('id="btnFilterSubDate"', html)
+        self.assertIn('id="filterBoxMonth"', html)
+        self.assertIn('id="filterBoxDate"', html)
+        self.assertIn('id="modalFabChoice"', html)
+        self.assertIn('app.openFabChoice()', html)
+
+        # Tarkistetaan että app.js sisältää uudet funktiot
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("switchFilterSubMode", js)
+        self.assertIn("openFabChoice", js)
+        self.assertIn("chooseFabAction", js)
+
 if __name__ == "__main__":
     unittest.main()

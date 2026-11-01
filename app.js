@@ -19,6 +19,7 @@ class BudjettiApp {
     this.currentView = "viewKoti";
     this.previousView = "viewKoti";
     this.currentLedgerTab = "tx";
+    this.currentFilterMode = "all";
     this.currentBudgetsTab = "categories";
     this.currentDebtTab = "debts";
     this.p2pType = "lent";
@@ -373,32 +374,66 @@ class BudjettiApp {
   }
 
   // --- FILTER & LEDGER RENDERING (Kuukausi & Päivämäärä Haku) ---
-  handleMonthPickerChange() {
-    const m = document.getElementById("txMonthPicker")?.value;
-    if (m) {
-      const d = document.getElementById("txDatePicker");
-      if (d) d.value = "";
+  switchFilterSubMode(mode) {
+    this.currentFilterMode = mode;
+    const btnAll = document.getElementById("btnFilterSubAll");
+    const btnMonth = document.getElementById("btnFilterSubMonth");
+    const btnDate = document.getElementById("btnFilterSubDate");
+    const boxMonth = document.getElementById("filterBoxMonth");
+    const boxDate = document.getElementById("filterBoxDate");
+    const mPicker = document.getElementById("txMonthPicker");
+    const dPicker = document.getElementById("txDatePicker");
+
+    [btnAll, btnMonth, btnDate].forEach(b => { if (b) b.classList.remove("active"); });
+
+    if (mode === "month") {
+      if (btnMonth) btnMonth.classList.add("active");
+      if (boxMonth) boxMonth.style.display = "flex";
+      if (boxDate) boxDate.style.display = "none";
+      if (dPicker) dPicker.value = "";
+      if (mPicker && !mPicker.value) {
+        const now = new Date();
+        mPicker.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      }
+    } else if (mode === "date") {
+      if (btnDate) btnDate.classList.add("active");
+      if (boxMonth) boxMonth.style.display = "none";
+      if (boxDate) boxDate.style.display = "flex";
+      if (mPicker) mPicker.value = "";
+      if (dPicker && !dPicker.value) {
+        const now = new Date();
+        dPicker.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      }
+    } else {
+      if (btnAll) btnAll.classList.add("active");
+      if (boxMonth) boxMonth.style.display = "none";
+      if (boxDate) boxDate.style.display = "none";
+      if (mPicker) mPicker.value = "";
+      if (dPicker) dPicker.value = "";
     }
     this.filterTransactions();
   }
 
-  handleDatePickerChange() {
-    const d = document.getElementById("txDatePicker")?.value;
-    if (d) {
-      const m = document.getElementById("txMonthPicker");
-      if (m) m.value = "";
-    }
+  handleMonthPickerChange() {
     this.filterTransactions();
+  }
+
+  handleDatePickerChange() {
+    this.filterTransactions();
+  }
+
+  resetMonthFilter() {
+    this.switchFilterSubMode("all");
+  }
+
+  resetDateFilter() {
+    this.switchFilterSubMode("all");
   }
 
   resetTxFilters() {
     const s = document.getElementById("txSearchInput");
     if (s) s.value = "";
-    const m = document.getElementById("txMonthPicker");
-    if (m) m.value = "";
-    const d = document.getElementById("txDatePicker");
-    if (d) d.value = "";
-    this.filterTransactions();
+    this.switchFilterSubMode("all");
   }
 
   filterTransactions() {
@@ -1600,6 +1635,19 @@ class BudjettiApp {
   }
 
   // --- MODALS & QUICK ADD ---
+  openFabChoice() {
+    this.openModal("modalFabChoice");
+  }
+
+  chooseFabAction(action) {
+    this.closeModal("modalFabChoice");
+    if (action === "receipt") {
+      this.openQuickReceiptModal();
+    } else {
+      this.openQuickAddModal();
+    }
+  }
+
   openQuickAddModal(prefill = {}) {
     const modal = document.getElementById("modalQuickAdd");
     if (!modal) return;

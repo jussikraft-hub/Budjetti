@@ -172,26 +172,45 @@
           <!-- Filter Controls -->
           <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
             <div style="display: flex; gap: 8px;">
-              <input type="text" id="txSearchInput" placeholder="Hae kauppaa, kuvausta tai kategoriaa..." class="form-input" style="padding: 9px 12px; font-size: 13px; flex: 1;" oninput="app.filterTransactions()">
-              <button type="button" class="btn-primary" style="width: auto; padding: 9px 12px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.openQuickReceiptModal()" title="Ota nopea kuittikuva">
-                📷 Kuitti
+              <input type="text" id="txSearchInput" placeholder="Hae kauppaa, selitettä tai kategoriaa..." class="form-input" style="padding: 10px 14px; font-size: 13px; flex: 1;" oninput="app.filterTransactions()">
+              <button type="button" class="btn-primary" style="width: auto; padding: 10px 18px; font-size: 11px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary); flex-shrink: 0;" onclick="app.filterTransactions()" title="Suorita haku">
+                Hae
               </button>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: flex-end;">
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 2px;">Kuukausi</label>
-                <input type="month" id="txMonthPicker" class="form-input font-num" style="padding: 7px 8px; font-size: 11px;" onchange="app.handleMonthPickerChange()">
+            <!-- Segmented Time Filter Mode -->
+            <div class="segmented-control" style="margin: 0; background: #171718; padding: 3px;">
+              <button type="button" class="segmented-btn active" id="btnFilterSubAll" onclick="app.switchFilterSubMode('all')" style="font-size: 11px; padding: 6px;">
+                Kaikki
+              </button>
+              <button type="button" class="segmented-btn" id="btnFilterSubMonth" onclick="app.switchFilterSubMode('month')" style="font-size: 11px; padding: 6px;">
+                Kuukausi
+              </button>
+              <button type="button" class="segmented-btn" id="btnFilterSubDate" onclick="app.switchFilterSubMode('date')" style="font-size: 11px; padding: 6px;">
+                Päivämäärä
+              </button>
+            </div>
+
+            <!-- Month Filter Box (Full Width) -->
+            <div id="filterBoxMonth" style="display: none; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; align-items: center; justify-content: space-between; gap: 10px;">
+              <div style="flex: 1; min-width: 0;">
+                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Rajaa kuukaudella</label>
+                <input type="month" id="txMonthPicker" class="form-input font-num" style="padding: 7px 10px; font-size: 12px; width: 100%;" onchange="app.handleMonthPickerChange()">
               </div>
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 2px;">Tarkka päivä</label>
-                <input type="date" id="txDatePicker" class="form-input font-num" style="padding: 7px 8px; font-size: 11px;" onchange="app.handleDatePickerChange()">
+              <button type="button" style="background: none; border: none; color: var(--c-crimson); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding-top: 14px; font-weight: 600; flex-shrink: 0;" onclick="app.resetMonthFilter()">
+                ✕ Nollaa
+              </button>
+            </div>
+
+            <!-- Date Filter Box (Full Width) -->
+            <div id="filterBoxDate" style="display: none; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; align-items: center; justify-content: space-between; gap: 10px;">
+              <div style="flex: 1; min-width: 0;">
+                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Rajaa tarkalla päivällä</label>
+                <input type="date" id="txDatePicker" class="form-input font-num" style="padding: 7px 10px; font-size: 12px; width: 100%;" onchange="app.handleDatePickerChange()">
               </div>
-              <div>
-                <button type="button" style="background: none; border: none; color: var(--c-stone); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; text-decoration: underline; padding-bottom: 8px;" onclick="app.resetTxFilters()">
-                  Nollaa
-                </button>
-              </div>
+              <button type="button" style="background: none; border: none; color: var(--c-crimson); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding-top: 14px; font-weight: 600; flex-shrink: 0;" onclick="app.resetDateFilter()">
+                ✕ Nollaa
+              </button>
             </div>
           </div>
 
@@ -562,7 +581,7 @@
     </main>
 
     <!-- FLOATING ACTION BUTTON -->
-    <button class="fab-add" onclick="app.openQuickAddModal()" title="Uusi kirjaus">
+    <button class="fab-add" onclick="app.openFabChoice()" title="Uusi kirjaus tai pikakuitti">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
@@ -599,6 +618,56 @@
         <span>Velat</span>
       </button>
     </nav>
+
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: VALITSE TOIMENPIDE (FAB CHOICE)         -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalFabChoice" onclick="if(event.target === this) app.closeModal('modalFabChoice')">
+    <div class="modal-content" style="max-width: 380px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(165,160,136,0.15); margin-bottom: 14px;">
+        <div>
+          <span class="card-label" style="margin: 0;">Uusi toimenpide</span>
+          <h3 style="font-size: 14px; font-weight: 500;">Valitse kirjaustapa</h3>
+        </div>
+        <button onclick="app.closeModal('modalFabChoice')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px; padding: 2px 6px;">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Choice 1: Kirjaa tapahtuma -->
+        <button type="button" class="btn-primary" style="background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary); padding: 14px; text-align: left; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; cursor: pointer;" onclick="app.chooseFabAction('tx')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(166,36,60,0.2); border: 1px solid rgba(166,36,60,0.4); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+              💳
+            </div>
+            <div>
+              <p style="font-size: 13px; font-weight: 600; color: var(--c-text-primary); margin-bottom: 2px;">Kirjaa tapahtuma</p>
+              <p style="font-size: 11px; color: var(--c-stone); font-weight: normal; text-transform: none; letter-spacing: normal;">Täytä summa, kategoria, kauppa ja tili</p>
+            </div>
+          </div>
+          <span style="color: var(--c-stone); font-size: 14px;">&rarr;</span>
+        </button>
+
+        <!-- Choice 2: Pikakuitti inboxiin -->
+        <button type="button" class="btn-primary" style="background: rgba(166,36,60,0.12); border: 1px solid rgba(166,36,60,0.35); color: var(--c-text-primary); padding: 14px; text-align: left; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; cursor: pointer;" onclick="app.chooseFabAction('receipt')">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: var(--c-crimson); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; flex-shrink: 0;">
+              📷
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <p style="font-size: 13px; font-weight: 600; color: var(--c-text-primary);">Pikakuitti Inboxiin</p>
+                <span style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; background: var(--c-crimson); color: white; padding: 1px 5px; border-radius: 4px; font-family: ui-monospace, monospace;">NOPEA</span>
+              </div>
+              <p style="font-size: 11px; color: var(--c-stone); font-weight: normal; text-transform: none; letter-spacing: normal;">Nappaa kuva sekunnissa, täytä tiedot myöhemmin</p>
+            </div>
+          </div>
+          <span style="color: var(--c-crimson); font-size: 14px; font-weight: bold;">&rarr;</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   </div>
 
