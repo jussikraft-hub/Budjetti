@@ -39,6 +39,134 @@ class BudjettiApp {
 
     this.paydayDay = 20;
     this.freeBalanceManual = null;
+
+    // Teemat & Ulkoasu
+    this.activeTheme = "original";
+    this.customThemes = [];
+
+    // Järjestelmädialogit (In-App Modals)
+    this.activeDialogType = null;
+    this.dialogResolver = null;
+  }
+
+  static get DEFAULT_THEMES() {
+    return [
+      {
+        id: "original",
+        name: "Original Kraft",
+        tag: "Sveitsiläinen Tumma",
+        isOriginal: true,
+        font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        colors: {
+          bg: "#0F0F10",
+          card: "#171718",
+          cardSub: "#1D1D1F",
+          border: "#262629",
+          borderActive: "#38383C",
+          primary: "#A6243C",
+          text: "#EDEDED",
+          muted: "#8E8E93",
+          olive: "#3F4F38",
+          income: "#4E8C6A",
+          inputBg: "#171718"
+        }
+      },
+      {
+        id: "midnight_executive",
+        name: "Midnight Executive",
+        tag: "FinTech OLED",
+        font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        colors: {
+          bg: "#070B12",
+          card: "#0D1522",
+          cardSub: "#131E30",
+          border: "#1D2B40",
+          borderActive: "#2E4260",
+          primary: "#D4AF37",
+          text: "#F0F4FA",
+          muted: "#7A8B9E",
+          olive: "#2E7D5E",
+          income: "#2E7D5E",
+          inputBg: "#0D1522"
+        }
+      },
+      {
+        id: "studio_white",
+        name: "Studio Minimal White",
+        tag: "Skandinaavinen Vaalea",
+        font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        colors: {
+          bg: "#F7F7F8",
+          card: "#FFFFFF",
+          cardSub: "#F0F0F2",
+          border: "#E2E2E6",
+          borderActive: "#CACACE",
+          primary: "#8B1E32",
+          text: "#1A1A1C",
+          muted: "#707076",
+          olive: "#2D6A4F",
+          income: "#2D6A4F",
+          inputBg: "#FFFFFF"
+        }
+      },
+      {
+        id: "emerald_wealth",
+        name: "Emerald Wealth",
+        tag: "Private Banking",
+        font: "'Newsreader', 'Playfair Display', Georgia, serif",
+        colors: {
+          bg: "#0A110E",
+          card: "#111C18",
+          cardSub: "#172621",
+          border: "#223830",
+          borderActive: "#325246",
+          primary: "#C88A58",
+          text: "#E8F0EC",
+          muted: "#7E968D",
+          olive: "#388E67",
+          income: "#388E67",
+          inputBg: "#111C18"
+        }
+      },
+      {
+        id: "monochrome_pure",
+        name: "Monochrome Pure",
+        tag: "Korkeakontrasti",
+        font: "ui-monospace, 'SF Mono', Monaco, 'Cascadia Mono', monospace",
+        colors: {
+          bg: "#000000",
+          card: "#121212",
+          cardSub: "#1A1A1A",
+          border: "#333333",
+          borderActive: "#555555",
+          primary: "#FFFFFF",
+          text: "#FFFFFF",
+          muted: "#999999",
+          olive: "#CCCCCC",
+          income: "#CCCCCC",
+          inputBg: "#121212"
+        }
+      },
+      {
+        id: "warm_cashmere",
+        name: "Warm Cashmere",
+        tag: "Eleganssi Vaalea",
+        font: "'Newsreader', 'Playfair Display', Georgia, serif",
+        colors: {
+          bg: "#F4EFEA",
+          card: "#FCFAF7",
+          cardSub: "#EBE5DE",
+          border: "#DCD4CA",
+          borderActive: "#C2B6A6",
+          primary: "#9C4132",
+          text: "#2B2521",
+          muted: "#7A7067",
+          olive: "#4A6B53",
+          income: "#4A6B53",
+          inputBg: "#FCFAF7"
+        }
+      }
+    ];
   }
 
   // Universaali summan parsinta: hyväksyy sekä 12,50 että 12.50
@@ -64,6 +192,7 @@ class BudjettiApp {
 
       await this.storage.init();
       await this.categories.init();
+      await this.initTheme();
 
       // Ladataan perusasetukset
       this.paydayDay = await this.storage.getSetting("payday", 20);
@@ -990,13 +1119,23 @@ class BudjettiApp {
       if (saveBtn) saveBtn.style.display = "block";
     } catch (e) {
       console.error("Kuvan tiivistysvirhe:", e);
-      alert("Kuvan tiivistys epäonnistui.");
+      this.showDialog({
+        title: "Kuvan käsittelyvirhe",
+        message: "Kuvan tiivistys epäonnistui.",
+        type: "alert",
+        icon: "warning"
+      });
     }
   }
 
   async saveQuickReceiptToInbox() {
     if (!this.tempQuickReceiptData) {
-      alert("Valitse ensin kuva.");
+      await this.showDialog({
+        title: "Kuva puuttuu",
+        message: "Ota tai valitse ensin kuitti ennen tallennusta.",
+        type: "alert",
+        icon: "warning"
+      });
       return;
     }
     const receiptId = "rec_" + Date.now();
@@ -1021,7 +1160,12 @@ class BudjettiApp {
     if (this.currentLedgerTab === "inbox") {
       this.renderInbox();
     }
-    alert("✅ Kuitti tallennettu Kuitti-Inboxiin! Voit käsitellä sen milloin vain.");
+    await this.showDialog({
+      title: "Kuitti tallennettu",
+      message: "Kuitti on tallennettu Kuitti-Inboxiin! Voit tarkistaa ja kirjata sen milloin vain.",
+      type: "alert",
+      icon: "success"
+    });
   }
 
   updateInboxBadges() {
@@ -1105,7 +1249,15 @@ class BudjettiApp {
   }
 
   async deleteInboxReceipt(id) {
-    if (confirm("Haluatko poistaa tämän kuitin inboxista?")) {
+    const ok = await this.showDialog({
+      title: "Poista kuitti",
+      message: "Haluatko poistaa tämän kuitin Kuitti-Inboxista?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista kuitti",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       this.receiptInbox = this.receiptInbox.filter(r => r.id !== id);
       await this.storage.saveReceiptInbox(this.receiptInbox);
       this.updateInboxBadges();
@@ -1287,7 +1439,15 @@ class BudjettiApp {
   }
 
   async deleteSubscription(subId) {
-    if (confirm("Haluatko poistaa tämän kuukausitilauksen?")) {
+    const ok = await this.showDialog({
+      title: "Poista kuukausitilaus",
+      message: "Haluatko poistaa tämän toistuvan tilauksen seurannasta?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista tilaus",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       this.subscriptions = this.subscriptions.filter(s => s.id !== subId);
       await this.storage.saveSubscriptions(this.subscriptions);
       this.renderSubscriptionsView();
@@ -1576,17 +1736,40 @@ class BudjettiApp {
     const d = this.debts.find(item => item.id === debtId);
     if (!d) return;
     const defaultAmt = d.monthlyPayment || 100;
-    const input = prompt(`Kirjaa lyhennys kohteelle "${d.name}" (€):`, defaultAmt);
-    if (input === null) return;
-    const amt = parseFloat(input);
+    const input = await this.showDialog({
+      title: "Kirjaa lyhennys",
+      message: `Kirjaa lyhennys kohteelle "${d.name}" (€):`,
+      type: "prompt",
+      icon: "info",
+      defaultValue: defaultAmt.toString(),
+      suffix: "€",
+      confirmText: "Kirjaa lyhennys",
+      cancelText: "Peruuta"
+    });
+    if (input === null || input === "") return;
+    const amt = this.parseAmount(input);
     if (isNaN(amt) || amt <= 0) {
-      alert("Virheellinen summa.");
+      await this.showDialog({
+        title: "Virheellinen summa",
+        message: "Syötä positiivinen numeroarvo lyhennykselle.",
+        type: "alert",
+        icon: "warning"
+      });
       return;
     }
     d.remainingAmount = Math.max(0, (d.remainingAmount || 0) - amt);
     await this.storage.saveDebts(this.debts);
 
-    if (confirm(`Lyhennys ${FinanceCalculator.formatCurrency(amt)} kirjattu saldosta! Haluatko luoda myös kulu-kirjauksen Päiväkirjaan?`)) {
+    const addTx = await this.showDialog({
+      title: "Luo kulu Päiväkirjaan",
+      message: `Lyhennys ${FinanceCalculator.formatCurrency(amt)} kirjattu saldosta! Haluatko luoda myös kulu-kirjauksen Päiväkirjaan?`,
+      type: "confirm",
+      icon: "info",
+      confirmText: "Luo kirjaus",
+      cancelText: "Pelkkä saldopäivitys"
+    });
+
+    if (addTx) {
       const tx = {
         id: "tx_" + Date.now(),
         date: new Date().toISOString().split("T")[0],
@@ -1605,7 +1788,15 @@ class BudjettiApp {
   }
 
   async deleteDebt(debtId) {
-    if (confirm("Haluatko poistaa tämän velan seurannasta?")) {
+    const ok = await this.showDialog({
+      title: "Poista velka",
+      message: "Haluatko poistaa tämän velan seurannasta?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista velka",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       this.debts = this.debts.filter(d => d.id !== debtId);
       await this.storage.saveDebts(this.debts);
       this.renderDebtsView();
@@ -1769,7 +1960,15 @@ class BudjettiApp {
   }
 
   async deleteP2P(p2pId) {
-    if (confirm("Haluatko poistaa tämän merkinnän?")) {
+    const ok = await this.showDialog({
+      title: "Poista merkintä",
+      message: "Haluatko poistaa tämän saatavan / velan?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista merkintä",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       this.p2pLoans = this.p2pLoans.filter(p => p.id !== p2pId);
       await this.storage.saveP2pLoans(this.p2pLoans);
       this.renderP2PView();
@@ -1830,12 +2029,22 @@ class BudjettiApp {
     if (!this.currentSplittingTx) return;
     const person = document.getElementById("splitPersonName")?.value.trim();
     if (!person) {
-      alert("Syötä henkilön nimi.");
+      await this.showDialog({
+        title: "Tieto puuttuu",
+        message: "Syötä henkilön nimi kenen kanssa kulu jaetaan.",
+        type: "alert",
+        icon: "warning"
+      });
       return;
     }
     const personAmt = this.parseAmount(document.getElementById("splitPersonAmount")?.value);
     if (personAmt <= 0) {
-      alert("Syötä jaettava summa.");
+      await this.showDialog({
+        title: "Tieto puuttuu",
+        message: "Syötä toisen osapuolen jaettava summa.",
+        type: "alert",
+        icon: "warning"
+      });
       return;
     }
 
@@ -1861,7 +2070,12 @@ class BudjettiApp {
     this.closeModal("modalSplitExpense");
     this.closeModal("modalQuickAdd");
     await this.refreshData();
-    alert(`✅ Kulu jaettu! ${person}:n osuus ${FinanceCalculator.formatCurrency(personAmt)} lisätty saatavaksi.`);
+    await this.showDialog({
+      title: "Kulu jaettu",
+      message: `${person}:n osuus ${FinanceCalculator.formatCurrency(personAmt)} on lisätty saatavaksi.`,
+      type: "alert",
+      icon: "success"
+    });
   }
 
   // --- TILIT & MAKSUTAVAT (Accounts) ---
@@ -1980,10 +2194,23 @@ class BudjettiApp {
 
   async deleteAccount(accId) {
     if (this.accounts.length <= 1) {
-      alert("Ainakin yksi tili tai maksutapa tulee säilyttää.");
+      await this.showDialog({
+        title: "Tiliä ei voi poistaa",
+        message: "Ainakin yksi tili tai maksutapa tulee säilyttää.",
+        type: "alert",
+        icon: "warning"
+      });
       return;
     }
-    if (confirm("Haluatko poistaa tämän tilin / maksutavan?")) {
+    const ok = await this.showDialog({
+      title: "Poista tili",
+      message: "Haluatko poistaa tämän tilin / maksutavan valikoimasta?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista tili",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       this.accounts = this.accounts.filter(a => a.id !== accId);
       await this.storage.saveAccounts(this.accounts);
       this.populateAccountDropdowns();
@@ -2047,6 +2274,418 @@ class BudjettiApp {
     }
   }
 
+  // --- IN-APP JÄRJESTELMÄDIALOGIT (Korvaa selaimen alert/confirm/prompt) ---
+  showDialog({
+    title = "Ilmoitus",
+    message = "",
+    type = "alert", // 'alert' | 'confirm' | 'prompt'
+    icon = "info",  // 'info' | 'success' | 'warning' | 'trash' | 'cloud' | 'percent'
+    defaultValue = "",
+    placeholder = "0",
+    suffix = "",
+    confirmText = "OK",
+    cancelText = "Peruuta",
+    quickChips = []
+  } = {}) {
+    return new Promise((resolve) => {
+      this.dialogResolver = resolve;
+      this.activeDialogType = type;
+
+      const modal = document.getElementById("modalSystemDialog");
+      const titleEl = document.getElementById("dialogTitle");
+      const msgEl = document.getElementById("dialogMessage");
+      const iconBox = document.getElementById("dialogIconBox");
+      const inputContainer = document.getElementById("dialogInputContainer");
+      const inputEl = document.getElementById("dialogPromptInput");
+      const suffixEl = document.getElementById("dialogPromptSuffix");
+      const chipsEl = document.getElementById("dialogQuickChips");
+      const btnCancel = document.getElementById("btnDialogCancel");
+      const btnConfirm = document.getElementById("btnDialogConfirm");
+      const btnCloseX = document.getElementById("btnDialogCloseX");
+
+      if (!modal) {
+        if (type === "confirm") resolve(true);
+        else if (type === "prompt") resolve(defaultValue);
+        else resolve();
+        return;
+      }
+
+      if (titleEl) titleEl.innerText = title;
+      if (msgEl) msgEl.innerText = message;
+      if (btnConfirm) btnConfirm.innerText = confirmText;
+      if (btnCancel) {
+        btnCancel.innerText = cancelText;
+        btnCancel.style.display = type === "alert" ? "none" : "block";
+      }
+      if (btnCloseX) {
+        btnCloseX.style.display = type === "alert" ? "none" : "block";
+      }
+
+      // Minimalist Monoline SVG -ikonit sovelluksen väreillä
+      let iconSvg = "";
+      let iconColor = "var(--c-stone)";
+      let iconBg = "rgba(142,142,147,0.15)";
+      let iconBorder = "rgba(142,142,147,0.3)";
+
+      if (icon === "success") {
+        iconColor = "var(--c-income)";
+        iconBg = "rgba(78, 140, 106, 0.15)";
+        iconBorder = "rgba(78, 140, 106, 0.35)";
+        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+      } else if (icon === "cloud") {
+        iconColor = "var(--c-olive)";
+        iconBg = "rgba(63, 79, 56, 0.25)";
+        iconBorder = "rgba(63, 79, 56, 0.4)";
+        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>`;
+      } else if (icon === "percent") {
+        iconColor = "var(--c-crimson)";
+        iconBg = "rgba(166,36,60,0.15)";
+        iconBorder = "rgba(166,36,60,0.35)";
+        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>`;
+      } else if (icon === "warning" || icon === "trash") {
+        iconColor = "var(--c-crimson)";
+        iconBg = "rgba(166,36,60,0.15)";
+        iconBorder = "rgba(166,36,60,0.35)";
+        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+      } else {
+        iconColor = "var(--c-stone)";
+        iconBg = "rgba(142,142,147,0.15)";
+        iconBorder = "rgba(142,142,147,0.3)";
+        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+      }
+
+      if (iconBox) {
+        iconBox.innerHTML = iconSvg;
+        iconBox.style.color = iconColor;
+        iconBox.style.backgroundColor = iconBg;
+        iconBox.style.borderColor = iconBorder;
+      }
+
+      // Prompt-syötekenttä ja pikapainikkeet (vain numeroita / desimaaleja)
+      if (type === "prompt") {
+        if (inputContainer) inputContainer.style.display = "block";
+        if (inputEl) {
+          inputEl.value = defaultValue;
+          inputEl.placeholder = placeholder;
+          inputEl.onkeydown = (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              this.closeSystemDialog(true);
+            }
+          };
+          setTimeout(() => {
+            inputEl.focus();
+            inputEl.select();
+          }, 60);
+        }
+        if (suffixEl) {
+          suffixEl.innerText = suffix;
+          suffixEl.style.display = suffix ? "block" : "none";
+        }
+        if (chipsEl) {
+          if (quickChips && quickChips.length > 0) {
+            chipsEl.innerHTML = quickChips.map(c => `
+              <button type="button" class="btn-primary" style="flex: 1; min-width: 48px; padding: 7px 10px; font-size: 11px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="document.getElementById('dialogPromptInput').value = '${c}'">
+                ${c}${suffix}
+              </button>
+            `).join("");
+            chipsEl.style.display = "flex";
+          } else {
+            chipsEl.innerHTML = "";
+            chipsEl.style.display = "none";
+          }
+        }
+      } else {
+        if (inputContainer) inputContainer.style.display = "none";
+      }
+
+      modal.classList.add("active");
+    });
+  }
+
+  closeSystemDialog(confirmed) {
+    const modal = document.getElementById("modalSystemDialog");
+    if (modal) modal.classList.remove("active");
+
+    if (this.dialogResolver) {
+      if (this.activeDialogType === "prompt") {
+        if (confirmed) {
+          const inputEl = document.getElementById("dialogPromptInput");
+          this.dialogResolver(inputEl ? inputEl.value : "");
+        } else {
+          this.dialogResolver(null);
+        }
+      } else if (this.activeDialogType === "confirm") {
+        this.dialogResolver(Boolean(confirmed));
+      } else {
+        this.dialogResolver(true);
+      }
+      this.dialogResolver = null;
+    }
+  }
+
+  // --- TEEMOJEN HALLINTA & KUSTOMOINTI ---
+  async initTheme() {
+    this.customThemes = await this.storage.getSetting("custom_themes", []);
+    this.activeTheme = await this.storage.getSetting("active_theme", "original");
+
+    const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
+    let current = all.find(t => t.id === this.activeTheme) || BudjettiApp.DEFAULT_THEMES[0];
+    this.applyTheme(current, false);
+    this.renderThemePresets();
+  }
+
+  applyTheme(theme, save = true) {
+    if (!theme || !theme.colors) return;
+    const root = document.documentElement;
+    const c = theme.colors;
+
+    root.style.setProperty("--c-bg", c.bg);
+    root.style.setProperty("--c-card", c.card);
+    root.style.setProperty("--c-card-sub", c.cardSub || c.card);
+    root.style.setProperty("--c-border", c.border);
+    root.style.setProperty("--c-border-active", c.borderActive || c.border);
+    root.style.setProperty("--c-crimson", c.primary);
+    root.style.setProperty("--c-crimson-hover", c.primary);
+    root.style.setProperty("--c-text-primary", c.text);
+    root.style.setProperty("--c-stone", c.muted);
+    root.style.setProperty("--c-olive", c.olive || "#3F4F38");
+    root.style.setProperty("--c-income", c.income || c.olive || "#4E8C6A");
+    root.style.setProperty("--c-input-bg", c.inputBg || c.card);
+
+    if (theme.font) {
+      root.style.setProperty("--font-main", theme.font);
+    }
+
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+    setVal("themeColorBg", c.bg);
+    setVal("themeColorBgHex", c.bg);
+    setVal("themeColorCard", c.card);
+    setVal("themeColorCardHex", c.card);
+    setVal("themeColorPrimary", c.primary);
+    setVal("themeColorPrimaryHex", c.primary);
+    setVal("themeColorText", c.text);
+    setVal("themeColorTextHex", c.text);
+    setVal("themeColorMuted", c.muted);
+    setVal("themeColorMutedHex", c.muted);
+    setVal("themeColorOlive", c.olive || "#3F4F38");
+    setVal("themeColorOliveHex", c.olive || "#3F4F38");
+
+    const fontEl = document.getElementById("themeFontSelect");
+    if (fontEl && theme.font) {
+      fontEl.value = theme.font;
+    }
+
+    const badge = document.getElementById("activeThemeBadge");
+    if (badge) {
+      badge.innerText = theme.name || "Original Kraft";
+    }
+
+    this.activeTheme = theme.id || "original";
+    if (save) {
+      this.storage.setSetting("active_theme", theme.id || "original");
+      this.storage.triggerBackgroundSync();
+    }
+    this.renderThemePresets();
+  }
+
+  renderThemePresets() {
+    const grid = document.getElementById("themePresetsGrid");
+    if (!grid) return;
+
+    const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
+    grid.innerHTML = all.map(t => {
+      const isActive = t.id === this.activeTheme;
+      const c = t.colors;
+      return `
+        <div class="theme-preset-card ${isActive ? 'active' : ''}" onclick="app.selectThemePreset('${t.id}')">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 600; color: var(--c-text-primary);">${t.name}</div>
+              <div style="font-size: 10px; color: var(--c-stone);">${t.tag || ''}</div>
+            </div>
+            ${t.isOriginal ? '<span style="font-size: 8px; padding: 2px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson); font-weight: 600;">ORIGINAL</span>' : (t.isCustom ? `<button type="button" onclick="app.deleteCustomTheme('${t.id}', event)" title="Poista tämä teema" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 2px 4px; font-size: 12px; line-height: 1;">✕</button>` : '')}
+          </div>
+          <div class="theme-palette-preview">
+            <div class="theme-palette-slice" style="background: ${c.bg};"></div>
+            <div class="theme-palette-slice" style="background: ${c.card};"></div>
+            <div class="theme-palette-slice" style="background: ${c.primary};"></div>
+            <div class="theme-palette-slice" style="background: ${c.olive || c.text};"></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  selectThemePreset(themeId) {
+    const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
+    const target = all.find(t => t.id === themeId);
+    if (target) {
+      this.applyTheme(target, true);
+    }
+  }
+
+  handleLiveColorChange() {
+    const bg = document.getElementById("themeColorBg")?.value || "#0F0F10";
+    const card = document.getElementById("themeColorCard")?.value || "#171718";
+    const primary = document.getElementById("themeColorPrimary")?.value || "#A6243C";
+    const text = document.getElementById("themeColorText")?.value || "#EDEDED";
+    const muted = document.getElementById("themeColorMuted")?.value || "#8E8E93";
+    const olive = document.getElementById("themeColorOlive")?.value || "#3F4F38";
+
+    const setHex = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+    setHex("themeColorBgHex", bg);
+    setHex("themeColorCardHex", card);
+    setHex("themeColorPrimaryHex", primary);
+    setHex("themeColorTextHex", text);
+    setHex("themeColorMutedHex", muted);
+    setHex("themeColorOliveHex", olive);
+
+    const root = document.documentElement;
+    root.style.setProperty("--c-bg", bg);
+    root.style.setProperty("--c-card", card);
+    root.style.setProperty("--c-border", this.adjustHexBrightness(card, 15));
+    root.style.setProperty("--c-border-active", this.adjustHexBrightness(card, 25));
+    root.style.setProperty("--c-crimson", primary);
+    root.style.setProperty("--c-crimson-hover", primary);
+    root.style.setProperty("--c-text-primary", text);
+    root.style.setProperty("--c-stone", muted);
+    root.style.setProperty("--c-olive", olive);
+    root.style.setProperty("--c-income", olive);
+    root.style.setProperty("--c-input-bg", card);
+
+    const badge = document.getElementById("activeThemeBadge");
+    if (badge) badge.innerText = "Mukautettu";
+  }
+
+  handleHexColorChange(pickerId, hexVal) {
+    if (!hexVal) return;
+    const clean = hexVal.trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+      const picker = document.getElementById(pickerId);
+      if (picker) {
+        picker.value = clean;
+        this.handleLiveColorChange();
+      }
+    }
+  }
+
+  handleThemeFontChange() {
+    const fontEl = document.getElementById("themeFontSelect");
+    if (fontEl && fontEl.value) {
+      document.documentElement.style.setProperty("--font-main", fontEl.value);
+    }
+  }
+
+  adjustHexBrightness(hex, percent) {
+    if (!hex || !hex.startsWith("#") || hex.length !== 7) return hex;
+    let r = parseInt(hex.substring(1, 3), 16);
+    let g = parseInt(hex.substring(3, 5), 16);
+    let b = parseInt(hex.substring(5, 7), 16);
+    r = Math.min(255, Math.max(0, Math.round(r + (r * percent / 100))));
+    g = Math.min(255, Math.max(0, Math.round(g + (g * percent / 100))));
+    b = Math.min(255, Math.max(0, Math.round(b + (b * percent / 100))));
+    const toHex = (n) => n.toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+
+  async saveCurrentThemeAsNew() {
+    const name = await this.showDialog({
+      title: "Tallenna uusi teema",
+      message: "Anna nimi omalle väri- ja fonttiteemallesi:",
+      type: "prompt",
+      icon: "info",
+      defaultValue: "Oma Teema " + (this.customThemes.length + 1),
+      confirmText: "Tallenna teema",
+      cancelText: "Peruuta"
+    });
+    if (!name || !name.trim()) return;
+
+    const bg = document.getElementById("themeColorBg")?.value || "#0F0F10";
+    const card = document.getElementById("themeColorCard")?.value || "#171718";
+    const primary = document.getElementById("themeColorPrimary")?.value || "#A6243C";
+    const text = document.getElementById("themeColorText")?.value || "#EDEDED";
+    const muted = document.getElementById("themeColorMuted")?.value || "#8E8E93";
+    const olive = document.getElementById("themeColorOlive")?.value || "#3F4F38";
+    const font = document.getElementById("themeFontSelect")?.value || "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+    const newTheme = {
+      id: "custom_" + Date.now(),
+      name: name.trim(),
+      tag: "Oma Teema",
+      isCustom: true,
+      font: font,
+      colors: {
+        bg,
+        card,
+        cardSub: this.adjustHexBrightness(card, 5),
+        border: this.adjustHexBrightness(card, 15),
+        borderActive: this.adjustHexBrightness(card, 25),
+        primary,
+        text,
+        muted,
+        olive,
+        income: olive,
+        inputBg: card
+      }
+    };
+
+    this.customThemes.push(newTheme);
+    await this.storage.setSetting("custom_themes", this.customThemes);
+    await this.applyTheme(newTheme, true);
+    await this.showDialog({
+      title: "Teema tallennettu",
+      message: `Teema "${newTheme.name}" on tallennettu ja otettu käyttöön! Se tallentuu automaattisesti JSON-varmuuskopioihin ja pilveen.`,
+      type: "alert",
+      icon: "success"
+    });
+  }
+
+  async resetToOriginalTheme() {
+    const orig = BudjettiApp.DEFAULT_THEMES.find(t => t.id === "original");
+    if (!orig) return;
+    await this.applyTheme(orig, true);
+    await this.showDialog({
+      title: "Original Kraft palautettu",
+      message: "Alkuperäinen sveitsiläinen Original Kraft -teema on palautettu käyttöön.",
+      type: "alert",
+      icon: "info"
+    });
+  }
+
+  async deleteCustomTheme(themeId, event) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const theme = this.customThemes.find(t => t.id === themeId);
+    if (!theme) return;
+    const ok = await this.showDialog({
+      title: "Poista oma teema",
+      message: `Haluatko poistaa tallentamasi teeman "${theme.name}"?`,
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista teema",
+      cancelText: "Peruuta"
+    });
+    if (!ok) return;
+
+    this.customThemes = this.customThemes.filter(t => t.id !== themeId);
+    await this.storage.setSetting("custom_themes", this.customThemes);
+    if (this.activeTheme === themeId) {
+      const orig = BudjettiApp.DEFAULT_THEMES.find(t => t.id === "original");
+      await this.applyTheme(orig, true);
+    } else {
+      this.renderThemePresets();
+    }
+  }
+
   // --- MODALS & QUICK ADD ---
   openModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -2090,7 +2729,12 @@ class BudjettiApp {
     }
 
     if (!dataUrl) {
-      alert("Kuittitiedostoa ei löytynyt tallennustilasta.");
+      await this.showDialog({
+        title: "Kuittia ei löydy",
+        message: "Kuittitiedostoa ei löytynyt tallennustilasta.",
+        type: "alert",
+        icon: "warning"
+      });
       return;
     }
 
@@ -2343,10 +2987,20 @@ class BudjettiApp {
     this.updateCalcDisplay();
   }
 
-  calcSplitCustom() {
-    const pStr = prompt("Syötä oma prosenttiosuutesi (esim. 65):", "50");
+  async calcSplitCustom() {
+    const pStr = await this.showDialog({
+      title: "Oma prosenttiosuus",
+      message: "Valitse tai syötä oma prosenttiosuutesi kokonaissummasta (0–100 %):",
+      type: "prompt",
+      icon: "percent",
+      defaultValue: "50",
+      suffix: "%",
+      confirmText: "Käytä prosenttia",
+      cancelText: "Peruuta",
+      quickChips: [25, 33, 50, 65, 75]
+    });
     if (!pStr) return;
-    const p = parseFloat(pStr.replace(",", "."));
+    const p = parseFloat(String(pStr).replace(",", "."));
     if (p > 0 && p <= 100) {
       this.calcSplitPercent(p);
     }
@@ -2580,7 +3234,12 @@ class BudjettiApp {
       this.openReceiptOverlay(compressedDataUrl, file.name || "Liitetty kuitti");
     } catch (e) {
       console.error("Kuvan tiivistys epäonnistui:", e);
-      alert("Kuvan tiivistys epäonnistui: " + (e.message || e));
+      this.showDialog({
+        title: "Kuvan tiivistys epäonnistui",
+        message: e.message || String(e),
+        type: "alert",
+        icon: "warning"
+      });
       document.getElementById("receiptFileName").innerText = "Virhe kuvan käsittelyssä";
     }
   }
@@ -2653,7 +3312,15 @@ class BudjettiApp {
   }
 
   async deleteTransaction(id) {
-    if (confirm("Haluatko varmasti poistaa tämän kirjauksen?")) {
+    const ok = await this.showDialog({
+      title: "Poista kirjaus",
+      message: "Haluatko varmasti poistaa tämän kirjauksen pysyvästi?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       await this.storage.deleteTransaction(id);
       await this.refreshData();
     }
@@ -2736,7 +3403,15 @@ class BudjettiApp {
   }
 
   async deleteCategory(id) {
-    if (confirm("Haluatko poistaa tämän kategorian?")) {
+    const ok = await this.showDialog({
+      title: "Poista kategoria",
+      message: "Haluatko poistaa tämän kategorian?",
+      type: "confirm",
+      icon: "trash",
+      confirmText: "Poista kategoria",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       await this.categories.deleteCategory(id);
       await this.refreshData();
     }
@@ -2813,7 +3488,15 @@ class BudjettiApp {
   async deleteCurrentGroup() {
     const id = document.getElementById("groupFormId")?.value;
     if (!id) return;
-    if (confirm("Haluatko varmasti poistaa tämän pääryhmän? Siihen kuuluvat kategoriat siirretään toiseen ryhmään.")) {
+    const ok = await this.showDialog({
+      title: "Poista pääryhmä",
+      message: "Haluatko varmasti poistaa tämän pääryhmän? Siihen kuuluvat kategoriat siirretään toiseen ryhmään.",
+      type: "confirm",
+      icon: "warning",
+      confirmText: "Poista pääryhmä",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       await this.categories.deleteGroup(id);
       this.closeModal("modalCategoryGroup");
       await this.refreshData();
@@ -2840,8 +3523,17 @@ class BudjettiApp {
       }
     } else {
       const current = document.getElementById(inputId)?.value || "";
-      const path = prompt("Syötä kansion polku (selaimessasi ei ole suoraa File System Access -tukea):", current);
-      if (path !== null) {
+      const path = await this.showDialog({
+        title: "Kansion polku",
+        message: "Syötä kansion polku tallennusta varten:",
+        type: "prompt",
+        icon: "cloud",
+        defaultValue: current,
+        suffix: "",
+        confirmText: "Aseta polku",
+        cancelText: "Peruuta"
+      });
+      if (path !== null && path !== "") {
         const input = document.getElementById(inputId);
         if (input) {
           input.value = path.trim();
@@ -2873,7 +3565,15 @@ class BudjettiApp {
   }
 
   async resetBudgetsToZero() {
-    if (confirm("Haluatko varmasti nollata kaikki kuukausitavoitteet puhtaaksi (0 €)?")) {
+    const ok = await this.showDialog({
+      title: "Nollaa tavoitteet",
+      message: "Haluatko varmasti nollata kaikki kuukausitavoitteet puhtaaksi (0 €)?",
+      type: "confirm",
+      icon: "warning",
+      confirmText: "Nollaa tavoitteet",
+      cancelText: "Peruuta"
+    });
+    if (ok) {
       const allCats = this.categories.getAll();
       for (const c of allCats) {
         c.budgetMonthly = 0;
@@ -2883,11 +3583,16 @@ class BudjettiApp {
       await this.categories.save();
       await this.refreshData();
       await this.storage.syncToCloud(true);
-      alert("✅ Kaikki kuukausitavoitteet on nollattu puhtaaksi (0 €)!");
+      await this.showDialog({
+        title: "Tavoitteet nollattu",
+        message: "Kaikki kuukausitavoitteet on nollattu puhtaaksi (0 €).",
+        type: "alert",
+        icon: "success"
+      });
     }
   }
 
-  saveDropboxConfig() {
+  async saveDropboxConfig() {
     const tokenEl = document.getElementById("settingDropboxToken");
     const folderEl = document.getElementById("settingDropboxFolder");
     if (tokenEl) {
@@ -2898,8 +3603,13 @@ class BudjettiApp {
       folderEl.value = this.storage.getDropboxFolder();
     }
     this.updateSyncBadge();
-    alert("Dropbox-asetukset tallennettu selaimeen!");
     this.storage.syncToCloud(true);
+    await this.showDialog({
+      title: "Asetukset tallennettu",
+      message: "Dropbox-asetukset on tallennettu selaimeen.",
+      type: "alert",
+      icon: "cloud"
+    });
   }
 
   saveDropboxFolder() {
@@ -2910,7 +3620,7 @@ class BudjettiApp {
     }
   }
 
-  saveGDriveConfig() {
+  async saveGDriveConfig() {
     const tokenEl = document.getElementById("settingGDriveToken");
     const folderEl = document.getElementById("settingGDriveFolder");
     if (tokenEl) {
@@ -2921,8 +3631,13 @@ class BudjettiApp {
       folderEl.value = this.storage.getGDriveFolder();
     }
     this.updateSyncBadge();
-    alert("Google Drive -asetukset tallennettu!");
     this.storage.syncToCloud(true);
+    await this.showDialog({
+      title: "Asetukset tallennettu",
+      message: "Google Drive -asetukset on tallennettu selaimeen.",
+      type: "alert",
+      icon: "cloud"
+    });
   }
 
   saveGDriveFolder() {
@@ -2952,14 +3667,39 @@ class BudjettiApp {
     try {
       if (direction === "upload") {
         await this.storage.syncToCloud(false);
-        alert("✅ Tallennettu pilveen onnistuneesti!");
+        await this.showDialog({
+          title: "Pilvitallennus valmis",
+          message: "Kaikki tiedot on tallennettu pilveen onnistuneesti.",
+          type: "alert",
+          icon: "success"
+        });
       } else {
+        const ok = await this.showDialog({
+          title: "Lataa pilvestä",
+          message: "Haluatko ladata ja synkronoida tiedot pilvestä? Tämä yhdistää paikalliset tiedot pilven uusimpaan versioon.",
+          type: "confirm",
+          icon: "cloud",
+          confirmText: "Lataa & Synkkaa",
+          cancelText: "Peruuta"
+        });
+        if (!ok) return;
+
         await this.storage.syncFromCloud(false);
         await this.refreshData();
-        alert("✅ Ladattu ja synkronoitu pilvestä!");
+        await this.showDialog({
+          title: "Pilvisynkronointi valmis",
+          message: "Tiedot on ladattu ja synkronoitu pilvestä onnistuneesti.",
+          type: "alert",
+          icon: "success"
+        });
       }
     } catch (e) {
-      alert("Synkronointivirhe: " + e.message);
+      await this.showDialog({
+        title: "Synkronointivirhe",
+        message: e.message || String(e),
+        type: "alert",
+        icon: "warning"
+      });
     }
   }
 
@@ -2972,7 +3712,12 @@ class BudjettiApp {
     try {
       await this.interchange.exportCSV();
     } catch (e) {
-      alert(e.message);
+      await this.showDialog({
+        title: "CSV-vientivirhe",
+        message: e.message || String(e),
+        type: "alert",
+        icon: "warning"
+      });
     }
   }
 
@@ -2982,9 +3727,19 @@ class BudjettiApp {
     try {
       await this.interchange.importJSON(file);
       await this.refreshData();
-      alert("✅ JSON-varmuuskopio palautettu onnistuneesti!");
+      await this.showDialog({
+        title: "Varmuuskopio palautettu",
+        message: "JSON-varmuuskopio ja asetukset palautettu onnistuneesti!",
+        type: "alert",
+        icon: "success"
+      });
     } catch (e) {
-      alert("Tuontivirhe: " + e.message);
+      await this.showDialog({
+        title: "Tuontivirhe",
+        message: e.message || String(e),
+        type: "alert",
+        icon: "warning"
+      });
     }
   }
 
@@ -2994,9 +3749,19 @@ class BudjettiApp {
     try {
       const count = await this.interchange.importCSV(file);
       await this.refreshData();
-      alert(`✅ Tuotu ${count} tapahtumaa CSV-tiedostosta!`);
+      await this.showDialog({
+        title: "CSV-tuonti valmis",
+        message: `Tuotu ${count} tapahtumaa CSV-tiedostosta.`,
+        type: "alert",
+        icon: "success"
+      });
     } catch (e) {
-      alert("CSV-tuontivirhe: " + e.message);
+      await this.showDialog({
+        title: "CSV-tuontivirhe",
+        message: e.message || String(e),
+        type: "alert",
+        icon: "warning"
+      });
     }
   }
 }

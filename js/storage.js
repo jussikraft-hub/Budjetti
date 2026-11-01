@@ -509,7 +509,9 @@ class StorageProvider {
       dropboxFolder: this.getDropboxFolder(),
       gdriveFolder: this.getGDriveFolder(),
       receiptsTarget: this.getReceiptsTarget(),
-      receiptsFolder: this.getReceiptsFolder()
+      receiptsFolder: this.getReceiptsFolder(),
+      activeTheme: await this.getSetting("active_theme", null),
+      customThemes: await this.getSetting("custom_themes", [])
     };
 
     return {
@@ -548,6 +550,8 @@ class StorageProvider {
       if (payload.settings.freeBalanceManual !== undefined) {
         await this.setSetting("freeBalanceManual", payload.settings.freeBalanceManual);
       }
+      if (payload.settings.activeTheme) await this.setSetting("active_theme", payload.settings.activeTheme);
+      if (payload.settings.customThemes) await this.setSetting("custom_themes", payload.settings.customThemes);
     }
     await this.bulkSaveTransactions(payload.transactions);
     return true;

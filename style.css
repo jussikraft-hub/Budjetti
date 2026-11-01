@@ -15,8 +15,10 @@
   --c-bg: #141415;
   --c-card: #222224;
   --c-card-elevated: #28282b;
+  --c-input-bg: #171718;
   --c-border: rgba(165, 160, 136, 0.18);
   --c-border-active: rgba(165, 160, 136, 0.35);
+  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
 * {
@@ -39,7 +41,7 @@ html, body {
 body {
   background-color: var(--c-bg);
   color: var(--c-text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-main);
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -609,7 +611,7 @@ body {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  background-color: #171718;
+  background-color: var(--c-input-bg, #171718);
   border: 1px solid var(--c-border);
   color: var(--c-text-primary);
   border-radius: 12px;
@@ -619,7 +621,8 @@ body {
   transition: border-color 0.15s ease;
 }
 
-input[type="date"].form-input {
+input[type="date"].form-input,
+input[type="month"].form-input {
   min-width: 0 !important;
   max-width: 100% !important;
   -webkit-appearance: none;
@@ -657,9 +660,9 @@ input[type="date"].form-input {
 
 /* Filter Clear Button (Compact ✕) */
 .btn-filter-clear {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: rgba(166, 36, 60, 0.12);
   border: 1px solid rgba(166, 36, 60, 0.35);
   color: var(--c-crimson);
@@ -670,7 +673,7 @@ input[type="date"].form-input {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  margin-top: 14px;
+  margin: 0;
   touch-action: manipulation;
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
@@ -679,6 +682,39 @@ input[type="date"].form-input {
 }
 .btn-filter-clear:active {
   transform: scale(0.94);
+}
+
+/* Theme Preset Card */
+.theme-preset-card {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-preset-card.active {
+  border-color: var(--c-crimson);
+  box-shadow: 0 0 0 1px var(--c-crimson);
+}
+
+.theme-palette-preview {
+  display: flex;
+  height: 14px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 125, 125, 0.2);
+}
+
+.theme-palette-slice {
+  flex: 1;
+  height: 100%;
 }
 
 /* Floating Receipt Overlay (Picture-in-Picture with Pinch-Zoom) */

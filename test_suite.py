@@ -613,5 +613,50 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);", html, "index.html:stä puuttuu minmax(0, 1fr) sarakkeet!")
         self.assertIn("content.scrollLeft = 0", app_js, "app.js:stä puuttuu modaalin scrollLeft-nollaus!")
 
+    def test_15_revision_11_themes_inapp_dialogs_filter_overlap(self):
+        """Regressiotesti revisio 11:lle: Teemat, sovelluksen in-app dialogit ja kuukausisuodattimen päällekkäisyyden esto."""
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/storage.js"), "r", encoding="utf-8") as f:
+            storage_js = f.read()
+
+        # 1. Ei selaimen natiiveja prompt/alert/confirm -kutsuja app.js:ssä
+        self.assertNotIn("prompt(", app_js, "app.js sisältää edelleen selaimen natiivin prompt()-kutsun!")
+        self.assertNotIn("alert(", app_js, "app.js sisältää edelleen selaimen natiivin alert()-kutsun!")
+        self.assertNotIn("confirm(", app_js, "app.js sisältää edelleen selaimen natiivin confirm()-kutsun!")
+
+        # 2. In-App järjestelmädialogi ja numeerinen näppäimistö prosentille
+        self.assertIn('id="modalSystemDialog"', html, "index.html:stä puuttuu modalSystemDialog!")
+        self.assertIn('id="dialogPromptInput"', html, "index.html:stä puuttuu dialogPromptInput!")
+        self.assertIn('inputmode="decimal"', html, "dialogPromptInput:lta puuttuu inputmode='decimal' numeronäppäimistöä varten!")
+        self.assertIn("showDialog(", app_js, "app.js:stä puuttuu showDialog-metodi!")
+        self.assertIn("closeSystemDialog(", app_js, "app.js:stä puuttuu closeSystemDialog-metodi!")
+
+        # 3. Kuukausi- ja päivämääräsuodattimien päällekkäisyyden esto (flex 1 ja erotettu label)
+        self.assertIn('id="filterBoxMonth"', html)
+        self.assertIn('id="filterBoxDate"', html)
+        self.assertIn('.btn-filter-clear', css)
+        self.assertNotIn('margin-top: 14px;', css, "style.css sisältää edelleen vanhan päällekkäisyyttä aiheuttaneen margin-top: 14px säännön .btn-filter-clearille!")
+
+        # 4. Teemojen hallinta ja tallennus JSONiin
+        self.assertIn("DEFAULT_THEMES", app_js, "app.js:stä puuttuu DEFAULT_THEMES!")
+        self.assertIn("Original Kraft", app_js, "Original Kraft -teema puuttuu oletuksista!")
+        self.assertIn("Midnight Executive", app_js, "Midnight Executive -teema puuttuu!")
+        self.assertIn("Studio Minimal White", app_js, "Studio Minimal White -teema puuttuu!")
+        self.assertIn("Emerald Wealth", app_js, "Emerald Wealth -teema puuttuu!")
+        self.assertIn("Monochrome Pure", app_js, "Monochrome Pure -teema puuttuu!")
+        self.assertIn("resetToOriginalTheme", app_js, "Original Kraftin palautustoiminto puuttuu!")
+        self.assertIn("saveCurrentThemeAsNew", app_js, "Oman teeman tallennus puuttuu!")
+        self.assertIn('id="themePresetsGrid"', html, "index.html:stä puuttuu themePresetsGrid!")
+        self.assertIn('id="themeFontSelect"', html, "index.html:stä puuttuu themeFontSelect!")
+
+        # 5. Teemat tallentuvat storageen ja vientiin
+        self.assertIn("activeTheme", storage_js, "storage.js ei vie activeTheme-tietoa!")
+        self.assertIn("customThemes", storage_js, "storage.js ei vie customThemes-tietoa!")
+
 if __name__ == "__main__":
     unittest.main()

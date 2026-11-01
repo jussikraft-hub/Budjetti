@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css?v=20261101_2045">
+  <link rel="stylesheet" href="style.css?v=20261101_2130">
 
   <!-- External Parsers & Visualizers (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -257,26 +257,26 @@
               </button>
             </div>
 
-            <!-- Month Filter Box (Full Width) -->
-            <div id="filterBoxMonth" style="display: none; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; align-items: center; justify-content: space-between; gap: 10px;">
-              <div style="flex: 1; min-width: 0;">
-                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Rajaa kuukaudella</label>
-                <input type="month" id="txMonthPicker" class="form-input font-num" style="padding: 7px 10px; font-size: 12px; width: 100%;" onchange="app.handleMonthPickerChange()">
+            <!-- Month Filter Box (Full Width, Zero Overlap) -->
+            <div id="filterBoxMonth" style="display: none; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box;">
+              <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block;">Rajaa kuukaudella</label>
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;">
+                <input type="month" id="txMonthPicker" class="form-input font-num" style="padding: 9px 12px; font-size: 13px; flex: 1; min-width: 0; width: auto;" onchange="app.handleMonthPickerChange()">
+                <button type="button" class="btn-filter-clear" onclick="app.resetMonthFilter()" title="Tyhjennä kuukausirajaus">
+                  ✕
+                </button>
               </div>
-              <button type="button" class="btn-filter-clear" onclick="app.resetMonthFilter()" title="Tyhjennä kuukausirajaus">
-                ✕
-              </button>
             </div>
 
-            <!-- Date Filter Box (Full Width) -->
-            <div id="filterBoxDate" style="display: none; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; align-items: center; justify-content: space-between; gap: 10px;">
-              <div style="flex: 1; min-width: 0;">
-                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Rajaa tarkalla päivällä</label>
-                <input type="date" id="txDatePicker" class="form-input font-num" style="padding: 7px 10px; font-size: 12px; width: 100%;" onchange="app.handleDatePickerChange()">
+            <!-- Date Filter Box (Full Width, Zero Overlap) -->
+            <div id="filterBoxDate" style="display: none; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box;">
+              <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block;">Rajaa tarkalla päivällä</label>
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;">
+                <input type="date" id="txDatePicker" class="form-input font-num" style="padding: 9px 12px; font-size: 13px; flex: 1; min-width: 0; width: auto;" onchange="app.handleDatePickerChange()">
+                <button type="button" class="btn-filter-clear" onclick="app.resetDateFilter()" title="Tyhjennä päivämäärärajaus">
+                  ✕
+                </button>
               </div>
-              <button type="button" class="btn-filter-clear" onclick="app.resetDateFilter()" title="Tyhjennä päivämäärärajaus">
-                ✕
-              </button>
             </div>
           </div>
 
@@ -590,6 +590,95 @@
           </p>
           <div id="accountsList" style="display: flex; flex-direction: column; gap: 8px;">
             <!-- Accounts Injected Here -->
+          </div>
+        </div>
+
+        <!-- Teemat & Ulkoasu (Theme Management) -->
+        <div class="luxury-card" style="margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="card-label" style="margin: 0;">Teemat & Ulkoasu</span>
+            <span id="activeThemeBadge" style="font-size: 10px; font-family: ui-monospace, monospace; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: rgba(165,160,136,0.15); color: var(--c-text-primary); border: 1px solid var(--c-border);">
+              Original Kraft
+            </span>
+          </div>
+          <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 12px;">
+            Valitse ammattilaisteema tai räätälöi omat värit ja fontti. Teemat tallentuvat automaattisesti laitteelle ja JSON-varmuuskopioon.
+          </p>
+
+          <!-- Pre-built Themes Selection Grid -->
+          <div id="themePresetsGrid" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 16px;">
+            <!-- Theme Cards Injected Here -->
+          </div>
+
+          <!-- Color Customizer Box -->
+          <div style="background: var(--c-input-bg, #171718); border: 1px solid var(--c-border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block;">Muokkaa teeman värejä</span>
+            
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px;">
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Tausta</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="color" id="themeColorBg" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                  <input type="text" id="themeColorBgHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorBg', this.value)">
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Kortit</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="color" id="themeColorCard" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                  <input type="text" id="themeColorCardHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorCard', this.value)">
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Korostus (Meno)</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="color" id="themeColorPrimary" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                  <input type="text" id="themeColorPrimaryHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorPrimary', this.value)">
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Pääteksti</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="color" id="themeColorText" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                  <input type="text" id="themeColorTextHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorText', this.value)">
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Himmeä teksti</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="color" id="themeColorMuted" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                  <input type="text" id="themeColorMutedHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorMuted', this.value)">
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Tulot & Säästöt</label>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <input type="color" id="themeColorOlive" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                  <input type="text" id="themeColorOliveHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorOlive', this.value)">
+                </div>
+              </div>
+            </div>
+
+            <!-- Font Family Selection (Curated) -->
+            <div style="margin-top: 6px;">
+              <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Typografia & Fontti</label>
+              <select id="themeFontSelect" class="form-input" style="font-size: 12px;" onchange="app.handleThemeFontChange()">
+                <option value="sans">Moderni Swiss Sans (SF Pro / Inter / Helvetica)</option>
+                <option value="serif">Editorial Luxury Serif (Charter / New York / Georgia)</option>
+                <option value="grotesk">Klassinen Sveitsiläinen Grotesk (Helvetica Neue)</option>
+                <option value="mono">Tekninen Finanssi Mono (SF Mono / Menlo / Monospace)</option>
+              </select>
+            </div>
+
+            <!-- Actions Row -->
+            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-primary" style="flex: 1; min-width: 140px; padding: 10px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.saveCurrentThemeAsNew()">
+                + Tallenna omana teemana
+              </button>
+              <button type="button" class="btn-primary" style="flex: 1; min-width: 140px; padding: 10px; font-size: 10px; background: rgba(166,36,60,0.15); border: 1px solid rgba(166,36,60,0.35); color: var(--c-crimson);" onclick="app.resetToOriginalTheme()">
+                Palauta Original Kraft
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1353,11 +1442,57 @@
     </div>
   </div>
 
+  <!-- ============================================== -->
+  <!-- MODAL: SOVELLUKSEN OMA JÄRJESTELMÄDIALOGI     -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalSystemDialog" style="z-index: 100;" onclick="if(event.target === this && app.activeDialogType !== 'alert') app.closeSystemDialog(false)">
+    <div class="modal-content" style="max-width: 380px; width: 100%; margin: 0 auto; padding: 22px;">
+      
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <div id="dialogIconBox" style="width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(166,36,60,0.15); color: var(--c-crimson); border: 1px solid var(--c-border-active);">
+          <!-- Injected Monoline SVG Icon -->
+        </div>
+        <div style="min-width: 0; flex: 1;">
+          <h3 id="dialogTitle" style="font-size: 14px; font-weight: 600; color: var(--c-text-primary); margin: 0;">Vahvistus</h3>
+          <p id="dialogSub" style="font-size: 10px; color: var(--c-stone); text-transform: uppercase; letter-spacing: 0.08em; margin: 0;">Budjetti</p>
+        </div>
+        <button type="button" id="btnDialogCloseX" onclick="app.closeSystemDialog(false)" style="background: none; border: none; color: var(--c-stone); font-size: 18px; cursor: pointer; padding: 4px;">&times;</button>
+      </div>
+
+      <p id="dialogMessage" style="font-size: 13px; color: var(--c-text-primary); line-height: 1.5; margin-bottom: 16px; word-break: break-word;">
+        <!-- Injected Message Text -->
+      </p>
+
+      <!-- Optional Prompt Input Section (Decimal Only!) -->
+      <div id="dialogInputContainer" style="display: none; margin-bottom: 16px;">
+        <div style="position: relative;">
+          <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="dialogPromptInput" class="form-input font-num" style="font-size: 20px; padding: 10px 14px; text-align: right;" placeholder="0">
+          <span id="dialogPromptSuffix" style="position: absolute; right: 14px; top: 11px; font-size: 14px; color: var(--c-stone); pointer-events: none;">%</span>
+        </div>
+        <!-- Quick Pick Chips for percentage or quick values -->
+        <div id="dialogQuickChips" style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+          <!-- Injected Chips -->
+        </div>
+      </div>
+
+      <!-- Action Buttons Row -->
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button type="button" id="btnDialogCancel" class="btn-primary" style="flex: 1; background: #252527; border: 1px solid var(--c-border); color: var(--c-stone); padding: 12px; font-size: 11px;" onclick="app.closeSystemDialog(false)">
+          Peruuta
+        </button>
+        <button type="button" id="btnDialogConfirm" class="btn-primary" style="flex: 1; padding: 12px; font-size: 11px;" onclick="app.closeSystemDialog(true)">
+          Vahvista
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Application Logic Modules -->
-  <script src="js/storage.js?v=20261101_2045"></script>
-  <script src="js/categories.js?v=20261101_2045"></script>
-  <script src="js/calculator.js?v=20261101_2045"></script>
-  <script src="js/exportImport.js?v=20261101_2045"></script>
-  <script src="app.js?v=20261101_2045"></script>
+  <script src="js/storage.js?v=20261101_2130"></script>
+  <script src="js/categories.js?v=20261101_2130"></script>
+  <script src="js/calculator.js?v=20261101_2130"></script>
+  <script src="js/exportImport.js?v=20261101_2130"></script>
+  <script src="app.js?v=20261101_2130"></script>
 </body>
 </html>
