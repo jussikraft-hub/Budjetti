@@ -106,6 +106,15 @@ class BudjettiApp {
       const dateEl = document.getElementById("formDate");
       if (dateEl) dateEl.value = new Date().toISOString().split("T")[0];
 
+      // Kiinnitetään kelluvan plus-painikkeen tapahtumakuuntelija varmuudeksi
+      const fabBtn = document.getElementById("fabAddBtn") || document.querySelector(".fab-add");
+      if (fabBtn) {
+        fabBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.openFabChoice();
+        });
+      }
+
     } catch (e) {
       console.error("Sovelluksen alustusvirhe:", e);
     }

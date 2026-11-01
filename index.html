@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261101_1800">
 
   <!-- External Parsers & Visualizers (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -581,7 +581,7 @@
     </main>
 
     <!-- FLOATING ACTION BUTTON -->
-    <button class="fab-add" onclick="app.openFabChoice()" title="Uusi kirjaus tai pikakuitti">
+    <button class="fab-add" id="fabAddBtn" onclick="app.openFabChoice()" title="Uusi kirjaus tai pikakuitti">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
@@ -625,7 +625,7 @@
   <!-- MODAL: VALITSE TOIMENPIDE (FAB CHOICE)         -->
   <!-- ============================================== -->
   <div class="modal-overlay" id="modalFabChoice" onclick="if(event.target === this) app.closeModal('modalFabChoice')">
-    <div class="modal-content" style="max-width: 380px;">
+    <div class="modal-content" style="max-width: 380px; width: 100%; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(165,160,136,0.15); margin-bottom: 14px;">
         <div>
           <span class="card-label" style="margin: 0;">Uusi toimenpide</span>
@@ -667,8 +667,6 @@
         </button>
       </div>
     </div>
-  </div>
-
   </div>
 
   <!-- ============================================== -->
@@ -1128,10 +1126,10 @@
   </div>
 
   <!-- Application Logic Modules -->
-  <script src="js/storage.js"></script>
-  <script src="js/categories.js"></script>
-  <script src="js/calculator.js"></script>
-  <script src="js/exportImport.js"></script>
-  <script src="app.js"></script>
+  <script src="js/storage.js?v=20261101_1800"></script>
+  <script src="js/categories.js?v=20261101_1800"></script>
+  <script src="js/calculator.js?v=20261101_1800"></script>
+  <script src="js/exportImport.js?v=20261101_1800"></script>
+  <script src="app.js?v=20261101_1800"></script>
 </body>
 </html>

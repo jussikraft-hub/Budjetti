@@ -344,24 +344,28 @@ class TestBudjettiApp(unittest.TestCase):
                 )
 
     def test_11_revision_6_vertical_lock_and_filter(self):
-        """Varmistaa Revisio 6:n pystysuuntaisen liikelukituksen, Päiväkirjan segmentoidun suodatuksen ja Plus-painikkeen Pikakuitti-valikon."""
+        """Varmistaa Revisio 6:n pystysuuntaisen liikelukituksen, Päiväkirjan segmentoidun suodatuksen, Plus-painikkeen luotettavuuden ja välimuistin ohituksen."""
         with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
             css = f.read()
         self.assertIn("touch-action: pan-y", css, "CSS:stä puuttuu touch-action: pan-y!")
         self.assertIn("overscroll-behavior-x: none", css, "CSS:stä puuttuu overscroll-behavior-x: none!")
         self.assertIn("overflow-x: hidden", css, "CSS:stä puuttuu overflow-x: hidden!")
+        self.assertIn(".fab-add svg", css, "CSS:stä puuttuu .fab-add svg sääntö!")
+        self.assertIn("visibility: hidden", css, "CSS:stä puuttuu modal-overlayn visibility: hidden!")
 
         with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
             html = f.read()
 
-        # Päiväkirjan uusi suodatinrakenne
+        # Päiväkirjan uusi suodatinrakenne ja FAB
         self.assertIn('id="btnFilterSubAll"', html)
         self.assertIn('id="btnFilterSubMonth"', html)
         self.assertIn('id="btnFilterSubDate"', html)
         self.assertIn('id="filterBoxMonth"', html)
         self.assertIn('id="filterBoxDate"', html)
         self.assertIn('id="modalFabChoice"', html)
+        self.assertIn('id="fabAddBtn"', html)
         self.assertIn('app.openFabChoice()', html)
+        self.assertIn('?v=', html, "index.html:stä puuttuu välimuistinohitusversiointi (?v=)!")
 
         # Tarkistetaan että app.js sisältää uudet funktiot ja modaaliohjaimet
         with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
