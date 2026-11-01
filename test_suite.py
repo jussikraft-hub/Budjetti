@@ -106,5 +106,39 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertEqual(res.returncode, 0, f"Laskentalogiikkatesti epäonnistui:\n{res.stderr}")
         self.assertIn("OK", res.stdout)
 
+    def test_06_dropbox_folder_config(self):
+        """Testaa Dropbox-kansion polun muotoilua ja URL-puhdistuslogiikkaa."""
+        storage_test_js = """
+        global.localStorage = {
+          _data: {},
+          getItem(k) { return this._data[k] || null; },
+          setItem(k, v) { this._data[k] = String(v); }
+        };
+        const { StorageProvider } = require('""" + os.path.join(SCRIPT_DIR, "js/storage.js") + """');
+        const sp = new StorageProvider();
+
+        // Oletuskansio
+        if (sp.getDropboxFolder() !== "/Apps/Budjetti-Jussi") throw new Error("Oletuskansio väärin: " + sp.getDropboxFolder());
+        if (sp.getDataFilePath() !== "/Apps/Budjetti-Jussi/budjetti_data.json") throw new Error("Datafile path väärin");
+
+        // Räätälöity kansio
+        sp.setDropboxFolder("OmaTalous/2026");
+        if (sp.getDropboxFolder() !== "/OmaTalous/2026") throw new Error("Slash-lisäys epäonnistui: " + sp.getDropboxFolder());
+        if (sp.getDataFilePath() !== "/OmaTalous/2026/budjetti_data.json") throw new Error("Custom path väärin");
+
+        // Juurikansio (app token)
+        sp.setDropboxFolder("/");
+        if (sp.getDataFilePath() !== "/budjetti_data.json") throw new Error("Root path väärin: " + sp.getDataFilePath());
+
+        // Dropbox URL syötetty vahingossa
+        sp.setDropboxFolder("https://www.dropbox.com/scl/fo/yp7t3v0er6by2w14atioz/ABG3GRDAdrqv7WXpBOeKHIE?rlkey=h6ti13xi04bf3jdcjs262m4bq&dl=0");
+        if (sp.getDropboxFolder() !== "/Apps/Budjetti-Jussi") throw new Error("URL-puhdistus epäonnistui: " + sp.getDropboxFolder());
+
+        console.log("OK");
+        """
+        res = subprocess.run(["node", "-e", storage_test_js], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, f"Dropbox-kansiotesti epäonnistui:\n{res.stderr}")
+        self.assertIn("OK", res.stdout)
+
 if __name__ == "__main__":
     unittest.main()

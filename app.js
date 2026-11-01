@@ -29,12 +29,16 @@ class BudjettiApp {
 
       const target = this.storage.getSyncTarget();
       const token = this.storage.getDropboxToken();
+      const folder = this.storage.getDropboxFolder();
 
       const settingTargetEl = document.getElementById("settingSyncTarget");
       if (settingTargetEl) settingTargetEl.value = target;
 
       const tokenEl = document.getElementById("settingDropboxToken");
       if (tokenEl && token) tokenEl.value = token;
+
+      const folderEl = document.getElementById("settingDropboxFolder");
+      if (folderEl && folder) folderEl.value = folder;
 
       const paydayEl = document.getElementById("settingPaydayDay");
       if (paydayEl) paydayEl.value = this.paydayDay;
@@ -597,12 +601,31 @@ class BudjettiApp {
     this.updateSyncBadge();
   }
 
-  saveDropboxToken() {
-    const token = document.getElementById("settingDropboxToken").value.trim();
-    this.storage.setDropboxToken(token);
+  saveDropboxConfig() {
+    const tokenEl = document.getElementById("settingDropboxToken");
+    const folderEl = document.getElementById("settingDropboxFolder");
+    if (tokenEl) {
+      this.storage.setDropboxToken(tokenEl.value.trim());
+    }
+    if (folderEl) {
+      this.storage.setDropboxFolder(folderEl.value.trim());
+      folderEl.value = this.storage.getDropboxFolder();
+    }
     this.updateSyncBadge();
-    alert("Dropbox Access Token tallennettu selaimeen!");
+    alert("Dropbox-asetukset tallennettu selaimeen!");
     this.storage.syncToCloud(true);
+  }
+
+  saveDropboxFolder() {
+    const folderEl = document.getElementById("settingDropboxFolder");
+    if (folderEl) {
+      this.storage.setDropboxFolder(folderEl.value.trim());
+      folderEl.value = this.storage.getDropboxFolder();
+    }
+  }
+
+  saveDropboxToken() {
+    this.saveDropboxConfig();
   }
 
   async savePaydaySetting() {

@@ -6,9 +6,8 @@
 const DB_NAME = "BudjettiDB";
 const DB_VERSION = 1;
 const DROPBOX_TOKEN_KEY = "budjetti_dropbox_token";
+const DROPBOX_FOLDER_KEY = "budjetti_dropbox_folder";
 const SYNC_TARGET_KEY = "budjetti_sync_target"; // 'local', 'dropbox', 'gdrive'
-const DATA_FILE_PATH = "/budjetti_data.json";
-const RECEIPTS_FOLDER_PATH = "/Budjetti/Kuitit";
 
 class StorageProvider {
   constructor() {
@@ -200,6 +199,49 @@ class StorageProvider {
     localStorage.setItem(DROPBOX_TOKEN_KEY, token.trim());
   }
 
+  getDropboxFolder() {
+    const saved = localStorage.getItem(DROPBOX_FOLDER_KEY);
+    if (saved !== null && saved !== undefined) {
+      return saved.trim();
+    }
+    return "/Apps/Budjetti-Jussi";
+  }
+
+  setDropboxFolder(folder) {
+    if (!folder) {
+      localStorage.setItem(DROPBOX_FOLDER_KEY, "/Apps/Budjetti-Jussi");
+      return;
+    }
+    let clean = folder.trim();
+    // Jos käyttäjä liittää Dropbox jako-linkin
+    if (clean.includes("dropbox.com/")) {
+      clean = "/Apps/Budjetti-Jussi";
+    }
+    if (clean && !clean.startsWith("/")) {
+      clean = "/" + clean;
+    }
+    if (clean.length > 1 && clean.endsWith("/")) {
+      clean = clean.slice(0, -1);
+    }
+    localStorage.setItem(DROPBOX_FOLDER_KEY, clean);
+  }
+
+  getDataFilePath() {
+    const folder = this.getDropboxFolder();
+    if (!folder || folder === "/") {
+      return "/budjetti_data.json";
+    }
+    return `${folder}/budjetti_data.json`;
+  }
+
+  getReceiptsFolderPath() {
+    const folder = this.getDropboxFolder();
+    if (!folder || folder === "/") {
+      return "/Kuitit";
+    }
+    return `${folder}/Kuitit`;
+  }
+
   getSyncTarget() {
     return localStorage.getItem(SYNC_TARGET_KEY) || "dropbox";
   }
@@ -223,6 +265,7 @@ class StorageProvider {
       recurring: await this.getSetting("recurring", []),
       categories: await this.getSetting("categories", null),
       freeBalanceManual: await this.getSetting("freeBalanceManual", null),
+      dropboxFolder: this.getDropboxFolder()
     };
 
     return {
@@ -241,6 +284,7 @@ class StorageProvider {
       if (payload.settings.payday) await this.setSetting("payday", payload.settings.payday);
       if (payload.settings.recurring) await this.setSetting("recurring", payload.settings.recurring);
       if (payload.settings.categories) await this.setSetting("categories", payload.settings.categories);
+      if (payload.settings.dropboxFolder) this.setDropboxFolder(payload.settings.dropboxFolder);
       if (payload.settings.freeBalanceManual !== undefined) {
         await this.setSetting("freeBalanceManual", payload.settings.freeBalanceManual);
       }
@@ -249,9 +293,39 @@ class StorageProvider {
     return true;
   }
 
+  async uploadDropboxFile(token, path, content) {
+    return fetch("https://content.dropboxapi.com/2/files/upload", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Dropbox-API-Arg": JSON.stringify({
+          path: path,
+          mode: "overwrite",
+          autorename: false,
+          mute: true,
+          strict_conflict: false,
+        }),
+        "Content-Type": "application/octet-stream",
+      },
+      body: content,
+    });
+  }
+
+  async downloadDropboxFile(token, path) {
+    return fetch("https://content.dropboxapi.com/2/files/download", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Dropbox-API-Arg": JSON.stringify({
+          path: path,
+        }),
+      },
+    });
+  }
+
   async syncToCloud(silent = false) {
     const target = this.getSyncTarget();
-    if (target !== "dropbox") return; // Lokaali tai GDrive (tulossa)
+    if (target !== "dropbox") return;
 
     const token = this.getDropboxToken();
     if (!token) {
@@ -262,29 +336,27 @@ class StorageProvider {
     try {
       const payload = await this.exportFullPayload();
       const content = JSON.stringify(payload, null, 2);
+      let targetPath = this.getDataFilePath();
 
-      const res = await fetch("https://content.dropboxapi.com/2/files/upload", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + token,
-          "Dropbox-API-Arg": JSON.stringify({
-            path: DATA_FILE_PATH,
-            mode: "overwrite",
-            autorename: false,
-            mute: true,
-            strict_conflict: false,
-          }),
-          "Content-Type": "application/octet-stream",
-        },
-        body: content,
-      });
+      let res = await this.uploadDropboxFile(token, targetPath, content);
 
+      // Jos polkuvirhe (esim. App folder -tokenilla kansio on jo sovellusjuuri)
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error_summary || res.statusText);
+        if (targetPath !== "/budjetti_data.json") {
+          console.warn(`Polku ${targetPath} epäonnistui (${err.error_summary || "error"}), kokeillaan juureen /budjetti_data.json...`);
+          const fallbackRes = await this.uploadDropboxFile(token, "/budjetti_data.json", content);
+          if (fallbackRes.ok) {
+            this.setDropboxFolder("/");
+            res = fallbackRes;
+          }
+        }
+        if (!res.ok) {
+          throw new Error(err.error_summary || res.statusText);
+        }
       }
 
-      if (!silent) console.log("✅ Synkronoitu Dropboxiin onnistuneesti!");
+      if (!silent) console.log(`✅ Synkronoitu Dropboxiin onnistuneesti (${targetPath})!`);
       return true;
     } catch (e) {
       console.error("Dropbox synkronointivirhe:", e);
@@ -300,15 +372,17 @@ class StorageProvider {
     if (!token) return;
 
     try {
-      const res = await fetch("https://content.dropboxapi.com/2/files/download", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + token,
-          "Dropbox-API-Arg": JSON.stringify({
-            path: DATA_FILE_PATH,
-          }),
-        },
-      });
+      let targetPath = this.getDataFilePath();
+      let res = await this.downloadDropboxFile(token, targetPath);
+
+      // Jos polku ei löytynyt, kokeillaan juurta /budjetti_data.json
+      if (!res.ok && targetPath !== "/budjetti_data.json") {
+        const fallbackRes = await this.downloadDropboxFile(token, "/budjetti_data.json");
+        if (fallbackRes.ok) {
+          res = fallbackRes;
+          this.setDropboxFolder("/");
+        }
+      }
 
       if (!res.ok) {
         if (res.status === 409) {
