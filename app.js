@@ -1635,6 +1635,16 @@ class BudjettiApp {
   }
 
   // --- MODALS & QUICK ADD ---
+  openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.add("active");
+  }
+
+  closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove("active");
+  }
+
   openFabChoice() {
     this.openModal("modalFabChoice");
   }
@@ -1723,11 +1733,6 @@ class BudjettiApp {
       receiptId: tx.receiptId,
       accountId: tx.accountId
     });
-  }
-
-  closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove("active");
   }
 
   setFormType(type) {

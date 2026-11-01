@@ -363,12 +363,14 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn('id="modalFabChoice"', html)
         self.assertIn('app.openFabChoice()', html)
 
-        # Tarkistetaan että app.js sisältää uudet funktiot
+        # Tarkistetaan että app.js sisältää uudet funktiot ja modaaliohjaimet
         with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
             js = f.read()
         self.assertIn("switchFilterSubMode", js)
         self.assertIn("openFabChoice", js)
         self.assertIn("chooseFabAction", js)
+        self.assertIn("openModal", js)
+        self.assertIn("closeModal", js)
 
 if __name__ == "__main__":
     unittest.main()
