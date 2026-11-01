@@ -605,5 +605,13 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("overscroll-behavior-x: none !important;", css)
         self.assertIn("setAllocationView", app_js, "app.js:stä puuttuu setAllocationView!")
 
+        # 5. Uusi kirjaus -ikkunan (modalQuickAdd) ja kaikkien modaalien sivuttaisliikkeen täysi esto
+        self.assertNotIn("🧮", html, "index.html sisältää edelleen kielletyn emojin 🧮 Laskin-napissa!")
+        self.assertIn("overscroll-behavior-y: contain;", css, "CSS:stä puuttuu overscroll-behavior-y: contain modaaleille!")
+        self.assertIn(".modal-content form", css, "CSS:stä puuttuu .modal-content form overflow-rajoitus!")
+        self.assertIn(".modal-content *", css, "CSS:stä puuttuu .modal-content * max-width rajoitus!")
+        self.assertIn("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);", html, "index.html:stä puuttuu minmax(0, 1fr) sarakkeet!")
+        self.assertIn("content.scrollLeft = 0", app_js, "app.js:stä puuttuu modaalin scrollLeft-nollaus!")
+
 if __name__ == "__main__":
     unittest.main()

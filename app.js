@@ -149,6 +149,17 @@ class BudjettiApp {
         });
       }
 
+      // Lukitaan kaikki modaalit tiukasti pystysuuntaisiksi: nollataan mahdollinen vaakavieritys
+      if (typeof document !== "undefined") {
+        document.querySelectorAll(".modal-content, .modal-overlay").forEach(el => {
+          el.addEventListener("scroll", (e) => {
+            if (e.currentTarget.scrollLeft !== 0) {
+              e.currentTarget.scrollLeft = 0;
+            }
+          }, { passive: true });
+        });
+      }
+
     } catch (e) {
       console.error("Sovelluksen alustusvirhe:", e);
     }
@@ -2039,12 +2050,25 @@ class BudjettiApp {
   // --- MODALS & QUICK ADD ---
   openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add("active");
+    if (modal) {
+      modal.classList.add("active");
+      const content = modal.querySelector(".modal-content");
+      if (content) {
+        content.scrollLeft = 0;
+        content.scrollTop = 0;
+      }
+    }
   }
 
   closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove("active");
+    if (modal) {
+      modal.classList.remove("active");
+      const content = modal.querySelector(".modal-content");
+      if (content) {
+        content.scrollLeft = 0;
+      }
+    }
   }
 
   // --- FLOATING RECEIPT OVERLAY (Picture-in-Picture) ---
@@ -2433,9 +2457,11 @@ class BudjettiApp {
     this.renderCategoryPills(prefill.categoryId || this.selectedCatId);
 
     modal.classList.add("active");
-    setTimeout(() => {
-      document.getElementById("formAmount").focus();
-    }, 200);
+    const content = modal.querySelector(".modal-content");
+    if (content) {
+      content.scrollLeft = 0;
+      content.scrollTop = 0;
+    }
   }
 
   clearReceipt() {
@@ -2500,10 +2526,19 @@ class BudjettiApp {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "form-input";
-      btn.style.padding = "8px 10px";
+      btn.style.padding = "8px 8px";
       btn.style.fontSize = "11px";
       btn.style.textAlign = "left";
       btn.style.cursor = "pointer";
+      btn.style.width = "100%";
+      btn.style.maxWidth = "100%";
+      btn.style.minWidth = "0";
+      btn.style.display = "flex";
+      btn.style.alignItems = "center";
+      btn.style.gap = "6px";
+      btn.style.overflow = "hidden";
+      btn.style.boxSizing = "border-box";
+      btn.title = c.name;
 
       const isSelected = c.id === activeCatId;
       if (isSelected) {
@@ -2517,8 +2552,8 @@ class BudjettiApp {
       };
 
       btn.innerHTML = `
-        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${c.color}; margin-right: 6px;"></span>
-        ${c.name}
+        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">${c.name}</span>
       `;
       container.appendChild(btn);
     });
