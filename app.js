@@ -173,12 +173,36 @@ class BudjettiApp {
     }
   }
 
+  sortTransactionsDesc(a, b) {
+    const dateDiff = (b.date || "").localeCompare(a.date || "");
+    if (dateDiff !== 0) return dateDiff;
+    const getStamp = (t) => {
+      if (t.createdAt) {
+        const ms = new Date(t.createdAt).getTime();
+        if (!isNaN(ms)) return ms;
+      }
+      if (t.updatedAt) {
+        const ms = new Date(t.updatedAt).getTime();
+        if (!isNaN(ms)) return ms;
+      }
+      if (t.id && typeof t.id === "string" && t.id.startsWith("tx_")) {
+        const num = parseInt(t.id.replace("tx_", ""), 10);
+        if (!isNaN(num)) return num;
+      }
+      return 0;
+    };
+    return getStamp(b) - getStamp(a);
+  }
+
   async refreshData() {
     this.paydayDay = await this.storage.getSetting("payday", 20);
     this.freeBalanceManual = await this.storage.getSetting("freeBalanceManual", null);
     await this.categories.init();
 
     this.transactions = await this.storage.getAllTransactions();
+    if (Array.isArray(this.transactions)) {
+      this.transactions.sort((a, b) => this.sortTransactionsDesc(a, b));
+    }
     this.accounts = await this.storage.getAccounts();
     this.subscriptions = await this.storage.getSubscriptions();
     this.debts = await this.storage.getDebts();
@@ -201,6 +225,7 @@ class BudjettiApp {
     this.renderDebtsView();
     this.renderP2PView();
     this.renderAccountsList();
+    this.renderInbox();
     this.updateInboxBadges();
   }
 
@@ -317,46 +342,54 @@ class BudjettiApp {
     });
   }
 
-  // --- ALLOKAATIOKARUSELLI & KAAVIOT (Palkit / Donitsi / Pylväät) ---
-  setAllocationSlide(index) {
-    this.allocCurrentSlide = index;
-    const carousel = document.getElementById("allocationCarousel");
-    if (carousel) {
-      const slideWidth = carousel.clientWidth || 340;
-      carousel.scrollTo({ left: index * slideWidth, behavior: "smooth" });
-    }
-    this.updateAllocSlideIndicators(index);
-    if (index === 1 || index === 2) {
+  // --- ALLOKAATIONÄKYMÄT & KAAVIOT (Palkit / Piirakka / Pylväät) ---
+  setAllocationView(view) {
+    if (view === 0 || view === "bars") view = "bars";
+    else if (view === 1 || view === "pie") view = "pie";
+    else if (view === 2 || view === "bar") view = "bar";
+    else view = "bars";
+
+    this.allocCurrentView = view;
+    this.allocCurrentSlide = view === "bars" ? 0 : (view === "pie" ? 1 : 2);
+
+    const paneBars = document.getElementById("allocPaneBars");
+    const panePie = document.getElementById("allocPanePie");
+    const paneBar = document.getElementById("allocPaneBar");
+
+    if (paneBars) paneBars.style.display = view === "bars" ? "block" : "none";
+    if (panePie) panePie.style.display = view === "pie" ? "block" : "none";
+    if (paneBar) paneBar.style.display = view === "bar" ? "block" : "none";
+
+    const btnBars = document.getElementById("btnAllocViewBars");
+    const btnPie = document.getElementById("btnAllocViewPie");
+    const btnBar = document.getElementById("btnAllocViewBar");
+    if (btnBars) btnBars.classList.toggle("active", view === "bars");
+    if (btnPie) btnPie.classList.toggle("active", view === "pie");
+    if (btnBar) btnBar.classList.toggle("active", view === "bar");
+
+    if (view === "pie" || view === "bar") {
       this.renderAllocationCharts(this.lastCategoryTotals);
     }
   }
 
+  setAllocationSlide(index) {
+    const viewMap = ["bars", "pie", "bar"];
+    this.setAllocationView(viewMap[index] || "bars");
+  }
+
   handleAllocCarouselScroll() {
-    const carousel = document.getElementById("allocationCarousel");
-    if (!carousel) return;
-    const slideWidth = carousel.clientWidth || 1;
-    const index = Math.min(2, Math.max(0, Math.round(carousel.scrollLeft / slideWidth)));
-    if (index !== this.allocCurrentSlide) {
-      this.allocCurrentSlide = index;
-      this.updateAllocSlideIndicators(index);
-      if (index === 1 || index === 2) {
-        this.renderAllocationCharts(this.lastCategoryTotals);
-      }
-    }
+    // Korvattu puhtaalla pystysuuntaisella välilehtikytkimellä ilman sivuttaista liikettä
   }
 
   updateAllocSlideIndicators(index) {
+    const viewMap = ["bars", "pie", "bar"];
+    const activeView = typeof index === "string" ? index : (viewMap[index] || "bars");
     const btnBars = document.getElementById("btnAllocViewBars");
     const btnPie = document.getElementById("btnAllocViewPie");
     const btnBar = document.getElementById("btnAllocViewBar");
-    if (btnBars) btnBars.classList.toggle("active", index === 0);
-    if (btnPie) btnPie.classList.toggle("active", index === 1);
-    if (btnBar) btnBar.classList.toggle("active", index === 2);
-
-    for (let i = 0; i <= 2; i++) {
-      const dot = document.getElementById(`allocDot${i}`);
-      if (dot) dot.classList.toggle("active", i === index);
-    }
+    if (btnBars) btnBars.classList.toggle("active", activeView === "bars");
+    if (btnPie) btnPie.classList.toggle("active", activeView === "pie");
+    if (btnBar) btnBar.classList.toggle("active", activeView === "bar");
   }
 
   async handleAllocDataConfigChange() {
@@ -684,7 +717,8 @@ class BudjettiApp {
     if (!container) return;
     container.innerHTML = "";
 
-    const recent = this.transactions.slice(0, 5);
+    const sorted = [...this.transactions].sort((a, b) => this.sortTransactionsDesc(a, b));
+    const recent = sorted.slice(0, 5);
     if (recent.length === 0) {
       container.innerHTML = `<p style="font-size: 11px; color: var(--c-stone); padding: 10px 0;">Ei kirjattuja tapahtumia.</p>`;
       return;
@@ -823,6 +857,8 @@ class BudjettiApp {
       }
       return true;
     });
+
+    filtered.sort((a, b) => this.sortTransactionsDesc(a, b));
 
     listContainer.innerHTML = "";
     if (filtered.length === 0) {
@@ -1043,14 +1079,16 @@ class BudjettiApp {
   }
 
   processInboxReceipt(id) {
-    const item = this.receiptInbox.find(r => r.id === id);
+    const item = this.receiptInbox.find(r => r.id === id || r.receiptId === id);
     if (!item) return;
+    this.activeProcessingInboxId = item.id;
+    this.activeProcessingReceiptId = item.receiptId || item.id;
     this.openQuickAddModal({
+      fromInbox: true,
       receiptId: item.receiptId || item.id,
       date: item.date,
       desc: item.notes || ""
     });
-    this.activeProcessingInboxId = id;
     // Avataan kuitin esikatselu heti sovelluksen ja lomakkeen päälle tulevana kelluvana ikkunana!
     this.openReceiptOverlay(item.receiptId || item.id, item.notes || "Kuitin tiedot");
   }
@@ -2351,6 +2389,10 @@ class BudjettiApp {
 
     this.tempReceiptData = null;
     this.currentReceiptId = prefill.receiptId || null;
+    if (!prefill.fromInbox && !prefill.receiptId) {
+      this.activeProcessingInboxId = null;
+      this.activeProcessingReceiptId = null;
+    }
 
     const modalTitle = document.getElementById("modalFormTitle");
     if (modalTitle) modalTitle.innerText = prefill.id ? "Muokkaa kirjausta" : "Uusi kirjaus";
@@ -2524,6 +2566,9 @@ class BudjettiApp {
       await this.storage.saveReceipt(receiptId, this.tempReceiptData);
     }
 
+    const existing = this.transactions.find(t => t.id === id);
+    const createdAt = existing?.createdAt || (id.startsWith("tx_") ? new Date(parseInt(id.replace("tx_", ""), 10) || Date.now()).toISOString() : new Date().toISOString());
+
     const tx = {
       id,
       date,
@@ -2534,22 +2579,36 @@ class BudjettiApp {
       desc,
       receiptId,
       accountId,
+      createdAt,
       updatedAt: new Date().toISOString()
     };
 
     // Jos olemassa oleva kirjaus ja sillä oli splitInfo, säilytetään se
-    const existing = this.transactions.find(t => t.id === id);
     if (existing && existing.splitInfo) {
       tx.splitInfo = existing.splitInfo;
     }
 
     await this.storage.saveTransaction(tx);
 
-    // Jos käsittelimme Kuitti-Inboxista tulleen kuitin, poistetaan se inboxista
-    if (this.activeProcessingInboxId) {
-      this.receiptInbox = this.receiptInbox.filter(r => r.id !== this.activeProcessingInboxId);
+    // Jos käsittelimme avointa kuittia ja summa on annettu (> 0), poistetaan se heti inboxista ilman viivettä
+    const isResolvedReceipt = (amount > 0) && (
+      this.activeProcessingInboxId ||
+      this.activeProcessingReceiptId ||
+      receiptId
+    );
+
+    if (isResolvedReceipt) {
+      const matchInboxId = this.activeProcessingInboxId;
+      const matchRecId = this.activeProcessingReceiptId || receiptId;
+      this.receiptInbox = this.receiptInbox.filter(r => {
+        if (matchInboxId && r.id === matchInboxId) return false;
+        if (matchRecId && (r.receiptId === matchRecId || r.id === matchRecId)) return false;
+        return true;
+      });
       await this.storage.saveReceiptInbox(this.receiptInbox);
       this.activeProcessingInboxId = null;
+      this.activeProcessingReceiptId = null;
+      this.renderInbox();
       this.updateInboxBadges();
     }
 

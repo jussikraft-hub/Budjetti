@@ -83,8 +83,29 @@ class StorageProvider {
       const req = store.getAll();
       req.onsuccess = () => {
         const items = req.result || [];
-        // Järjestetään oletuksena uusimmasta vanhimpaan
-        items.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Järjestetään oletuksena uusimmasta vanhimpaan:
+        // Ensisijainen: päivämäärä (uusin päivä ensin)
+        // Toissijainen: kirjausaika / luontiaikaleima (uusin kirjaus ylimpänä saman päivän sisällä)
+        items.sort((a, b) => {
+          const dateDiff = (b.date || "").localeCompare(a.date || "");
+          if (dateDiff !== 0) return dateDiff;
+          const getStamp = (t) => {
+            if (t.createdAt) {
+              const ms = new Date(t.createdAt).getTime();
+              if (!isNaN(ms)) return ms;
+            }
+            if (t.updatedAt) {
+              const ms = new Date(t.updatedAt).getTime();
+              if (!isNaN(ms)) return ms;
+            }
+            if (t.id && typeof t.id === "string" && t.id.startsWith("tx_")) {
+              const num = parseInt(t.id.replace("tx_", ""), 10);
+              if (!isNaN(num)) return num;
+            }
+            return 0;
+          };
+          return getStamp(b) - getStamp(a);
+        });
         resolve(items);
       };
       req.onerror = () => resolve([]);

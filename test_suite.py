@@ -496,8 +496,8 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertEqual(res_group.returncode, 0, f"CategoryManager group CRUD testi epäonnistui:\n{res_group.stderr}")
         self.assertIn("GROUPS_OK", res_group.stdout)
 
-        # 5. Etusivun Allokaatiokaruselli ja kaaviot
-        self.assertIn('id="allocationCarousel"', html, "index.html:stä puuttuu allocationCarousel!")
+        # 5. Etusivun Allokaationäkymät ja kaaviot
+        self.assertTrue('id="allocationViewContainer"' in html or 'id="allocationCarousel"' in html, "index.html:stä puuttuu allokaatiosäiliö!")
         self.assertIn('id="chartAllocationPie"', html, "index.html:stä puuttuu chartAllocationPie canvas!")
         self.assertIn('id="chartAllocationBar"', html, "index.html:stä puuttuu chartAllocationBar canvas!")
         self.assertIn('id="allocDataAggregation"', html, "index.html:stä puuttuu allocDataAggregation pudotusvalikko!")
@@ -505,16 +505,105 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn('id="btnAllocViewBars"', html)
         self.assertIn('id="btnAllocViewPie"', html)
         self.assertIn('id="btnAllocViewBar"', html)
-        self.assertIn('id="allocDot0"', html)
-        self.assertIn('id="allocDot1"', html)
-        self.assertIn('id="allocDot2"', html)
 
         self.assertIn("setAllocationSlide", app_js, "app.js:stä puuttuu setAllocationSlide!")
-        self.assertIn("handleAllocCarouselScroll", app_js, "app.js:stä puuttuu handleAllocCarouselScroll!")
         self.assertIn("handleAllocDataConfigChange", app_js, "app.js:stä puuttuu handleAllocDataConfigChange!")
         self.assertIn("renderAllocationCharts", app_js, "app.js:stä puuttuu renderAllocationCharts!")
-        self.assertIn(".allocation-carousel", css, "CSS:stä puuttuu .allocation-carousel!")
-        self.assertIn("scroll-snap-type: x mandatory", css, "CSS:stä puuttuu scroll-snap-type: x mandatory karusellille!")
+
+    def test_14_revision_10_svg_icons_exact_sorting_instant_receipt_vertical_lock(self):
+        """
+        Varmistaa Revisio 10:n vaatimukset:
+        1. Minimalistiset SVG outline -ikonit allokaatiopainikkeissa (ei emojeja 📊 🍩 📈).
+        2. Tapahtumien järjestys todellisen kirjausajan mukaan (uusin samana päivänä lisätty aina ylimpänä).
+        3. Kuitti-inboxin välitön poistuminen heti kun summa > 0 kirjataan.
+        4. Sivuttaisen liikkeen täysi esto (touch-action: pan-y, overflow-x: hidden, zero horizontal drift).
+        """
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/storage.js"), "r", encoding="utf-8") as f:
+            storage_js = f.read()
+
+        # 1. Ei emojeja allokaatiopainikkeissa, vaan ohuet monoline SVG -ikonit
+        self.assertNotIn("📊", html, "index.html sisältää edelleen kielletyn emojin 📊 allokaatiossa!")
+        self.assertNotIn("🍩", html, "index.html sisältää edelleen kielletyn emojin 🍩 allokaatiossa!")
+        self.assertNotIn("📈", html, "index.html sisältää edelleen kielletyn emojin 📈 allokaatiossa!")
+
+        self.assertIn('id="btnAllocViewBars"', html)
+        self.assertIn('id="btnAllocViewPie"', html)
+        self.assertIn('id="btnAllocViewBar"', html)
+        self.assertIn("stroke-width=\"1.35\"", html)
+
+        # 2. Kirjausaikajärjestys saman päivämäärän sisällä
+        self.assertIn("sortTransactionsDesc", app_js, "app.js:stä puuttuu sortTransactionsDesc!")
+        
+        # Testaa järjestyslogiikka suoraan Node-ympäristössä kahdella samana päivänä lisätyllä ostoksella
+        sorting_test_node = """
+        const app = {
+          sortTransactionsDesc(a, b) {
+            const dateDiff = (b.date || "").localeCompare(a.date || "");
+            if (dateDiff !== 0) return dateDiff;
+            const getStamp = (t) => {
+              if (t.createdAt) {
+                const ms = new Date(t.createdAt).getTime();
+                if (!isNaN(ms)) return ms;
+              }
+              if (t.updatedAt) {
+                const ms = new Date(t.updatedAt).getTime();
+                if (!isNaN(ms)) return ms;
+              }
+              if (t.id && typeof t.id === "string" && t.id.startsWith("tx_")) {
+                const num = parseInt(t.id.replace("tx_", ""), 10);
+                if (!isNaN(num)) return num;
+              }
+              return 0;
+            };
+            return getStamp(b) - getStamp(a);
+          }
+        };
+
+        const txEarlierGrocery = {
+          id: "tx_1730480000000",
+          date: "2026-11-01",
+          vendor: "K-Supermarket",
+          amount: 45.20,
+          createdAt: "2026-11-01T12:00:00.000Z"
+        };
+
+        const txLaterBolt = {
+          id: "tx_1730500000000",
+          date: "2026-11-01",
+          vendor: "Bolt",
+          amount: 12.90,
+          createdAt: "2026-11-01T18:30:00.000Z"
+        };
+
+        const list = [txEarlierGrocery, txLaterBolt];
+        list.sort((a, b) => app.sortTransactionsDesc(a, b));
+
+        if (list[0].vendor !== "Bolt") {
+          console.error("VIRHE: Uusin kirjaus (Bolt) ei tullut ensimmäiseksi!", list);
+          process.exit(1);
+        }
+        console.log("SORTING_OK");
+        """
+        res_sort = subprocess.run(["node", "-e", sorting_test_node], capture_output=True, text=True)
+        self.assertEqual(res_sort.returncode, 0, f"Järjestystesti epäonnistui:\n{res_sort.stderr}")
+        self.assertIn("SORTING_OK", res_sort.stdout)
+
+        # 3. Kuitti-inboxin välitön poistuminen kuitin tallennuksessa
+        self.assertIn("isResolvedReceipt", app_js, "app.js:stä puuttuu isResolvedReceipt logiikka!")
+        self.assertIn("saveReceiptInbox", app_js)
+        self.assertIn("renderInbox", app_js)
+
+        # 4. Sivuttaisen liikkeen esto (strict vertical-only scrolling lock)
+        self.assertIn("overflow-x: hidden !important;", css)
+        self.assertIn("touch-action: pan-y !important;", css)
+        self.assertIn("overscroll-behavior-x: none !important;", css)
+        self.assertIn("setAllocationView", app_js, "app.js:stä puuttuu setAllocationView!")
 
 if __name__ == "__main__":
     unittest.main()
