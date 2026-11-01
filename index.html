@@ -13,11 +13,12 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css?v=20261101_1800">
+  <link rel="stylesheet" href="style.css?v=20261101_1830">
 
   <!-- External Parsers & Visualizers (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -539,7 +540,7 @@
                 <p style="font-size: 13px; font-weight: 500;">Käyttötilin alkusaldo (€)</p>
                 <p style="font-size: 11px; color: var(--c-stone);">Valinnainen manuaalinen saldon asetus</p>
               </div>
-              <input type="number" id="settingFreeBalanceManual" step="0.01" placeholder="Automaattinen" class="form-input font-num" style="width: 110px; text-align: right;" onchange="app.saveBalanceSetting()">
+              <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="settingFreeBalanceManual" placeholder="Automaattinen" class="form-input font-num" style="width: 110px; text-align: right;" onchange="app.saveBalanceSetting()">
             </div>
           </div>
         </div>
@@ -622,6 +623,31 @@
   </div>
 
   <!-- ============================================== -->
+  <!-- FLOATING RECEIPT OVERLAY (PICTURE-IN-PICTURE)  -->
+  <!-- ============================================== -->
+  <div id="receiptOverlayViewer" class="receipt-overlay-viewer" style="display: none;">
+    <div class="receipt-overlay-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 14px;">🧾</span>
+        <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-sand);" id="receiptOverlayTitle">Kuitin esikatselu</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button type="button" class="btn-overlay-ctrl" onclick="app.toggleReceiptOverlayZoom()" title="Suurenna / Pienennä">⤢</button>
+        <button type="button" class="btn-overlay-ctrl" onclick="app.closeReceiptOverlay()" title="Sulje esikatselu">&times;</button>
+      </div>
+    </div>
+    <div class="receipt-overlay-body" id="receiptOverlayBody">
+      <img id="receiptOverlayImg" src="" alt="Kuitti" style="width: 100%; height: auto; display: block; border-radius: 8px; background: #FFFFFF;">
+    </div>
+    <div class="receipt-overlay-footer" id="receiptOverlayFooter" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--c-border); background: #1a1a1c;">
+      <span style="font-size: 10px; color: var(--c-stone);" id="receiptOverlayMeta">Kuitin tiedot</span>
+      <button type="button" class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 11px;" id="btnReceiptOverlayAction" onclick="app.recordFromReceiptOverlay()">
+        💳 Kirjaa tapahtuma
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
   <!-- MODAL: VALITSE TOIMENPIDE (FAB CHOICE)         -->
   <!-- ============================================== -->
   <div class="modal-overlay" id="modalFabChoice" onclick="if(event.target === this) app.closeModal('modalFabChoice')">
@@ -670,6 +696,74 @@
   </div>
 
   <!-- ============================================== -->
+  <!-- MODAL: LASKIN & KULUJEN JAKO (CALCULATOR)      -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalCalculator" onclick="if(event.target === this) app.closeModal('modalCalculator')">
+    <div class="modal-content" style="max-width: 380px; width: 100%; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(165,160,136,0.15); margin-bottom: 12px;">
+        <div>
+          <span class="card-label" style="margin: 0;">Työkalu</span>
+          <h3 style="font-size: 14px; font-weight: 500;">Laskin & Kulujen jako</h3>
+        </div>
+        <button onclick="app.closeModal('modalCalculator')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px; padding: 2px 6px;">&times;</button>
+      </div>
+
+      <!-- Calculator Display -->
+      <div style="background: #171718; border: 1px solid var(--c-border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; text-align: right;">
+        <div id="calcExpr" class="font-num" style="font-size: 13px; color: var(--c-stone); min-height: 18px; word-break: break-all;"></div>
+        <div id="calcResult" class="font-num" style="font-size: 28px; font-weight: 400; color: var(--c-text-primary); margin-top: 2px;">0,00 €</div>
+        <div id="calcSplitInfo" style="font-size: 11px; color: var(--c-olive); margin-top: 4px; display: none;"></div>
+      </div>
+
+      <!-- Quick Split Controls -->
+      <div style="margin-bottom: 12px;">
+        <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Pikajako (Oma osuus)</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="btn-primary" style="flex: 1; min-width: 65px; padding: 6px 4px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="app.calcSplitParts(2)">½ (2:lle)</button>
+          <button type="button" class="btn-primary" style="flex: 1; min-width: 65px; padding: 6px 4px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="app.calcSplitParts(3)">⅓ (3:lle)</button>
+          <button type="button" class="btn-primary" style="flex: 1; min-width: 65px; padding: 6px 4px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="app.calcSplitParts(4)">¼ (4:lle)</button>
+          <button type="button" class="btn-primary" style="flex: 1; min-width: 55px; padding: 6px 4px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="app.calcSplitPercent(50)">50 %</button>
+          <button type="button" class="btn-primary" style="flex: 1; min-width: 55px; padding: 6px 4px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="app.calcSplitPercent(60)">60 %</button>
+          <button type="button" class="btn-primary" style="flex: 1; min-width: 55px; padding: 6px 4px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="app.calcSplitCustom()">Muu %</button>
+        </div>
+      </div>
+
+      <!-- Keypad Grid (Swiss Monoline) -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px;">
+        <button type="button" class="calc-btn calc-op" onclick="app.calcClear()">C</button>
+        <button type="button" class="calc-btn calc-op" onclick="app.calcBackspace()">⌫</button>
+        <button type="button" class="calc-btn calc-op" onclick="app.calcInputOp('%')">%</button>
+        <button type="button" class="calc-btn calc-op" onclick="app.calcInputOp('/')">÷</button>
+
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('7')">7</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('8')">8</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('9')">9</button>
+        <button type="button" class="calc-btn calc-op" onclick="app.calcInputOp('*')">×</button>
+
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('4')">4</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('5')">5</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('6')">6</button>
+        <button type="button" class="calc-btn calc-op" onclick="app.calcInputOp('-')">−</button>
+
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('1')">1</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('2')">2</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('3')">3</button>
+        <button type="button" class="calc-btn calc-op" onclick="app.calcInputOp('+')">+</button>
+
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('0')">0</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputComma()">,</button>
+        <button type="button" class="calc-btn" onclick="app.calcInputNum('00')">00</button>
+        <button type="button" class="calc-btn calc-equals" onclick="app.calcEvaluate()">=</button>
+      </div>
+
+      <!-- Apply Amount Button -->
+      <button type="button" class="btn-primary" style="padding: 12px; font-weight: 600;" onclick="app.applyCalculatorAmount()">
+        ✓ Aseta summa kirjauskenttään
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
   <!-- MODAL: UUSI KIRJAUS                            -->
   <!-- ============================================== -->
   <div class="modal-overlay" id="modalQuickAdd" onclick="if(event.target === this) app.closeModal('modalQuickAdd')">
@@ -702,9 +796,14 @@
 
         <!-- Big Amount Field -->
         <div>
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Määrä (€)</label>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone);">Määrä (€)</label>
+            <button type="button" class="btn-primary" style="width: auto; padding: 3px 8px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.openCalculatorModal()" title="Avaa laskin ja kulujen jakaja">
+              🧮 Laskin / Jaa
+            </button>
+          </div>
           <div style="position: relative;">
-            <input type="number" id="formAmount" step="0.01" min="0.01" required placeholder="0,00" class="form-input font-num" style="font-size: 30px; font-weight: 300; padding: 10px 38px 10px 14px;">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 30px; font-weight: 300; padding: 10px 38px 10px 14px;">
             <span style="position: absolute; right: 14px; top: 12px; font-size: 24px; color: var(--c-stone); font-weight: 300;">€</span>
           </div>
         </div>
@@ -753,9 +852,14 @@
               </svg>
               <span style="font-size: 11px; color: var(--c-stone);" id="receiptFileName">Liitä kuitti (valinnainen)</span>
             </div>
-            <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-crimson); font-size: 11px; cursor: pointer;">
-              Poista kuitti
-            </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" id="btnViewFormReceipt" onclick="app.openReceiptOverlay(app.currentReceiptId || app.tempReceiptData, 'Liitetty kuitti')" style="display: none; background: none; border: none; color: var(--c-sand); font-size: 11px; cursor: pointer; text-decoration: underline;">
+                Avaa kuitti ruudulle ⤢
+              </button>
+              <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-crimson); font-size: 11px; cursor: pointer;">
+                Poista
+              </button>
+            </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -869,7 +973,7 @@
         </div>
         <div>
           <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuukausitavoite (€) / Katto (0 = ei kattoa)</label>
-          <input type="number" id="catFormBudget" step="0.01" min="0" placeholder="0,00" class="form-input font-num">
+          <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="catFormBudget" placeholder="0,00" class="form-input font-num">
         </div>
         <div style="display: flex; align-items: center; gap: 10px; padding: 4px 0;">
           <input type="checkbox" id="catFormQuickAction" onchange="document.getElementById('catQuickAmountRow').style.display = this.checked ? 'block' : 'none'" style="accent-color: var(--c-crimson);">
@@ -877,7 +981,7 @@
         </div>
         <div id="catQuickAmountRow" style="display: none;">
           <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Pikasumma (€)</label>
-          <input type="number" id="catFormQuickAmount" step="0.01" min="0" placeholder="esim. 15,00" class="form-input font-num">
+          <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="catFormQuickAmount" placeholder="esim. 15,00" class="form-input font-num">
         </div>
         <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna kategoria & tavoite</button>
       </form>
@@ -902,7 +1006,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Summa (€ / kk)</label>
-            <input type="number" id="subFormAmount" step="0.01" min="0.01" required placeholder="0,00" class="form-input font-num">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="subFormAmount" required placeholder="0,00" class="form-input font-num">
           </div>
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Veloituspäivä (pv)</label>
@@ -952,17 +1056,17 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kokonaisvelka (€)</label>
-            <input type="number" id="debtFormTotal" step="0.01" min="0" placeholder="esim. 5000,00" class="form-input font-num">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="debtFormTotal" placeholder="esim. 5000,00" class="form-input font-num">
           </div>
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Jäljellä oleva saldo (€)</label>
-            <input type="number" id="debtFormRemaining" step="0.01" min="0" required placeholder="esim. 3200,00" class="form-input font-num">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="debtFormRemaining" required placeholder="esim. 3200,00" class="form-input font-num">
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuukausierä (€ / kk)</label>
-            <input type="number" id="debtFormMonthly" step="0.01" min="0" required placeholder="esim. 250,00" class="form-input font-num">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="debtFormMonthly" required placeholder="esim. 250,00" class="form-input font-num">
           </div>
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Eräpäivä (pv / kk)</label>
@@ -1012,7 +1116,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Summa (€)</label>
-            <input type="number" id="p2pFormAmount" step="0.01" min="0.01" required placeholder="0,00" class="form-input font-num">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="p2pFormAmount" required placeholder="0,00" class="form-input font-num">
           </div>
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Päivämäärä</label>
@@ -1060,11 +1164,11 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Toisen osuus (€)</label>
-            <input type="number" id="splitPersonAmount" step="0.01" min="0.01" class="form-input font-num" oninput="app.calculateSplitRemainder()">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="splitPersonAmount" class="form-input font-num" oninput="app.calculateSplitRemainder()">
           </div>
           <div>
             <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Oma osuus (€)</label>
-            <input type="number" id="splitMyAmount" step="0.01" min="0" class="form-input font-num" readonly style="opacity: 0.8;">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="splitMyAmount" class="form-input font-num" readonly style="opacity: 0.8;">
           </div>
         </div>
 
@@ -1126,10 +1230,10 @@
   </div>
 
   <!-- Application Logic Modules -->
-  <script src="js/storage.js?v=20261101_1800"></script>
-  <script src="js/categories.js?v=20261101_1800"></script>
-  <script src="js/calculator.js?v=20261101_1800"></script>
-  <script src="js/exportImport.js?v=20261101_1800"></script>
-  <script src="app.js?v=20261101_1800"></script>
+  <script src="js/storage.js?v=20261101_1830"></script>
+  <script src="js/categories.js?v=20261101_1830"></script>
+  <script src="js/calculator.js?v=20261101_1830"></script>
+  <script src="js/exportImport.js?v=20261101_1830"></script>
+  <script src="app.js?v=20261101_1830"></script>
 </body>
 </html>

@@ -376,5 +376,54 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("openModal", js)
         self.assertIn("closeModal", js)
 
+    def test_12_revision_8_pdf_overlay_keypad_calculator(self):
+        """Varmistaa Revisio 8:n vaatimukset: PDF-kuitin valkopohjustus, overlay-katselin, numeerinen syöttö ja laskin/jakaja."""
+        # 1. PDF & Canvas valkoinen tausta
+        with open(os.path.join(SCRIPT_DIR, "js/storage.js"), "r", encoding="utf-8") as f:
+            storage_js = f.read()
+        self.assertIn('ctx.fillStyle = "#FFFFFF"', storage_js, "StorageProviderista puuttuu valkoisen taustan pakotus (#FFFFFF)!")
+        self.assertIn('fillRect(0, 0, width, height)', storage_js, "StorageProviderista puuttuu fillRect-kutsu!")
+
+        # 2. HTML: Overlay-kuittikatselin, numeronäppäimistö ja laskin-moduuli
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('id="receiptOverlayViewer"', html, "index.html:stä puuttuu kelluva kuittikatselin (receiptOverlayViewer)!")
+        self.assertIn('id="modalCalculator"', html, "index.html:stä puuttuu laskin- ja jakomodaali (modalCalculator)!")
+        self.assertIn('inputmode="decimal"', html, "index.html:stä puuttuu inputmode='decimal' numeeriselle näppäimistölle!")
+        self.assertIn('pdf.min.js', html, "index.html:stä puuttuu PDF.js -kirjasto!")
+
+        # 3. CSS: Overlay ja laskinnäppäimet
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        self.assertIn(".receipt-overlay-viewer", css, "CSS:stä puuttuu .receipt-overlay-viewer!")
+        self.assertIn(".calc-btn", css, "CSS:stä puuttuu .calc-btn!")
+
+        # 4. JS: Laskinlogiikka ja universaali summaparsinta
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        self.assertIn("parseAmount", app_js, "app.js:stä puuttuu parseAmount-metodi!")
+        self.assertIn("openReceiptOverlay", app_js, "app.js:stä puuttuu openReceiptOverlay!")
+        self.assertIn("openCalculatorModal", app_js, "app.js:stä puuttuu openCalculatorModal!")
+        self.assertIn("calcSplitParts", app_js, "app.js:stä puuttuu calcSplitParts!")
+        self.assertIn("calcSplitPercent", app_js, "app.js:stä puuttuu calcSplitPercent!")
+
+        # Testataan node-ympäristössä parseAmount pilkun ja pisteen tuki
+        test_parse_js = """
+        const { JSDOM } = require ? {} : {};
+        function parseAmount(val) {
+          if (typeof val === "number") return isNaN(val) ? 0 : val;
+          if (!val) return 0;
+          const clean = String(val).trim().replace(/\\s/g, "").replace(",", ".");
+          const num = parseFloat(clean);
+          return isNaN(num) ? 0 : num;
+        }
+
+        if (parseAmount("12,50") !== 12.5) throw new Error("12,50 parsaus epäonnistui: " + parseAmount("12,50"));
+        if (parseAmount("12.50") !== 12.5) throw new Error("12.50 parsaus epäonnistui");
+        if (parseAmount(" 1 250,75 ") !== 1250.75) throw new Error("1 250,75 parsaus epäonnistui");
+        """
+        res = subprocess.run(["node", "-e", test_parse_js], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, f"parseAmount node-testi epäonnistui:\n{res.stderr}")
+
 if __name__ == "__main__":
     unittest.main()

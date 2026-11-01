@@ -211,6 +211,39 @@ class StorageProvider {
 
   // --- KUVANKÄSITTELY JA TIIVISTYS (Client-side Canvas Compression) ---
   static async compressImage(file, maxDimension = 1600, quality = 0.8) {
+    // 1. PDF-tiedostojen suora vektorirenderöinti valkoiselle taustalle PDF.js:llä
+    if ((file.type === "application/pdf" || (file.name && file.name.toLowerCase().endsWith(".pdf"))) && typeof window !== "undefined" && window.pdfjsLib) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+
+        let scale = 1.5;
+        const maxPageDim = Math.max(unscaledViewport.width, unscaledViewport.height);
+        if (maxPageDim > 0) {
+          scale = Math.min(2.5, maxDimension / maxPageDim);
+        }
+
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        const ctx = canvas.getContext("2d");
+
+        // Pakotetaan AINA puhtaan valkoinen tausta ennen renderöintiä!
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        return canvas.toDataURL("image/jpeg", quality);
+      } catch (pdfErr) {
+        console.warn("PDF.js renderointi epaonnistui, kokeillaan Image-fallbackia:", pdfErr);
+      }
+    }
+
+    // 2. Kuvankäsittely / Safari WebKit natiivi PDF-kuvalataus
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -233,6 +266,11 @@ class StorageProvider {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
+
+          // PAKOTETAAN PUHTAAN VALKOINEN TAUSTA:
+          // Läpinäkyvät PDF:t ja PNG:t muuttuvat mustiksi JPEG-muunnoksessa ilman tätä!
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
 
           // Muunnetaan tiivistetyksi JPEG-dataksi

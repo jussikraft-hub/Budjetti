@@ -32,12 +32,36 @@ class BudjettiApp {
     this.activeProcessingInboxId = null;
     this.currentSplittingTx = null;
 
+    // Laskin ja kuitin esikatselu
+    this.calcTokens = ["0"];
+    this.calcSplitDesc = null;
+    this.activeOverlayReceiptId = null;
+
     this.paydayDay = 20;
     this.freeBalanceManual = null;
   }
 
+  // Universaali summan parsinta: hyväksyy sekä 12,50 että 12.50
+  parseAmount(val) {
+    if (typeof val === "number") return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    const clean = String(val).trim().replace(/\s/g, "").replace(",", ".");
+    const num = parseFloat(clean);
+    return isNaN(num) ? 0 : num;
+  }
+
+  // Muotoilu suomalaiseen näyttömuotoon: 12,50 €
+  formatEuro(val) {
+    const num = typeof val === "number" ? val : this.parseAmount(val);
+    return num.toFixed(2).replace(".", ",") + " €";
+  }
+
   async init() {
     try {
+      if (typeof window !== "undefined" && window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+
       await this.storage.init();
       await this.categories.init();
 
@@ -671,7 +695,7 @@ class BudjettiApp {
       card.style.padding = "12px 14px";
 
       card.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; min-width: 0; cursor: pointer;" onclick="app.openReceiptOverlay('${item.receiptId || item.id}', '${(item.notes || 'Kuitti').replace(/'/g, "\\'")}')" title="Avaa kuitti suuremmaksi">
           <div class="receipt-thumb" style="background-image: url('${item.thumbnail || ''}');">
             ${!item.thumbnail ? '📎' : ''}
           </div>
@@ -680,13 +704,13 @@ class BudjettiApp {
               ${item.notes || 'Nimeämätön kuitti'}
             </p>
             <p style="font-size: 10px; color: var(--c-stone);" class="font-num">
-              Tallennettu ${FinanceCalculator.formatDateFi(item.date)}
+              Tallennettu ${FinanceCalculator.formatDateFi(item.date)} • 🔍 Avaa
             </p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
           <button class="btn-primary" style="width: auto; padding: 6px 10px; font-size: 9px;" onclick="app.processInboxReceipt('${item.id}')">
-            Käsittele &rarr;
+            Kirjaa &rarr;
           </button>
           <button style="background: none; border: none; color: var(--c-stone); font-size: 16px; cursor: pointer; padding: 4px;" onclick="app.deleteInboxReceipt('${item.id}')" title="Poista kuitti">
             &times;
@@ -706,6 +730,8 @@ class BudjettiApp {
       desc: item.notes || ""
     });
     this.activeProcessingInboxId = id;
+    // Avataan kuitin esikatselu heti sovelluksen ja lomakkeen päälle tulevana kelluvana ikkunana!
+    this.openReceiptOverlay(item.receiptId || item.id, item.notes || "Kuitin tiedot");
   }
 
   async deleteInboxReceipt(id) {
@@ -870,7 +896,7 @@ class BudjettiApp {
     event.preventDefault();
     const id = document.getElementById("subFormId").value || ("sub_" + Date.now());
     const name = document.getElementById("subFormName").value.trim();
-    const amount = parseFloat(document.getElementById("subFormAmount").value) || 0;
+    const amount = this.parseAmount(document.getElementById("subFormAmount").value);
     const billingDay = parseInt(document.getElementById("subFormBillingDay").value, 10) || 1;
     const accountId = document.getElementById("subFormAccount").value;
     const categoryId = document.getElementById("subFormCategory").value;
@@ -1148,9 +1174,9 @@ class BudjettiApp {
     event.preventDefault();
     const id = document.getElementById("debtFormId").value || ("debt_" + Date.now());
     const name = document.getElementById("debtFormName").value.trim();
-    const totalAmount = parseFloat(document.getElementById("debtFormTotal").value) || 0;
-    const remainingAmount = parseFloat(document.getElementById("debtFormRemaining").value) || 0;
-    const monthlyPayment = parseFloat(document.getElementById("debtFormMonthly").value) || 0;
+    const totalAmount = this.parseAmount(document.getElementById("debtFormTotal").value);
+    const remainingAmount = this.parseAmount(document.getElementById("debtFormRemaining").value);
+    const monthlyPayment = this.parseAmount(document.getElementById("debtFormMonthly").value);
     const dueDay = parseInt(document.getElementById("debtFormDueDay").value, 10) || 20;
     const paymentSource = document.getElementById("debtFormPaymentSource").value;
     const notes = document.getElementById("debtFormNotes").value.trim();
@@ -1337,7 +1363,7 @@ class BudjettiApp {
     event.preventDefault();
     const id = document.getElementById("p2pFormId").value || ("p2p_" + Date.now());
     const person = document.getElementById("p2pFormPerson").value.trim();
-    const amount = parseFloat(document.getElementById("p2pFormAmount").value) || 0;
+    const amount = this.parseAmount(document.getElementById("p2pFormAmount").value);
     const date = document.getElementById("p2pFormDate").value;
     const dueDate = document.getElementById("p2pFormDueDate").value;
     const notes = document.getElementById("p2pFormNotes").value.trim();
@@ -1407,19 +1433,19 @@ class BudjettiApp {
   calculateSplitRemainder() {
     if (!this.currentSplittingTx) return;
     const total = this.currentSplittingTx.amount || 0;
-    const personAmt = parseFloat(document.getElementById("splitPersonAmount")?.value) || 0;
+    const personAmt = this.parseAmount(document.getElementById("splitPersonAmount")?.value);
     const myAmt = Math.max(0, total - personAmt);
     const myInput = document.getElementById("splitMyAmount");
-    if (myInput) myInput.value = myAmt.toFixed(2);
+    if (myInput) myInput.value = myAmt.toFixed(2).replace(".", ",");
   }
 
   setEqualSplit() {
     if (!this.currentSplittingTx) return;
-    const half = (this.currentSplittingTx.amount / 2).toFixed(2);
+    const half = (this.currentSplittingTx.amount / 2).toFixed(2).replace(".", ",");
     const personInput = document.getElementById("splitPersonAmount");
     const myInput = document.getElementById("splitMyAmount");
     if (personInput) personInput.value = half;
-    if (myInput) myInput.value = (this.currentSplittingTx.amount - half).toFixed(2);
+    if (myInput) myInput.value = half;
   }
 
   async confirmSplitExpense() {
@@ -1429,7 +1455,7 @@ class BudjettiApp {
       alert("Syötä henkilön nimi.");
       return;
     }
-    const personAmt = parseFloat(document.getElementById("splitPersonAmount")?.value) || 0;
+    const personAmt = this.parseAmount(document.getElementById("splitPersonAmount")?.value);
     if (personAmt <= 0) {
       alert("Syötä jaettava summa.");
       return;
@@ -1654,6 +1680,229 @@ class BudjettiApp {
     if (modal) modal.classList.remove("active");
   }
 
+  // --- FLOATING RECEIPT OVERLAY (Picture-in-Picture) ---
+  async openReceiptOverlay(receiptIdOrData, metaText = "") {
+    const viewer = document.getElementById("receiptOverlayViewer");
+    const imgEl = document.getElementById("receiptOverlayImg");
+    const metaEl = document.getElementById("receiptOverlayMeta");
+    const actionBtn = document.getElementById("btnReceiptOverlayAction");
+    if (!viewer || !imgEl) return;
+
+    this.activeOverlayReceiptId = null;
+    let dataUrl = null;
+
+    if (typeof receiptIdOrData === "string" && receiptIdOrData.startsWith("data:")) {
+      dataUrl = receiptIdOrData;
+    } else if (typeof receiptIdOrData === "string" && receiptIdOrData.trim()) {
+      this.activeOverlayReceiptId = receiptIdOrData;
+      dataUrl = await this.storage.getReceipt(receiptIdOrData);
+    }
+
+    if (!dataUrl) {
+      alert("Kuittitiedostoa ei löytynyt tallennustilasta.");
+      return;
+    }
+
+    imgEl.src = dataUrl;
+    if (metaEl) metaEl.innerText = metaText || "Kuittitosite";
+
+    const quickAddModal = document.getElementById("modalQuickAdd");
+    const isAdding = quickAddModal && quickAddModal.classList.contains("active");
+    if (actionBtn) {
+      actionBtn.style.display = isAdding ? "none" : "block";
+    }
+
+    viewer.style.display = "flex";
+  }
+
+  closeReceiptOverlay() {
+    const viewer = document.getElementById("receiptOverlayViewer");
+    if (viewer) viewer.style.display = "none";
+  }
+
+  toggleReceiptOverlayZoom() {
+    const viewer = document.getElementById("receiptOverlayViewer");
+    if (viewer) viewer.classList.toggle("zoomed");
+  }
+
+  recordFromReceiptOverlay() {
+    if (this.activeOverlayReceiptId) {
+      this.processInboxReceipt(this.activeOverlayReceiptId);
+    }
+  }
+
+  // --- IN-APP CALCULATOR & SPLITTER ---
+  openCalculatorModal(initialVal = null) {
+    if (initialVal === null) {
+      const formVal = document.getElementById("formAmount")?.value;
+      const parsed = this.parseAmount(formVal);
+      this.calcTokens = parsed > 0 ? [parsed.toString()] : ["0"];
+    } else {
+      const parsed = this.parseAmount(initialVal);
+      this.calcTokens = parsed > 0 ? [parsed.toString()] : ["0"];
+    }
+    this.calcSplitDesc = null;
+    this.updateCalcDisplay();
+    this.openModal("modalCalculator");
+  }
+
+  calcInputNum(digit) {
+    const last = this.calcTokens[this.calcTokens.length - 1];
+    if (["+", "-", "*", "/"].includes(last)) {
+      this.calcTokens.push(digit);
+    } else {
+      if (last === "0" && digit !== "00") {
+        this.calcTokens[this.calcTokens.length - 1] = digit;
+      } else {
+        this.calcTokens[this.calcTokens.length - 1] = (last || "") + digit;
+      }
+    }
+    this.calcSplitDesc = null;
+    this.updateCalcDisplay();
+  }
+
+  calcInputComma() {
+    const last = this.calcTokens[this.calcTokens.length - 1];
+    if (["+", "-", "*", "/"].includes(last)) {
+      this.calcTokens.push("0.");
+    } else if (!last.includes(".")) {
+      this.calcTokens[this.calcTokens.length - 1] = (last || "0") + ".";
+    }
+    this.calcSplitDesc = null;
+    this.updateCalcDisplay();
+  }
+
+  calcInputOp(op) {
+    this.calcEvaluate();
+    const last = this.calcTokens[this.calcTokens.length - 1];
+    if (["+", "-", "*", "/"].includes(last)) {
+      this.calcTokens[this.calcTokens.length - 1] = op;
+    } else {
+      this.calcTokens.push(op);
+    }
+    this.calcSplitDesc = null;
+    this.updateCalcDisplay();
+  }
+
+  calcBackspace() {
+    const last = this.calcTokens[this.calcTokens.length - 1];
+    if (!last) return;
+    if (["+", "-", "*", "/"].includes(last)) {
+      this.calcTokens.pop();
+    } else if (last.length > 1) {
+      this.calcTokens[this.calcTokens.length - 1] = last.slice(0, -1);
+    } else {
+      this.calcTokens.pop();
+      if (this.calcTokens.length === 0) this.calcTokens = ["0"];
+    }
+    this.calcSplitDesc = null;
+    this.updateCalcDisplay();
+  }
+
+  calcClear() {
+    this.calcTokens = ["0"];
+    this.calcSplitDesc = null;
+    this.updateCalcDisplay();
+  }
+
+  calcEvaluate() {
+    try {
+      if (this.calcTokens.length === 0) return 0;
+      const last = this.calcTokens[this.calcTokens.length - 1];
+      let tokensToEval = [...this.calcTokens];
+      if (["+", "-", "*", "/"].includes(last)) {
+        tokensToEval.pop();
+      }
+      if (tokensToEval.length === 0) return 0;
+
+      let res = parseFloat(tokensToEval[0]) || 0;
+      for (let i = 1; i < tokensToEval.length; i += 2) {
+        const op = tokensToEval[i];
+        const nextVal = parseFloat(tokensToEval[i + 1]) || 0;
+        if (op === "+") res += nextVal;
+        else if (op === "-") res -= nextVal;
+        else if (op === "*") res *= nextVal;
+        else if (op === "/") res = nextVal !== 0 ? res / nextVal : res;
+      }
+      res = Math.round(res * 100) / 100;
+      this.calcTokens = [res.toString()];
+      this.updateCalcDisplay();
+      return res;
+    } catch (e) {
+      console.warn("Laskinvirhe:", e);
+      return 0;
+    }
+  }
+
+  calcSplitParts(parts) {
+    const total = this.calcEvaluate();
+    if (total <= 0) return;
+    const share = Math.round((total / parts) * 100) / 100;
+    this.calcTokens = [share.toString()];
+    this.calcSplitDesc = `Koko summa: ${this.formatEuro(total)} | Jaettu ${parts}:lle | Oma osuus: ${this.formatEuro(share)}`;
+    this.updateCalcDisplay();
+  }
+
+  calcSplitPercent(percent) {
+    const total = this.calcEvaluate();
+    if (total <= 0) return;
+    const share = Math.round((total * (percent / 100)) * 100) / 100;
+    this.calcTokens = [share.toString()];
+    this.calcSplitDesc = `Koko summa: ${this.formatEuro(total)} | Oma osuus ${percent} %: ${this.formatEuro(share)}`;
+    this.updateCalcDisplay();
+  }
+
+  calcSplitCustom() {
+    const pStr = prompt("Syötä oma prosenttiosuutesi (esim. 65):", "50");
+    if (!pStr) return;
+    const p = parseFloat(pStr.replace(",", "."));
+    if (p > 0 && p <= 100) {
+      this.calcSplitPercent(p);
+    }
+  }
+
+  updateCalcDisplay() {
+    const exprEl = document.getElementById("calcExpr");
+    const resultEl = document.getElementById("calcResult");
+    const splitEl = document.getElementById("calcSplitInfo");
+
+    let displayExpr = this.calcTokens.map(t => {
+      if (t === "*") return "×";
+      if (t === "/") return "÷";
+      if (t === "-") return "−";
+      return t.replace(".", ",");
+    }).join(" ");
+
+    if (exprEl) exprEl.innerText = displayExpr;
+
+    const currentVal = parseFloat(this.calcTokens[this.calcTokens.length - 1]) || 0;
+    if (resultEl) resultEl.innerText = currentVal.toFixed(2).replace(".", ",") + " €";
+
+    if (splitEl) {
+      if (this.calcSplitDesc) {
+        splitEl.style.display = "block";
+        splitEl.innerText = this.calcSplitDesc;
+      } else {
+        splitEl.style.display = "none";
+      }
+    }
+  }
+
+  applyCalculatorAmount() {
+    const finalAmt = this.calcEvaluate();
+    const amountField = document.getElementById("formAmount");
+    if (amountField) {
+      amountField.value = finalAmt.toFixed(2).replace(".", ",");
+    }
+    if (this.calcSplitDesc) {
+      const descField = document.getElementById("formDesc");
+      if (descField && !descField.value) {
+        descField.value = this.calcSplitDesc;
+      }
+    }
+    this.closeModal("modalCalculator");
+  }
+
   openFabChoice() {
     this.openModal("modalFabChoice");
   }
@@ -1679,16 +1928,19 @@ class BudjettiApp {
 
     const nameEl = document.getElementById("receiptFileName");
     const removeBtn = document.getElementById("btnRemoveReceipt");
+    const viewBtn = document.getElementById("btnViewFormReceipt");
     if (prefill.receiptId) {
       if (nameEl) nameEl.innerText = "Kuitti tallennettu 📎";
       if (removeBtn) removeBtn.style.display = "inline";
+      if (viewBtn) viewBtn.style.display = "inline-block";
     } else {
       if (nameEl) nameEl.innerText = "Liitä kuitti (valinnainen)";
       if (removeBtn) removeBtn.style.display = "none";
+      if (viewBtn) viewBtn.style.display = "none";
     }
 
     document.getElementById("formTxId").value = prefill.id || "";
-    document.getElementById("formAmount").value = prefill.amount ? prefill.amount.toFixed(2) : "";
+    document.getElementById("formAmount").value = prefill.amount ? prefill.amount.toString().replace(".", ",") : "";
     document.getElementById("formVendor").value = prefill.vendor || "";
     document.getElementById("formDate").value = prefill.date || new Date().toISOString().split("T")[0];
     document.getElementById("formDesc").value = prefill.desc || "";
@@ -1722,10 +1974,13 @@ class BudjettiApp {
     if (nameEl) nameEl.innerText = "Liitä kuitti (valinnainen)";
     const removeBtn = document.getElementById("btnRemoveReceipt");
     if (removeBtn) removeBtn.style.display = "none";
+    const viewBtn = document.getElementById("btnViewFormReceipt");
+    if (viewBtn) viewBtn.style.display = "none";
     const cam = document.getElementById("formReceiptCamera");
     if (cam) cam.value = "";
     const file = document.getElementById("formReceiptFile");
     if (file) file.value = "";
+    this.closeReceiptOverlay();
   }
 
   editTransaction(id) {
@@ -1813,9 +2068,13 @@ class BudjettiApp {
       document.getElementById("receiptFileName").innerText = `Kuva liitetty (${file.name || 'kamera'})`;
       const removeBtn = document.getElementById("btnRemoveReceipt");
       if (removeBtn) removeBtn.style.display = "inline";
+      const viewBtn = document.getElementById("btnViewFormReceipt");
+      if (viewBtn) viewBtn.style.display = "inline-block";
+      // Avataan kuitin esikatselu heti ruudulle kelluvana ikkunana lomakkeen yläpuolelle!
+      this.openReceiptOverlay(compressedDataUrl, file.name || "Liitetty kuitti");
     } catch (e) {
       console.error("Kuvan tiivistys epäonnistui:", e);
-      alert("Kuvan tiivistys epäonnistui.");
+      alert("Kuvan tiivistys epäonnistui: " + (e.message || e));
       document.getElementById("receiptFileName").innerText = "Virhe kuvan käsittelyssä";
     }
   }
@@ -1824,7 +2083,7 @@ class BudjettiApp {
     event.preventDefault();
 
     const id = document.getElementById("formTxId").value || "tx_" + Date.now();
-    const amount = parseFloat(document.getElementById("formAmount").value) || 0;
+    const amount = this.parseAmount(document.getElementById("formAmount").value);
     const vendor = document.getElementById("formVendor").value.trim();
     const date = document.getElementById("formDate").value;
     const desc = document.getElementById("formDesc").value.trim();
@@ -1866,6 +2125,7 @@ class BudjettiApp {
     }
 
     this.closeModal("modalQuickAdd");
+    this.closeReceiptOverlay();
     await this.refreshData();
   }
 
@@ -1925,9 +2185,9 @@ class BudjettiApp {
     const id = document.getElementById("catFormId")?.value;
     const name = document.getElementById("catFormName").value.trim();
     const groupId = document.getElementById("catFormGroup").value;
-    const budget = parseFloat(document.getElementById("catFormBudget").value) || 0;
+    const budget = this.parseAmount(document.getElementById("catFormBudget").value);
     const quickAction = document.getElementById("catFormQuickAction")?.checked || false;
-    const quickAmount = parseFloat(document.getElementById("catFormQuickAmount")?.value) || 0;
+    const quickAmount = this.parseAmount(document.getElementById("catFormQuickAmount")?.value);
 
     if (id) {
       await this.categories.updateCategory(id, {
@@ -2079,8 +2339,9 @@ class BudjettiApp {
   }
 
   async saveBalanceSetting() {
-    const val = parseFloat(document.getElementById("settingFreeBalanceManual").value);
-    this.freeBalanceManual = isNaN(val) ? null : val;
+    const raw = document.getElementById("settingFreeBalanceManual")?.value;
+    const val = raw ? this.parseAmount(raw) : null;
+    this.freeBalanceManual = val;
     await this.storage.setSetting("freeBalanceManual", this.freeBalanceManual);
     this.renderDashboard();
   }
