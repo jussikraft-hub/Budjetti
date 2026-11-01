@@ -49,9 +49,38 @@ class FinanceCalculator {
   }
 
   /**
+   * Palauttaa kuluvan palkkakauden alku- ja loppupäivämäärät YYYY-MM-DD muodossa
+   * @param {number} paydayDay - palkkapäivä (esim. 20)
+   * @param {Date} fromDate - vertailuhetki
+   */
+  static getCurrentPeriodRange(paydayDay = 20, fromDate = new Date()) {
+    const year = fromDate.getFullYear();
+    const month = fromDate.getMonth();
+    const day = fromDate.getDate();
+
+    let startD, endD;
+    if (day >= paydayDay) {
+      startD = new Date(year, month, paydayDay);
+      endD = new Date(year, month + 1, paydayDay - 1);
+    } else {
+      startD = new Date(year, month - 1, paydayDay);
+      endD = new Date(year, month, paydayDay - 1);
+    }
+
+    const pad = (n) => (n < 10 ? "0" + n : String(n));
+    const toDateStr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    return {
+      startStr: toDateStr(startD),
+      endStr: toDateStr(endD),
+      label: `${startD.getDate()}.${startD.getMonth() + 1}. – ${endD.getDate()}.${endD.getMonth() + 1}.`
+    };
+  }
+
+  /**
    * Laskee kuukauden tai valitun jakson taloustilastot
    */
-  static calculateStats(transactions, categories, filterYear, filterMonth) {
+  static calculateStats(transactions, categories, filterYear, filterMonth, dateRange = null) {
     let totalIncome = 0;
     let totalExpense = 0;
     const categoryTotals = {};
@@ -65,10 +94,14 @@ class FinanceCalculator {
 
     // Käydään tapahtumat läpi
     transactions.forEach(t => {
-      const d = new Date(t.date);
-      // Jos suodatettu tiettyyn vuoteen ja kuukauteen
-      if (filterYear !== undefined && d.getFullYear() !== filterYear) return;
-      if (filterMonth !== undefined && d.getMonth() !== filterMonth) return;
+      if (dateRange && dateRange.startStr && dateRange.endStr) {
+        if (t.date < dateRange.startStr || t.date > dateRange.endStr) return;
+      } else {
+        const d = new Date(t.date);
+        // Jos suodatettu tiettyyn vuoteen ja kuukauteen
+        if (filterYear !== undefined && d.getFullYear() !== filterYear) return;
+        if (filterMonth !== undefined && d.getMonth() !== filterMonth) return;
+      }
 
       const amt = parseFloat(t.amount) || 0;
       if (t.type === "income") {

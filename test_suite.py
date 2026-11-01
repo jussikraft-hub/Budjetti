@@ -100,6 +100,12 @@ class TestBudjettiApp(unittest.TestCase):
         const daily = FinanceCalculator.calculateDailyAllowance(642.80, 19);
         if (daily !== 33.83) throw new Error("Päiväallokaatio väärin: " + daily + " (odotettu 33.83)");
 
+        // Testi 4: Palkkakauden päivämäärävälin laskenta
+        const range1 = FinanceCalculator.getCurrentPeriodRange(20, d1);
+        if (range1.startStr !== "2026-10-20" || range1.endStr !== "2026-11-19") {
+          throw new Error("Palkkakausi väärin 1.11.: " + JSON.stringify(range1));
+        }
+
         console.log("OK");
         """
         res = subprocess.run(["node", "-e", calc_test_js], capture_output=True, text=True)

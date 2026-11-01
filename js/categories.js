@@ -125,16 +125,6 @@ class CategoryManager {
   async init() {
     const saved = await this.storage.getSetting("categories", null);
     if (saved && Array.isArray(saved.categories)) {
-      // Puhdistetaan vanhat mallisummat automaattisesti tyhjään perustilaan (0 €)
-      const hasOldMockAmounts = saved.categories.some(c => c.budgetMonthly === 500 || c.budgetMonthly === 2043.97 || c.budgetMonthly === 850);
-      if (hasOldMockAmounts) {
-        saved.categories.forEach(c => {
-          c.budgetMonthly = 0;
-          c.quickAction = false;
-          c.quickAmount = 0;
-        });
-        await this.storage.setSetting("categories", saved);
-      }
       this.categories = saved.categories;
       this.groups = saved.groups || [...DEFAULT_CATEGORY_GROUPS];
     } else {

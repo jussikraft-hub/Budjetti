@@ -95,7 +95,18 @@ class BudjettiApp {
   }
 
   async refreshData() {
+    this.paydayDay = await this.storage.getSetting("payday", 20);
+    this.freeBalanceManual = await this.storage.getSetting("freeBalanceManual", null);
+    await this.categories.init();
     this.transactions = await this.storage.getAllTransactions();
+
+    const paydayEl = document.getElementById("settingPaydayDay");
+    if (paydayEl) paydayEl.value = this.paydayDay;
+    const balanceEl = document.getElementById("settingFreeBalanceManual");
+    if (balanceEl && this.freeBalanceManual !== null) {
+      balanceEl.value = this.freeBalanceManual;
+    }
+
     this.renderHeader();
     this.renderDashboard();
     this.filterTransactions();
@@ -104,26 +115,27 @@ class BudjettiApp {
 
   renderHeader() {
     const now = new Date();
+    const periodRange = FinanceCalculator.getCurrentPeriodRange(this.paydayDay, now);
     const monthsFi = [
       "Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu",
       "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"
     ];
     const headerEl = document.getElementById("headerCurrentPeriod");
     if (headerEl) {
-      headerEl.innerText = `${monthsFi[now.getMonth()]} ${now.getFullYear()}`;
+      headerEl.innerText = `${monthsFi[now.getMonth()]} ${now.getFullYear()} (${periodRange.label})`;
     }
   }
 
   renderDashboard() {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const periodRange = FinanceCalculator.getCurrentPeriodRange(this.paydayDay, now);
 
     const stats = FinanceCalculator.calculateStats(
       this.transactions,
       this.categories.getAll(),
-      currentYear,
-      currentMonth
+      undefined,
+      undefined,
+      periodRange
     );
 
     // Lasketaan päivät palkkapäivään
@@ -325,13 +337,11 @@ class BudjettiApp {
     const monthMode = monthFilter ? monthFilter.value : "current";
 
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const periodRange = FinanceCalculator.getCurrentPeriodRange(this.paydayDay, now);
 
     const filtered = this.transactions.filter(t => {
-      const d = new Date(t.date);
       if (monthMode === "current") {
-        if (d.getFullYear() !== currentYear || d.getMonth() !== currentMonth) return false;
+        if (t.date < periodRange.startStr || t.date > periodRange.endStr) return false;
       }
       if (query) {
         const cat = this.categories.getById(t.category);
