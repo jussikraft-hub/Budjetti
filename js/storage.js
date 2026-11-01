@@ -444,6 +444,8 @@ class StorageProvider {
       subscriptions: await this.getSubscriptions(),
       debts: await this.getDebts(),
       p2pLoans: await this.getP2pLoans(),
+      ulosotto: await this.getSetting("ulosotto", null),
+      salary: await this.getSetting("salary", null),
       receiptInbox: await this.getReceiptInbox(),
       dropboxFolder: this.getDropboxFolder(),
       gdriveFolder: this.getGDriveFolder(),
@@ -455,6 +457,12 @@ class StorageProvider {
       version: "1.1",
       updated_at: new Date().toISOString(),
       settings,
+      accounts: settings.accounts,
+      subscriptions: settings.subscriptions,
+      debts: settings.debts,
+      p2pLoans: settings.p2pLoans,
+      ulosotto: settings.ulosotto,
+      salary: settings.salary,
       transactions,
     };
   }
@@ -467,10 +475,12 @@ class StorageProvider {
       if (payload.settings.payday) await this.setSetting("payday", payload.settings.payday);
       if (payload.settings.recurring) await this.setSetting("recurring", payload.settings.recurring);
       if (payload.settings.categories) await this.setSetting("categories", payload.settings.categories);
-      if (payload.settings.accounts) await this.setSetting("accounts", payload.settings.accounts);
-      if (payload.settings.subscriptions) await this.setSetting("subscriptions", payload.settings.subscriptions);
-      if (payload.settings.debts) await this.setSetting("debts", payload.settings.debts);
-      if (payload.settings.p2pLoans) await this.setSetting("p2pLoans", payload.settings.p2pLoans);
+      if (payload.settings.accounts || payload.accounts) await this.setSetting("accounts", payload.settings.accounts || payload.accounts);
+      if (payload.settings.subscriptions || payload.subscriptions) await this.setSetting("subscriptions", payload.settings.subscriptions || payload.subscriptions);
+      if (payload.settings.debts || payload.debts) await this.setSetting("debts", payload.settings.debts || payload.debts);
+      if (payload.settings.p2pLoans || payload.p2pLoans) await this.setSetting("p2pLoans", payload.settings.p2pLoans || payload.p2pLoans);
+      if (payload.settings.ulosotto || payload.ulosotto) await this.setSetting("ulosotto", payload.settings.ulosotto || payload.ulosotto);
+      if (payload.settings.salary || payload.salary) await this.setSetting("salary", payload.settings.salary || payload.salary);
       if (payload.settings.receiptInbox) await this.setSetting("receiptInbox", payload.settings.receiptInbox);
       if (payload.settings.dropboxFolder) this.setDropboxFolder(payload.settings.dropboxFolder);
       if (payload.settings.gdriveFolder) this.setGDriveFolder(payload.settings.gdriveFolder);
