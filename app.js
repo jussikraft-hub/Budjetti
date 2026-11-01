@@ -40,6 +40,15 @@ class BudjettiApp {
       const folderEl = document.getElementById("settingDropboxFolder");
       if (folderEl && folder) folderEl.value = folder;
 
+      const receiptsTarget = this.storage.getReceiptsTarget();
+      const receiptsFolder = this.storage.getReceiptsFolder();
+      const receiptsTargetEl = document.getElementById("settingReceiptsTarget");
+      if (receiptsTargetEl) receiptsTargetEl.value = receiptsTarget;
+      const receiptsFolderEl = document.getElementById("settingReceiptsFolder");
+      if (receiptsFolderEl) receiptsFolderEl.value = receiptsFolder;
+      const receiptsFolderSec = document.getElementById("receiptsFolderSection");
+      if (receiptsFolderSec) receiptsFolderSec.style.display = receiptsTarget === "dropbox" ? "block" : "none";
+
       const paydayEl = document.getElementById("settingPaydayDay");
       if (paydayEl) paydayEl.value = this.paydayDay;
 
@@ -142,7 +151,7 @@ class BudjettiApp {
     if (paydayLabel) paydayLabel.innerText = `Päiväallokaatio (${nextPaydayStr} saakka)`;
 
     const daysLeftEl = document.getElementById("kpiDaysLeft");
-    if (daysLeftEl) daysLeftEl.innerText = `${daysLeft} PV`;
+    if (daysLeftEl) daysLeftEl.innerText = daysLeft;
 
     const incomeEl = document.getElementById("kpiMonthIncome");
     if (incomeEl) incomeEl.innerText = "+" + FinanceCalculator.formatCurrency(stats.totalIncome);
@@ -208,11 +217,18 @@ class BudjettiApp {
     if (!container) return;
     container.innerHTML = "";
 
-    // Näytetään 3–4 keskeisintä kategoriaa, joilla on asetettu tavoite
+    // Näytetään keskeisimmät kategoriat, joilla on asetettu tavoite
     const catsWithBudget = this.categories.getAll().filter(c => c.budgetMonthly > 0 && c.type !== "income");
 
     if (catsWithBudget.length === 0) {
-      container.innerHTML = `<p style="font-size: 11px; color: var(--c-stone);">Ei asetettuja kuukausitavoitteita.</p>`;
+      container.innerHTML = `
+        <div style="text-align: center; padding: 14px 0;">
+          <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 8px;">Ei asetettuja kuukausitavoitteita.</p>
+          <button class="btn-primary" style="width: auto; padding: 6px 14px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.switchView('viewBudjetit')">
+            Aseta tavoitteita &rarr;
+          </button>
+        </div>
+      `;
       return;
     }
 
@@ -227,6 +243,9 @@ class BudjettiApp {
 
       const row = document.createElement("div");
       row.className = "meter-row";
+      row.style.cursor = "pointer";
+      row.title = "Klikkaa muokataksesi tavoitetta";
+      row.onclick = () => this.openCategoryModal(c.id);
       row.innerHTML = `
         <div style="display: flex; justify-content: space-between; font-size: 12px;" class="font-num">
           <span style="font-weight: 500; display: flex; align-items: center; gap: 8px;">
@@ -266,6 +285,11 @@ class BudjettiApp {
 
       const item = document.createElement("div");
       item.className = "ledger-item";
+      item.style.cursor = "pointer";
+      item.title = "Klikkaa muokataksesi kirjausta";
+      item.onclick = (e) => {
+        if (!e.target.closest("button")) this.editTransaction(t.id);
+      };
       item.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
           <div style="width: 32px; height: 32px; border-radius: 8px; background: #252527; color: var(--c-stone); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(165,160,136,0.15);">
@@ -332,20 +356,30 @@ class BudjettiApp {
 
       const row = document.createElement("div");
       row.className = "ledger-item";
+      row.style.cursor = "pointer";
+      row.title = "Klikkaa muokataksesi kirjausta";
+      row.onclick = (e) => {
+        if (!e.target.closest("button")) this.editTransaction(t.id);
+      };
       row.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
           <div>
             <p style="font-size: 13px; font-weight: 500; color: var(--c-text-primary);">${t.vendor || cat.name}</p>
             <p style="font-size: 11px; color: var(--c-stone);">
-              ${FinanceCalculator.formatDateFi(t.date)} · ${cat.name} ${t.desc ? '· ' + t.desc : ''}
+              ${FinanceCalculator.formatDateFi(t.date)} · ${cat.name} ${t.desc ? '· ' + t.desc : ''} ${t.receiptId ? '· 📎' : ''}
             </p>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
           <span class="font-num" style="font-size: 13px; font-weight: 500; color: ${color};">
             ${sign}${FinanceCalculator.formatCurrency(t.amount)}
           </span>
-          <button onclick="app.deleteTransaction('${t.id}')" title="Poista kirjaus" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px; font-size: 14px;">
+          <button onclick="app.editTransaction('${t.id}')" title="Muokkaa kirjausta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </button>
+          <button onclick="app.deleteTransaction('${t.id}')" title="Poista kirjaus" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px; font-size: 15px;">
             &times;
           </button>
         </div>
@@ -370,13 +404,21 @@ class BudjettiApp {
       groupCats.forEach(c => {
         catsHtml += `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(165,160,136,0.1);">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
               <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${c.color};"></span>
               <span style="font-size: 13px; font-weight: 500;">${c.name}</span>
+              ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson);">PIKA</span>' : ''}
             </div>
             <div style="display: flex; align-items: center; gap: 10px;" class="font-num">
-              <span style="font-size: 12px; color: var(--c-stone);">Tavoite: ${c.budgetMonthly ? c.budgetMonthly + ' €' : '-'}</span>
-              <button onclick="app.deleteCategory('${c.id}')" style="background: none; border: none; color: var(--c-stone); cursor: pointer;">&times;</button>
+              <span style="font-size: 12px; color: var(--c-stone); cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
+                ${c.budgetMonthly > 0 ? c.budgetMonthly.toFixed(0) + ' €' : '<span style="color: rgba(165,160,136,0.5);">Ei tavoitetta</span>'}
+              </span>
+              <button onclick="app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </button>
+              <button onclick="app.deleteCategory('${c.id}')" title="Poista kategoria" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px; font-size: 15px;">&times;</button>
             </div>
           </div>
         `;
@@ -385,10 +427,12 @@ class BudjettiApp {
       groupCard.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <span class="card-label" style="margin: 0; color: ${g.color};">${g.name}</span>
-          <span style="font-size: 11px; color: var(--c-stone); font-family: ui-monospace, monospace;">${groupCats.length} kpl</span>
+          <button onclick="app.openCategoryModal(null, '${g.id}')" style="background: none; border: none; font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em;">
+            + Lisää
+          </button>
         </div>
         <div style="display: flex; flex-direction: column;">
-          ${catsHtml || '<p style="font-size: 11px; color: var(--c-stone);">Ei kategorioita tässä ryhmässä.</p>'}
+          ${catsHtml || '<p style="font-size: 11px; color: var(--c-stone); padding: 8px 0;">Ei kategorioita tässä ryhmässä.</p>'}
         </div>
       `;
       container.appendChild(groupCard);
@@ -421,7 +465,21 @@ class BudjettiApp {
     if (!modal) return;
 
     this.tempReceiptData = null;
-    document.getElementById("receiptFileName").innerText = "Liitä kuittikuva";
+    this.currentReceiptId = prefill.receiptId || null;
+
+    const modalTitle = document.getElementById("modalFormTitle");
+    if (modalTitle) modalTitle.innerText = prefill.id ? "Muokkaa kirjausta" : "Uusi kirjaus";
+
+    const nameEl = document.getElementById("receiptFileName");
+    const removeBtn = document.getElementById("btnRemoveReceipt");
+    if (prefill.receiptId) {
+      if (nameEl) nameEl.innerText = "Kuitti tallennettu 📎";
+      if (removeBtn) removeBtn.style.display = "inline";
+    } else {
+      if (nameEl) nameEl.innerText = "Liitä kuitti (valinnainen)";
+      if (removeBtn) removeBtn.style.display = "none";
+    }
+
     document.getElementById("formTxId").value = prefill.id || "";
     document.getElementById("formAmount").value = prefill.amount ? prefill.amount.toFixed(2) : "";
     document.getElementById("formVendor").value = prefill.vendor || "";
@@ -435,6 +493,34 @@ class BudjettiApp {
     setTimeout(() => {
       document.getElementById("formAmount").focus();
     }, 200);
+  }
+
+  clearReceipt() {
+    this.tempReceiptData = null;
+    this.currentReceiptId = null;
+    const nameEl = document.getElementById("receiptFileName");
+    if (nameEl) nameEl.innerText = "Liitä kuitti (valinnainen)";
+    const removeBtn = document.getElementById("btnRemoveReceipt");
+    if (removeBtn) removeBtn.style.display = "none";
+    const cam = document.getElementById("formReceiptCamera");
+    if (cam) cam.value = "";
+    const file = document.getElementById("formReceiptFile");
+    if (file) file.value = "";
+  }
+
+  editTransaction(id) {
+    const tx = this.transactions.find(t => t.id === id);
+    if (!tx) return;
+    this.openQuickAddModal({
+      id: tx.id,
+      amount: tx.amount,
+      vendor: tx.vendor,
+      date: tx.date,
+      desc: tx.desc,
+      type: tx.type,
+      categoryId: tx.category,
+      receiptId: tx.receiptId
+    });
   }
 
   closeModal(modalId) {
@@ -508,7 +594,9 @@ class BudjettiApp {
       document.getElementById("receiptFileName").innerText = "Tiivistetään kuvaa...";
       const compressedDataUrl = await StorageProvider.compressImage(file, 1600, 0.8);
       this.tempReceiptData = compressedDataUrl;
-      document.getElementById("receiptFileName").innerText = `Kuva liitetty (${file.name})`;
+      document.getElementById("receiptFileName").innerText = `Kuva liitetty (${file.name || 'kamera'})`;
+      const removeBtn = document.getElementById("btnRemoveReceipt");
+      if (removeBtn) removeBtn.style.display = "inline";
     } catch (e) {
       console.error("Kuvan tiivistys epäonnistui:", e);
       alert("Kuvan tiivistys epäonnistui.");
@@ -525,9 +613,9 @@ class BudjettiApp {
     const date = document.getElementById("formDate").value;
     const desc = document.getElementById("formDesc").value.trim();
 
-    let receiptId = null;
+    let receiptId = this.currentReceiptId || null;
     if (this.tempReceiptData) {
-      receiptId = "rec_" + Date.now();
+      receiptId = receiptId || ("rec_" + Date.now());
       await this.storage.saveReceipt(receiptId, this.tempReceiptData);
     }
 
@@ -555,8 +643,8 @@ class BudjettiApp {
     }
   }
 
-  // --- KATEGORIAN LISÄYS ---
-  openCategoryModal() {
+  // --- KATEGORIAN MUOKKAUS & LISÄYS ---
+  openCategoryModal(catId = null, prefillGroupId = null) {
     const groupSelect = document.getElementById("catFormGroup");
     groupSelect.innerHTML = "";
     this.categories.getGroups().forEach(g => {
@@ -565,24 +653,70 @@ class BudjettiApp {
       opt.innerText = g.name;
       groupSelect.appendChild(opt);
     });
+
+    const titleEl = document.getElementById("modalCatTitle");
+    const idInput = document.getElementById("catFormId");
+    const nameInput = document.getElementById("catFormName");
+    const budgetInput = document.getElementById("catFormBudget");
+    const quickCheck = document.getElementById("catFormQuickAction");
+    const quickAmountInput = document.getElementById("catFormQuickAmount");
+    const quickRow = document.getElementById("catQuickAmountRow");
+
+    if (catId) {
+      const cat = this.categories.getById(catId);
+      if (titleEl) titleEl.innerText = "Muokkaa kategoriaa & tavoitetta";
+      if (idInput) idInput.value = cat.id;
+      if (nameInput) nameInput.value = cat.name;
+      if (groupSelect) groupSelect.value = cat.groupId || "arki";
+      if (budgetInput) budgetInput.value = cat.budgetMonthly > 0 ? cat.budgetMonthly : "";
+      if (quickCheck) quickCheck.checked = !!cat.quickAction;
+      if (quickAmountInput) quickAmountInput.value = cat.quickAmount > 0 ? cat.quickAmount : "";
+      if (quickRow) quickRow.style.display = cat.quickAction ? "block" : "none";
+    } else {
+      if (titleEl) titleEl.innerText = "Uusi kategoria";
+      if (idInput) idInput.value = "";
+      if (nameInput) nameInput.value = "";
+      if (groupSelect) groupSelect.value = prefillGroupId || "arki";
+      if (budgetInput) budgetInput.value = "";
+      if (quickCheck) quickCheck.checked = false;
+      if (quickAmountInput) quickAmountInput.value = "";
+      if (quickRow) quickRow.style.display = "none";
+    }
+
     const modal = document.getElementById("modalCategory");
     if (modal) modal.classList.add("active");
   }
 
   async handleCategorySubmit(event) {
     event.preventDefault();
+    const id = document.getElementById("catFormId")?.value;
     const name = document.getElementById("catFormName").value.trim();
     const groupId = document.getElementById("catFormGroup").value;
     const budget = parseFloat(document.getElementById("catFormBudget").value) || 0;
+    const quickAction = document.getElementById("catFormQuickAction")?.checked || false;
+    const quickAmount = parseFloat(document.getElementById("catFormQuickAmount")?.value) || 0;
 
-    await this.categories.addCategory({
-      name,
-      groupId,
-      budgetMonthly: budget
-    });
+    if (id) {
+      await this.categories.updateCategory(id, {
+        name,
+        groupId,
+        budgetMonthly: budget,
+        quickAction,
+        quickAmount
+      });
+    } else {
+      await this.categories.addCategory({
+        name,
+        groupId,
+        budgetMonthly: budget,
+        quickAction,
+        quickAmount
+      });
+    }
 
     this.closeModal("modalCategory");
     await this.refreshData();
+    this.storage.triggerBackgroundSync();
   }
 
   async deleteCategory(id) {
@@ -599,6 +733,32 @@ class BudjettiApp {
     const dropSec = document.getElementById("dropboxConfigSection");
     if (dropSec) dropSec.style.display = target === "dropbox" ? "block" : "none";
     this.updateSyncBadge();
+  }
+
+  handleReceiptsConfigChange() {
+    const target = document.getElementById("settingReceiptsTarget").value;
+    this.storage.setReceiptsTarget(target);
+    const folderInput = document.getElementById("settingReceiptsFolder");
+    if (folderInput) {
+      this.storage.setReceiptsFolder(folderInput.value);
+    }
+    const folderSec = document.getElementById("receiptsFolderSection");
+    if (folderSec) folderSec.style.display = target === "dropbox" ? "block" : "none";
+  }
+
+  async resetBudgetsToZero() {
+    if (confirm("Haluatko varmasti nollata kaikki kuukausitavoitteet puhtaaksi (0 €)?")) {
+      const allCats = this.categories.getAll();
+      for (const c of allCats) {
+        c.budgetMonthly = 0;
+        c.quickAction = false;
+        c.quickAmount = 0;
+      }
+      await this.categories.save();
+      await this.refreshData();
+      await this.storage.syncToCloud(true);
+      alert("✅ Kaikki kuukausitavoitteet on nollattu puhtaaksi (0 €)!");
+    }
   }
 
   saveDropboxConfig() {

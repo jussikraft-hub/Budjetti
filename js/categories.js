@@ -18,25 +18,27 @@ const DEFAULT_CATEGORIES = [
     name: "Ruokakauppa & Tarvikkeet",
     groupId: "arki",
     color: "#5C6A51",
-    budgetMonthly: 500.00,
-    quickAction: true,
-    quickAmount: 15.00
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
   {
     id: "apteekki",
     name: "Terveys & Apteekki",
     groupId: "arki",
     color: "#5C6A51",
-    budgetMonthly: 60.00,
-    quickAction: false
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
   {
     id: "lapset",
     name: "Lapset & Perhe",
     groupId: "arki",
     color: "#5C6A51",
-    budgetMonthly: 120.00,
-    quickAction: false
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
 
   // Kiinteät kulut & Asuminen
@@ -45,16 +47,18 @@ const DEFAULT_CATEGORIES = [
     name: "Vuokra / Vastike & Sähkö",
     groupId: "laskut",
     color: "#683F26",
-    budgetMonthly: 850.00,
-    quickAction: false
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
   {
     id: "puhelin_netti",
     name: "Puhelin & Verkkoyhteydet",
     groupId: "laskut",
     color: "#683F26",
-    budgetMonthly: 45.00,
-    quickAction: false
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
 
   // Ravintolat & Vapaa-aika
@@ -63,17 +67,18 @@ const DEFAULT_CATEGORIES = [
     name: "Lounaat & Kahvilat",
     groupId: "vapaaaika",
     color: "#683F26",
-    budgetMonthly: 180.00,
-    quickAction: true,
-    quickAmount: 12.50
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
   {
     id: "viihde",
     name: "Kulttuuri & Harrastukset",
     groupId: "vapaaaika",
     color: "#A6243C",
-    budgetMonthly: 80.00,
-    quickAction: false
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
 
   // Liikkuminen
@@ -81,10 +86,10 @@ const DEFAULT_CATEGORIES = [
     id: "liikenne",
     name: "Joukkoliikenne & Taksi",
     groupId: "liikenne",
-    color: "#A6243C",
-    budgetMonthly: 80.00,
-    quickAction: true,
-    quickAmount: 3.20
+    color: "#A5A088",
+    budgetMonthly: 0,
+    quickAction: false,
+    quickAmount: 0
   },
 
   // Tulot
@@ -93,8 +98,10 @@ const DEFAULT_CATEGORIES = [
     name: "Palkkatulot",
     groupId: "tulot",
     color: "#5C6A51",
-    budgetMonthly: 2043.97,
-    type: "income"
+    budgetMonthly: 0,
+    type: "income",
+    quickAction: false,
+    quickAmount: 0
   },
   {
     id: "muu_tulo",
@@ -102,7 +109,9 @@ const DEFAULT_CATEGORIES = [
     groupId: "tulot",
     color: "#5C6A51",
     budgetMonthly: 0,
-    type: "income"
+    type: "income",
+    quickAction: false,
+    quickAmount: 0
   }
 ];
 
@@ -116,6 +125,16 @@ class CategoryManager {
   async init() {
     const saved = await this.storage.getSetting("categories", null);
     if (saved && Array.isArray(saved.categories)) {
+      // Puhdistetaan vanhat mallisummat automaattisesti tyhjään perustilaan (0 €)
+      const hasOldMockAmounts = saved.categories.some(c => c.budgetMonthly === 500 || c.budgetMonthly === 2043.97 || c.budgetMonthly === 850);
+      if (hasOldMockAmounts) {
+        saved.categories.forEach(c => {
+          c.budgetMonthly = 0;
+          c.quickAction = false;
+          c.quickAmount = 0;
+        });
+        await this.storage.setSetting("categories", saved);
+      }
       this.categories = saved.categories;
       this.groups = saved.groups || [...DEFAULT_CATEGORY_GROUPS];
     } else {
@@ -175,11 +194,28 @@ class CategoryManager {
   async updateCategory(id, updates) {
     const idx = this.categories.findIndex(c => c.id === id);
     if (idx !== -1) {
-      this.categories[idx] = { ...this.categories[idx], ...updates };
+      const merged = { ...this.categories[idx], ...updates };
+      if (updates.budgetMonthly !== undefined) {
+        merged.budgetMonthly = parseFloat(updates.budgetMonthly) || 0;
+      }
+      if (updates.quickAmount !== undefined) {
+        merged.quickAmount = parseFloat(updates.quickAmount) || 0;
+      }
+      if (updates.quickAction !== undefined) {
+        merged.quickAction = !!updates.quickAction;
+      }
+      this.categories[idx] = merged;
       await this.save();
       return this.categories[idx];
     }
     return null;
+  }
+
+  async resetToDefaults() {
+    this.groups = JSON.parse(JSON.stringify(DEFAULT_CATEGORY_GROUPS));
+    this.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+    await this.save();
+    return this.categories;
   }
 
   async deleteCategory(id) {

@@ -8,6 +8,8 @@ const DB_VERSION = 1;
 const DROPBOX_TOKEN_KEY = "budjetti_dropbox_token";
 const DROPBOX_FOLDER_KEY = "budjetti_dropbox_folder";
 const SYNC_TARGET_KEY = "budjetti_sync_target"; // 'local', 'dropbox', 'gdrive'
+const RECEIPTS_TARGET_KEY = "budjetti_receipts_target"; // 'dropbox', 'local'
+const RECEIPTS_FOLDER_KEY = "budjetti_receipts_folder";
 
 class StorageProvider {
   constructor() {
@@ -132,13 +134,47 @@ class StorageProvider {
   // --- KUITTIKUVAT (Receipt Blobs) ---
   async saveReceipt(id, blobOrDataUrl) {
     if (!this.db) await this.init();
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const tx = this.db.transaction("receipts", "readwrite");
       const store = tx.objectStore("receipts");
       const req = store.put({ id, data: blobOrDataUrl, createdAt: new Date().toISOString() });
       req.onsuccess = () => resolve(id);
       req.onerror = (e) => reject(e);
     });
+
+    // Jos tallennuskohteena on Dropbox ja kuva on DataURL, viedään taustalla Dropbox-kuittikansioon
+    if (this.getReceiptsTarget() === "dropbox" && typeof blobOrDataUrl === "string" && blobOrDataUrl.startsWith("data:")) {
+      this.uploadReceiptToDropbox(id, blobOrDataUrl).catch(e => console.warn("Kuitti-upload taustavirhe:", e));
+    }
+    return id;
+  }
+
+  async uploadReceiptToDropbox(id, dataUrl) {
+    const token = this.getDropboxToken();
+    if (!token) return null;
+    try {
+      const u8 = StorageProvider.dataUrlToUint8Array(dataUrl);
+      const folder = this.getReceiptsFolder();
+      const path = `${folder}/${id}.jpg`;
+      const res = await this.uploadDropboxFile(token, path, u8);
+      if (!res.ok) {
+        console.warn(`Kuittikuvan Dropbox-tallennus (${path}) epäonnistui:`, res.status);
+      } else {
+        console.log(`✅ Kuittikuva tallennettu Dropboxiin: ${path}`);
+      }
+    } catch (e) {
+      console.warn("Kuittikuvan Dropbox-tallennusvirhe:", e);
+    }
+  }
+
+  static dataUrlToUint8Array(dataUrl) {
+    const parts = dataUrl.split(",");
+    const byteString = atob(parts[1] || parts[0]);
+    const u8 = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      u8[i] = byteString.charCodeAt(i);
+    }
+    return u8;
   }
 
   async getReceipt(id) {
@@ -242,6 +278,40 @@ class StorageProvider {
     return `${folder}/Kuitit`;
   }
 
+  getReceiptsTarget() {
+    return localStorage.getItem(RECEIPTS_TARGET_KEY) || (this.getSyncTarget() === "dropbox" ? "dropbox" : "local");
+  }
+
+  setReceiptsTarget(target) {
+    localStorage.setItem(RECEIPTS_TARGET_KEY, target);
+  }
+
+  getReceiptsFolder() {
+    const saved = localStorage.getItem(RECEIPTS_FOLDER_KEY);
+    if (saved !== null && saved !== undefined && saved.trim()) {
+      return saved.trim();
+    }
+    return this.getReceiptsFolderPath();
+  }
+
+  setReceiptsFolder(folder) {
+    if (!folder) {
+      localStorage.removeItem(RECEIPTS_FOLDER_KEY);
+      return;
+    }
+    let clean = folder.trim();
+    if (clean.includes("dropbox.com/")) {
+      clean = this.getDropboxFolder() + "/Kuitit";
+    }
+    if (clean && !clean.startsWith("/")) {
+      clean = "/" + clean;
+    }
+    if (clean.length > 1 && clean.endsWith("/")) {
+      clean = clean.slice(0, -1);
+    }
+    localStorage.setItem(RECEIPTS_FOLDER_KEY, clean);
+  }
+
   getSyncTarget() {
     return localStorage.getItem(SYNC_TARGET_KEY) || "dropbox";
   }
@@ -265,7 +335,9 @@ class StorageProvider {
       recurring: await this.getSetting("recurring", []),
       categories: await this.getSetting("categories", null),
       freeBalanceManual: await this.getSetting("freeBalanceManual", null),
-      dropboxFolder: this.getDropboxFolder()
+      dropboxFolder: this.getDropboxFolder(),
+      receiptsTarget: this.getReceiptsTarget(),
+      receiptsFolder: this.getReceiptsFolder()
     };
 
     return {
@@ -285,6 +357,8 @@ class StorageProvider {
       if (payload.settings.recurring) await this.setSetting("recurring", payload.settings.recurring);
       if (payload.settings.categories) await this.setSetting("categories", payload.settings.categories);
       if (payload.settings.dropboxFolder) this.setDropboxFolder(payload.settings.dropboxFolder);
+      if (payload.settings.receiptsTarget) this.setReceiptsTarget(payload.settings.receiptsTarget);
+      if (payload.settings.receiptsFolder) this.setReceiptsFolder(payload.settings.receiptsFolder);
       if (payload.settings.freeBalanceManual !== undefined) {
         await this.setSetting("freeBalanceManual", payload.settings.freeBalanceManual);
       }

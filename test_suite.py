@@ -140,5 +140,51 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertEqual(res.returncode, 0, f"Dropbox-kansiotesti epäonnistui:\n{res.stderr}")
         self.assertIn("OK", res.stdout)
 
+    def test_07_empty_state_and_category_edit(self):
+        """Varmistaa että oletuskategorioiden budjetit ovat tyhjässä perustilassa (0 €) ja että muokkaus toimii."""
+        cat_test_js = """
+        const { DEFAULT_CATEGORIES, CategoryManager } = require('""" + os.path.join(SCRIPT_DIR, "js/categories.js") + """');
+        
+        // Varmistetaan että kaikissa oletuskategorioissa kuukausibudjetti on 0 eikä pikasummia ole
+        for (const c of DEFAULT_CATEGORIES) {
+          if (c.budgetMonthly !== 0) throw new Error("Oletuskategorialla " + c.name + " on ei-nollasumma: " + c.budgetMonthly);
+          if (c.quickAction) throw new Error("Oletuskategorialla " + c.name + " on quickAction päällä");
+        }
+
+        // Testataan kategorian muokkauslogiikka mock-storagella
+        const mockStorage = {
+          _data: {},
+          async getSetting(k, d) { return this._data[k] || d; },
+          async setSetting(k, v) { this._data[k] = v; return true; }
+        };
+        const cm = new CategoryManager(mockStorage);
+        cm.updateCategory("ruokakauppa", { budgetMonthly: 400, name: "Supermarket" }).then(updated => {
+          if (updated.budgetMonthly !== 400) throw new Error("Kategorian budjetin päivitys epäonnistui");
+          if (updated.name !== "Supermarket") throw new Error("Kategorian nimen päivitys epäonnistui");
+          console.log("OK");
+        });
+        """
+        res = subprocess.run(["node", "-e", cat_test_js], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, f"Kategoria- ja nollatilalogiikkatesti epäonnistui:\n{res.stderr}")
+        self.assertIn("OK", res.stdout)
+
+    def test_08_ios_safe_area_and_receipt_buttons(self):
+        """Varmistaa että iOS Safe Area ja erilliset kamera/tiedosto -painikkeet löytyvät tiedostoista."""
+        # 1. HTML tarkistus
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('viewport-fit=cover', html)
+        self.assertIn('id="formReceiptCamera"', html)
+        self.assertIn('id="formReceiptFile"', html)
+        self.assertIn('id="settingReceiptsTarget"', html)
+        self.assertIn('id="modalCatTitle"', html)
+        self.assertIn('id="kpiDaysLeft"', html)
+
+        # 2. CSS Safe Area tarkistus
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        self.assertIn('safe-area-inset-top', css)
+        self.assertIn('safe-area-inset-bottom', css)
+
 if __name__ == "__main__":
     unittest.main()

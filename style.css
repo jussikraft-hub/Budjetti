@@ -79,9 +79,13 @@ body {
 
 /* Top App Header */
 .app-header {
-  padding: 16px 20px 12px;
-  background-color: rgba(31, 31, 32, 0.95);
-  backdrop-filter: blur(12px);
+  padding-top: max(calc(env(safe-area-inset-top, 0px) + 14px), 54px);
+  padding-bottom: 14px;
+  padding-left: max(22px, env(safe-area-inset-left));
+  padding-right: max(22px, env(safe-area-inset-right));
+  background-color: rgba(31, 31, 32, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--c-border);
   display: flex;
   justify-content: space-between;
@@ -130,8 +134,10 @@ body {
 /* Main Content Area */
 .app-main {
   flex: 1;
-  padding: 20px;
-  padding-bottom: 100px;
+  padding-top: 20px;
+  padding-bottom: max(calc(110px + env(safe-area-inset-bottom, 0px)), 125px);
+  padding-left: max(22px, env(safe-area-inset-left));
+  padding-right: max(22px, env(safe-area-inset-right));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -289,10 +295,10 @@ body {
 /* Floating Action Button (Razor-thin Swiss +) */
 .fab-add {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
+  bottom: max(calc(80px + env(safe-area-inset-bottom, 0px)), 104px);
+  right: max(22px, env(safe-area-inset-right));
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background-color: var(--c-crimson);
   color: var(--c-text-primary);
@@ -321,9 +327,13 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background-color: rgba(31, 31, 32, 0.95);
+  height: max(calc(60px + env(safe-area-inset-bottom, 0px)), 84px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  background-color: rgba(31, 31, 32, 0.96);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--c-border);
   display: flex;
   justify-content: space-around;
@@ -334,12 +344,14 @@ body {
 @media (min-width: 900px) {
   .bottom-nav {
     position: absolute;
+    height: 64px;
+    padding-bottom: 0;
     border-bottom-left-radius: 24px;
     border-bottom-right-radius: 24px;
   }
   .fab-add {
     position: absolute;
-    bottom: 80px;
+    bottom: 84px;
     right: 24px;
   }
 }
@@ -375,6 +387,7 @@ body {
   inset: 0;
   background-color: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -394,8 +407,8 @@ body {
   border-top: 1px solid var(--c-border-active);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
-  padding: 24px;
-  max-height: 90vh;
+  padding: 24px 22px max(calc(30px + env(safe-area-inset-bottom, 0px)), 48px);
+  max-height: calc(92vh - max(env(safe-area-inset-top, 0px), 44px));
   overflow-y: auto;
   transform: translateY(100%);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);

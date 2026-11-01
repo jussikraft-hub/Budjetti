@@ -59,24 +59,23 @@
 
           <!-- Day Allowance Box -->
           <div class="day-allowance-box">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div class="day-allowance-icon">
+            <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+              <div class="day-allowance-icon" style="flex-shrink: 0;">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="9"/>
                   <polyline points="12 7 12 12 15 15"/>
                 </svg>
               </div>
-              <div>
-                <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone);" id="kpiPaydayLabel">Päiväallokaatio (20.11. saakka)</p>
-                <p style="font-size: 14px; font-weight: 500; color: var(--c-text-primary);" class="font-num">
+              <div style="min-width: 0;">
+                <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiPaydayLabel">Päiväallokaatio (20.11. saakka)</p>
+                <p style="font-size: 15px; font-weight: 500; color: var(--c-text-primary);" class="font-num">
                   <span id="kpiDailyAllowance">0,00 €</span> <span style="font-size: 11px; color: var(--c-stone); font-weight: normal;">/ vrk</span>
                 </p>
               </div>
             </div>
-            <div>
-              <span id="kpiDaysLeft" style="font-size: 10px; font-family: ui-monospace, monospace; color: var(--c-stone); background: #252527; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(165,160,136,0.2);">
-                -- PV
-              </span>
+            <div style="text-align: right; flex-shrink: 0; white-space: nowrap; padding-left: 12px;">
+              <span id="kpiDaysLeft" class="font-num" style="font-size: 18px; font-weight: 500; color: var(--c-text-primary); display: block; line-height: 1;">--</span>
+              <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-top: 2px;">pv jäljellä</span>
             </div>
           </div>
 
@@ -224,6 +223,27 @@
           </div>
         </div>
 
+        <!-- Kuittien & Kuvien tallennuspaikka -->
+        <div class="luxury-card" style="margin-top: 16px;">
+          <span class="card-label">Kuittien & Kuvien tallennus</span>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+            <div>
+              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuittien tallennuskohde</label>
+              <select id="settingReceiptsTarget" class="form-input" onchange="app.handleReceiptsConfigChange()">
+                <option value="dropbox">Dropbox (Pilvi)</option>
+                <option value="local">Lokaali laitemuisti (IndexedDB)</option>
+              </select>
+            </div>
+            <div id="receiptsFolderSection">
+              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuittikansio Dropboxissa</label>
+              <input type="text" id="settingReceiptsFolder" placeholder="/Apps/Budjetti-Jussi/Kuitit" class="form-input font-num" style="font-size: 12px;" onchange="app.handleReceiptsConfigChange()">
+              <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
+                Kuvat tallentuvat tiivistettyinä JPEG-tiedostoina tähän kansioon.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Budget & Payday Settings -->
         <div class="luxury-card" style="margin-top: 16px;">
           <span class="card-label">Kauden & Palkkapäivän asetukset</span>
@@ -265,6 +285,17 @@
           </div>
           <input type="file" id="fileInputJSON" accept=".json" style="display: none;" onchange="app.handleJSONFileSelect(event)">
           <input type="file" id="fileInputCSV" accept=".csv" style="display: none;" onchange="app.handleCSVFileSelect(event)">
+        </div>
+
+        <!-- Data Management & Reset -->
+        <div class="luxury-card" style="margin-top: 16px;">
+          <span class="card-label">Datan hallinta</span>
+          <p style="font-size: 11px; color: var(--c-stone); margin-top: 6px;">
+            Aseta sovellus puhtaaseen perustilaan nollaamalla kaikki kuukausitavoitteet nollaksi (0 €).
+          </p>
+          <button class="btn-primary" style="margin-top: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.resetBudgetsToZero()">
+            Nollaa kaikki tavoitteet puhtaaksi (0 €)
+          </button>
         </div>
 
       </section>
@@ -380,18 +411,42 @@
         </div>
 
         <!-- Receipt Camera / Image Attachment -->
-        <div style="background: #171718; border: 1px solid var(--c-border); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24" style="color: var(--c-stone);">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>
-            <span style="font-size: 11px; color: var(--c-stone);" id="receiptFileName">Liitä kuittikuva</span>
+        <div style="background: #171718; border: 1px solid var(--c-border); border-radius: 12px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24" style="color: var(--c-stone);">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span style="font-size: 11px; color: var(--c-stone);" id="receiptFileName">Liitä kuitti (valinnainen)</span>
+            </div>
+            <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-crimson); font-size: 11px; cursor: pointer;">
+              Poista kuitti
+            </button>
           </div>
-          <button type="button" class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 10px; background: #252527; border: 1px solid var(--c-border);" onclick="document.getElementById('formReceiptInput').click()">
-            Valitse kuva
-          </button>
-          <input type="file" id="formReceiptInput" accept="image/*" capture="environment" style="display: none;" onchange="app.handleReceiptSelect(event)">
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <!-- Ota kuva kameralla -->
+            <button type="button" class="btn-primary" style="padding: 10px 8px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="document.getElementById('formReceiptCamera').click()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Ota kuva
+            </button>
+            <input type="file" id="formReceiptCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handleReceiptSelect(event)">
+
+            <!-- Valitse tiedosto / Galleria -->
+            <button type="button" class="btn-primary" style="padding: 10px 8px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="document.getElementById('formReceiptFile').click()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Valitse tiedosto
+            </button>
+            <input type="file" id="formReceiptFile" accept="image/*,application/pdf" style="display: none;" onchange="app.handleReceiptSelect(event)">
+          </div>
         </div>
 
         <button type="submit" class="btn-primary" style="margin-top: 6px;">
@@ -408,16 +463,34 @@
   <div class="modal-overlay" id="modalCategory" onclick="if(event.target === this) app.closeModal('modalCategory')">
     <div class="modal-content">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <h3 style="font-size: 14px; font-weight: 500;">Uusi kategoria</h3>
-        <button onclick="app.closeModal('modalCategory')" style="background: none; border: none; color: var(--c-stone); cursor: pointer;">&times;</button>
+        <h3 style="font-size: 14px; font-weight: 500;" id="modalCatTitle">Uusi kategoria</h3>
+        <button onclick="app.closeModal('modalCategory')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
       </div>
       <form id="catForm" onsubmit="app.handleCategorySubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
-        <input type="text" id="catFormName" required placeholder="Kategorian nimi (esim. Kahvilat)" class="form-input">
-        <select id="catFormGroup" class="form-input">
-          <!-- Groups injected -->
-        </select>
-        <input type="number" id="catFormBudget" step="1" placeholder="Kuukausitavoite (€)" class="form-input font-num">
-        <button type="submit" class="btn-primary">Tallenna kategoria</button>
+        <input type="hidden" id="catFormId">
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kategorian nimi</label>
+          <input type="text" id="catFormName" required placeholder="esim. Kahvilat" class="form-input">
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Pääryhmä</label>
+          <select id="catFormGroup" class="form-input">
+            <!-- Groups injected -->
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuukausitavoite (€) / Katto (0 = ei kattoa)</label>
+          <input type="number" id="catFormBudget" step="0.01" min="0" placeholder="0,00" class="form-input font-num">
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 0;">
+          <input type="checkbox" id="catFormQuickAction" onchange="document.getElementById('catQuickAmountRow').style.display = this.checked ? 'block' : 'none'" style="accent-color: var(--c-crimson);">
+          <label for="catFormQuickAction" style="font-size: 12px; color: var(--c-text-primary); cursor: pointer;">Pikanäppäin päänäkymään</label>
+        </div>
+        <div id="catQuickAmountRow" style="display: none;">
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Pikasumma (€)</label>
+          <input type="number" id="catFormQuickAmount" step="0.01" min="0" placeholder="esim. 15,00" class="form-input font-num">
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna kategoria & tavoite</button>
       </form>
     </div>
   </div>
