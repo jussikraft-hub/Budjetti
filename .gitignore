@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+# Työtilan sisäiset dokumentit ja tilatiedostot (eivät kuulu julkiseen GitHub-repoon)
+_Materiaali/
+_Projektit/
+_Exported/
+_Valmiit/
+status.md
+push_to_github.command
