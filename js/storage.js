@@ -510,6 +510,7 @@ class StorageProvider {
       gdriveFolder: this.getGDriveFolder(),
       receiptsTarget: this.getReceiptsTarget(),
       receiptsFolder: this.getReceiptsFolder(),
+      themeMode: await this.getSetting("theme_mode", "dark"),
       activeTheme: await this.getSetting("active_theme", null),
       customThemes: await this.getSetting("custom_themes", [])
     };
@@ -550,6 +551,7 @@ class StorageProvider {
       if (payload.settings.freeBalanceManual !== undefined) {
         await this.setSetting("freeBalanceManual", payload.settings.freeBalanceManual);
       }
+      if (payload.settings.themeMode) await this.setSetting("theme_mode", payload.settings.themeMode);
       if (payload.settings.activeTheme) await this.setSetting("active_theme", payload.settings.activeTheme);
       if (payload.settings.customThemes) await this.setSetting("custom_themes", payload.settings.customThemes);
     }

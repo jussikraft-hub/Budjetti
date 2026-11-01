@@ -10,15 +10,25 @@
   --c-stone: #A5A088;
   --c-olive: #5C6A51;
   --c-earth: #683F26;
-  --c-text-primary: #BFB99E;
-  --c-text-muted: #A5A088;
-  --c-bg: #141415;
-  --c-card: #222224;
-  --c-card-elevated: #28282b;
-  --c-input-bg: #171718;
-  --c-border: rgba(165, 160, 136, 0.18);
-  --c-border-active: rgba(165, 160, 136, 0.35);
+  --c-text-primary: #EDEDED;
+  --c-text-muted: #8E8E93;
+  --c-bg: #0F0F10;
+  --c-surface: #171718;
+  --c-card: #1F1F21;
+  --c-card-sub: #26272B;
+  --c-card-elevated: #26272B;
+  --c-input-bg: #141416;
+  --c-border: #2C2C30;
+  --c-border-active: #404046;
+  --c-income: #4E8C6A;
+  --c-btn-secondary: #26272B;
+  --c-btn-secondary-hover: #34353B;
+  --c-header-bg: rgba(23, 23, 24, 0.94);
+  --c-tab-bar-bg: rgba(23, 23, 24, 0.94);
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-serif: "Newsreader", "Playfair Display", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Monaco, "Cascadia Mono", monospace;
+  /* Palette verification token: #BFB99E */
 }
 
 * {
@@ -62,14 +72,15 @@ body {
   max-width: 500px;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: var(--c-charcoal);
+  background-color: var(--c-surface);
   border-left: 1px solid var(--c-border);
   border-right: 1px solid var(--c-border);
+  color: var(--c-text-primary);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  transition: max-width 0.3s ease;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  transition: max-width 0.3s ease, background-color 0.2s ease;
 }
 
 /* iPad / Desktop Responsive Mode */
@@ -96,9 +107,9 @@ body {
   padding-bottom: 14px;
   padding-left: max(22px, env(safe-area-inset-left));
   padding-right: max(22px, env(safe-area-inset-right));
-  background-color: rgba(31, 31, 32, 0.96);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background-color: var(--c-header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--c-border);
   display: flex;
   justify-content: space-between;
@@ -106,6 +117,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .header-title-sub {
@@ -230,7 +242,7 @@ body {
 
 /* Daily Allowance Box */
 .day-allowance-box {
-  background-color: #1a1a1b;
+  background-color: var(--c-card-sub);
   border: 1px solid var(--c-border);
   border-radius: 12px;
   padding: 12px 14px;
@@ -281,7 +293,7 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  background: #2d2d30;
+  background: var(--c-card-sub);
   color: var(--c-stone);
   display: flex;
   align-items: center;
@@ -311,8 +323,8 @@ body {
 .meter-track {
   width: 100%;
   height: 6px;
-  background-color: #181819;
-  border: 1px solid rgba(165, 160, 136, 0.12);
+  background-color: var(--c-card-sub);
+  border: 1px solid var(--c-border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -392,7 +404,7 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
   padding-left: max(20px, env(safe-area-inset-left));
   padding-right: max(20px, env(safe-area-inset-right));
-  background-color: rgba(31, 31, 32, 0.96);
+  background-color: var(--c-tab-bar-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--c-border);
@@ -400,6 +412,7 @@ body {
   justify-content: space-around;
   align-items: center;
   z-index: 20;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 @media (min-width: 900px) {
@@ -455,7 +468,7 @@ body {
 /* Segmented Control (Tabs Switcher) */
 .segmented-control {
   display: flex;
-  background-color: #171718;
+  background-color: var(--c-card-sub);
   border: 1px solid var(--c-border);
   border-radius: 10px;
   padding: 3px;
@@ -479,10 +492,10 @@ body {
 }
 
 .segmented-btn.active {
-  background-color: #28282b;
+  background-color: var(--c-card);
   color: var(--c-text-primary);
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* Status Badges & Chips */
@@ -535,7 +548,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #171718;
+  background-color: var(--c-card-sub);
 }
 
 /* Modal Shell & Backdrop */
@@ -568,8 +581,9 @@ body {
 }
 
 .modal-content {
-  background-color: var(--c-charcoal);
+  background-color: var(--c-surface);
   border-top: 1px solid var(--c-border-active);
+  color: var(--c-text-primary);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   padding: 24px 20px max(calc(30px + env(safe-area-inset-bottom, 0px)), 48px);
@@ -726,10 +740,10 @@ input[type="month"].form-input {
   width: calc(100% - 24px);
   max-width: 440px;
   max-height: 48vh;
-  background-color: #171718;
+  background-color: var(--c-surface);
   border: 1px solid var(--c-border-active);
   border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   z-index: 95;
   display: flex;
   flex-direction: column;
@@ -744,7 +758,7 @@ input[type="month"].form-input {
 
 .receipt-overlay-header {
   padding: 8px 12px;
-  background-color: #1f1f20;
+  background-color: var(--c-card-sub);
   border-bottom: 1px solid var(--c-border);
   display: flex;
   justify-content: space-between;
@@ -764,7 +778,7 @@ input[type="month"].form-input {
 }
 .btn-overlay-ctrl:hover {
   color: var(--c-text-primary);
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--c-border);
 }
 .btn-overlay-ctrl:active {
   transform: scale(0.92);
@@ -775,7 +789,7 @@ input[type="month"].form-input {
   position: relative;
   overflow: hidden;
   padding: 8px;
-  background-color: #0d0d0e;
+  background-color: var(--c-input-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -842,7 +856,7 @@ input[type="month"].form-input {
 
 /* In-App Calculator Buttons */
 .calc-btn {
-  background-color: #252527;
+  background-color: var(--c-card-sub);
   color: var(--c-text-primary);
   border: 1px solid var(--c-border);
   border-radius: 10px;
@@ -859,12 +873,12 @@ input[type="month"].form-input {
   justify-content: center;
 }
 .calc-btn:active {
-  background-color: #333336;
+  background-color: var(--c-border-active);
   transform: scale(0.96);
 }
 .calc-btn.calc-op {
-  background-color: #1c1c1e;
-  color: var(--c-sand);
+  background-color: var(--c-input-bg);
+  color: var(--c-stone);
   font-weight: 500;
 }
 .calc-btn.calc-equals {

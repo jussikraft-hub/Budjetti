@@ -658,5 +658,42 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("activeTheme", storage_js, "storage.js ei vie activeTheme-tietoa!")
         self.assertIn("customThemes", storage_js, "storage.js ei vie customThemes-tietoa!")
 
+    def test_16_revision_12_day_night_modes_and_dynamic_surface(self):
+        """Regressiotesti revisio 12:lle: Night/Day/Auto ulkoasutilat, dynaamiset taustat ja saavutettavat väripaletit."""
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/storage.js"), "r", encoding="utf-8") as f:
+            storage_js = f.read()
+
+        # 1. Ulkoasutilan valitsimet HTML:ssä (Tumma / Vaalea / Auto)
+        self.assertIn('id="btnThemeModeDark"', html, "index.html:stä puuttuu btnThemeModeDark!")
+        self.assertIn('id="btnThemeModeLight"', html, "index.html:stä puuttuu btnThemeModeLight!")
+        self.assertIn('id="btnThemeModeAuto"', html, "index.html:stä puuttuu btnThemeModeAuto!")
+        self.assertIn('app.setThemeMode(', html, "index.html:stä puuttuu app.setThemeMode-kutsu!")
+
+        # 2. Ulkoasutilan ohjaus ja logiikka app.js:ssä
+        self.assertIn("setThemeMode(", app_js, "app.js:stä puuttuu setThemeMode-metodi!")
+        self.assertIn("updateThemeModeButtons(", app_js, "app.js:stä puuttuu updateThemeModeButtons-metodi!")
+        self.assertIn("resolveThemePalette(", app_js, "app.js:stä puuttuu resolveThemePalette-metodi!")
+        self.assertIn("isDarkModeActive(", app_js, "app.js:stä puuttuu isDarkModeActive-metodi!")
+        self.assertIn("this.themeMode", app_js, "app.js:stä puuttuu this.themeMode!")
+
+        # 3. Teemoissa määritelty sekä dark että light -paletti
+        self.assertIn("dark: {", app_js, "app.js:n DEFAULT_THEMES ei sisällä dark-lohkoa!")
+        self.assertIn("light: {", app_js, "app.js:n DEFAULT_THEMES ei sisällä light-lohkoa!")
+
+        # 4. style.css: .app-container käyttää dynaamista --c-surface taustaa, ei kovakoodattua tummaa taustaa
+        self.assertIn("background-color: var(--c-surface);", css, "style.css:n .app-container ei käytä dynaamista --c-surface taustaa!")
+        self.assertIn("--c-surface:", css, "style.css:stä puuttuu --c-surface CSS-muuttuja!")
+        self.assertIn("--c-header-bg:", css, "style.css:stä puuttuu --c-header-bg CSS-muuttuja!")
+        self.assertIn("--c-tab-bar-bg:", css, "style.css:stä puuttuu --c-tab-bar-bg CSS-muuttuja!")
+
+        # 5. storage.js vie ja tuo themeMode-asetuksen
+        self.assertIn("themeMode", storage_js, "storage.js ei vie tai tuo themeMode-tietoa!")
+
 if __name__ == "__main__":
     unittest.main()

@@ -43,6 +43,7 @@ class BudjettiApp {
     // Teemat & Ulkoasu
     this.activeTheme = "original";
     this.customThemes = [];
+    this.themeMode = "dark"; // "dark" | "light" | "auto"
 
     // Järjestelmädialogit (In-App Modals)
     this.activeDialogType = null;
@@ -54,11 +55,42 @@ class BudjettiApp {
       {
         id: "original",
         name: "Original Kraft",
-        tag: "Sveitsiläinen Tumma",
+        tag: "Sveitsiläinen Minimalismi",
         isOriginal: true,
         font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        dark: {
+          bg: "#0F0F10",
+          surface: "#171718",
+          card: "#1C1C1E",
+          cardSub: "#242426",
+          border: "#2C2C2E",
+          borderActive: "#3A3A3C",
+          primary: "#A6243C",
+          primaryHover: "#C9324E",
+          text: "#EDEDED",
+          muted: "#8E8E93",
+          olive: "#4E8C6A",
+          income: "#4E8C6A",
+          inputBg: "#1C1C1E"
+        },
+        light: {
+          bg: "#F4F4F6",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#F0F0F2",
+          border: "#E2E2E6",
+          borderActive: "#C6C6CC",
+          primary: "#991B32",
+          primaryHover: "#801427",
+          text: "#111827",
+          muted: "#52525B",
+          olive: "#2D6A4F",
+          income: "#2D6A4F",
+          inputBg: "#F4F4F6"
+        },
         colors: {
           bg: "#0F0F10",
+          surface: "#171718",
           card: "#171718",
           cardSub: "#1D1D1F",
           border: "#262629",
@@ -74,10 +106,41 @@ class BudjettiApp {
       {
         id: "midnight_executive",
         name: "Midnight Executive",
-        tag: "FinTech OLED",
+        tag: "FinTech & Corporate",
         font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        dark: {
+          bg: "#06090E",
+          surface: "#0B1017",
+          card: "#111823",
+          cardSub: "#182232",
+          border: "#1E2D42",
+          borderActive: "#2C3E5A",
+          primary: "#D4AF37",
+          primaryHover: "#E6C158",
+          text: "#F0F4FA",
+          muted: "#7E91A6",
+          olive: "#2E7D5E",
+          income: "#2E7D5E",
+          inputBg: "#111823"
+        },
+        light: {
+          bg: "#F1F5F9",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#E2E8F0",
+          border: "#CBD5E1",
+          borderActive: "#94A3B8",
+          primary: "#0F172A",
+          primaryHover: "#1E293B",
+          text: "#0F172A",
+          muted: "#475569",
+          olive: "#15803D",
+          income: "#15803D",
+          inputBg: "#F8FAFC"
+        },
         colors: {
           bg: "#070B12",
+          surface: "#0D1522",
           card: "#0D1522",
           cardSub: "#131E30",
           border: "#1D2B40",
@@ -93,10 +156,41 @@ class BudjettiApp {
       {
         id: "studio_white",
         name: "Studio Minimal White",
-        tag: "Skandinaavinen Vaalea",
+        tag: "Skandinaavinen Arkkitehtuuri",
         font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        dark: {
+          bg: "#121417",
+          surface: "#1A1D21",
+          card: "#22262B",
+          cardSub: "#2B3037",
+          border: "#353C45",
+          borderActive: "#464E59",
+          primary: "#3B82F6",
+          primaryHover: "#60A5FA",
+          text: "#F3F4F6",
+          muted: "#9CA3AF",
+          olive: "#10B981",
+          income: "#10B981",
+          inputBg: "#22262B"
+        },
+        light: {
+          bg: "#F8F9FA",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#F1F3F5",
+          border: "#E5E7EB",
+          borderActive: "#D1D5DB",
+          primary: "#2563EB",
+          primaryHover: "#1D4ED8",
+          text: "#111827",
+          muted: "#6B7280",
+          olive: "#059669",
+          income: "#059669",
+          inputBg: "#F9FAFB"
+        },
         colors: {
           bg: "#F7F7F8",
+          surface: "#FFFFFF",
           card: "#FFFFFF",
           cardSub: "#F0F0F2",
           border: "#E2E2E6",
@@ -112,10 +206,41 @@ class BudjettiApp {
       {
         id: "emerald_wealth",
         name: "Emerald Wealth",
-        tag: "Private Banking",
+        tag: "Private Banking & Heritage",
         font: "'Newsreader', 'Playfair Display', Georgia, serif",
+        dark: {
+          bg: "#07100B",
+          surface: "#0D1A13",
+          card: "#13251B",
+          cardSub: "#1A3225",
+          border: "#244533",
+          borderActive: "#335E47",
+          primary: "#D19F68",
+          primaryHover: "#E0B280",
+          text: "#EDF4F0",
+          muted: "#829B8E",
+          olive: "#34D399",
+          income: "#34D399",
+          inputBg: "#13251B"
+        },
+        light: {
+          bg: "#F2F7F4",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#E4EFE8",
+          border: "#C8DED0",
+          borderActive: "#A8C9B4",
+          primary: "#1B4D3E",
+          primaryHover: "#14382D",
+          text: "#0F261E",
+          muted: "#4D6D61",
+          olive: "#1B4D3E",
+          income: "#1B4D3E",
+          inputBg: "#F6FAF7"
+        },
         colors: {
           bg: "#0A110E",
+          surface: "#111C18",
           card: "#111C18",
           cardSub: "#172621",
           border: "#223830",
@@ -131,10 +256,41 @@ class BudjettiApp {
       {
         id: "monochrome_pure",
         name: "Monochrome Pure",
-        tag: "Korkeakontrasti",
+        tag: "Minimalisti Korkeakontrasti",
         font: "ui-monospace, 'SF Mono', Monaco, 'Cascadia Mono', monospace",
+        dark: {
+          bg: "#000000",
+          surface: "#0D0D0D",
+          card: "#161616",
+          cardSub: "#222222",
+          border: "#333333",
+          borderActive: "#555555",
+          primary: "#FFFFFF",
+          primaryHover: "#E0E0E0",
+          text: "#FFFFFF",
+          muted: "#A0A0A0",
+          olive: "#DDDDDD",
+          income: "#DDDDDD",
+          inputBg: "#161616"
+        },
+        light: {
+          bg: "#F5F5F5",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#EEEEEE",
+          border: "#D4D4D4",
+          borderActive: "#A3A3A3",
+          primary: "#000000",
+          primaryHover: "#262626",
+          text: "#000000",
+          muted: "#525252",
+          olive: "#171717",
+          income: "#171717",
+          inputBg: "#F5F5F5"
+        },
         colors: {
           bg: "#000000",
+          surface: "#121212",
           card: "#121212",
           cardSub: "#1A1A1A",
           border: "#333333",
@@ -150,10 +306,41 @@ class BudjettiApp {
       {
         id: "warm_cashmere",
         name: "Warm Cashmere",
-        tag: "Eleganssi Vaalea",
+        tag: "Eleganssi & Pehmeys",
         font: "'Newsreader', 'Playfair Display', Georgia, serif",
+        dark: {
+          bg: "#171412",
+          surface: "#1F1B18",
+          card: "#2A2420",
+          cardSub: "#352E2A",
+          border: "#443B35",
+          borderActive: "#5B4F47",
+          primary: "#E07A5F",
+          primaryHover: "#EB9077",
+          text: "#F4EFEA",
+          muted: "#9E938B",
+          olive: "#6CA378",
+          income: "#6CA378",
+          inputBg: "#2A2420"
+        },
+        light: {
+          bg: "#F7F4EE",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#EFE9DF",
+          border: "#DDD4C5",
+          borderActive: "#C4B7A4",
+          primary: "#9C4132",
+          primaryHover: "#803326",
+          text: "#2B2521",
+          muted: "#786D64",
+          olive: "#4A6B53",
+          income: "#4A6B53",
+          inputBg: "#FAF7F2"
+        },
         colors: {
           bg: "#F4EFEA",
+          surface: "#FCFAF7",
           card: "#FCFAF7",
           cardSub: "#EBE5DE",
           border: "#DCD4CA",
@@ -2424,10 +2611,24 @@ class BudjettiApp {
     }
   }
 
-  // --- TEEMOJEN HALLINTA & KUSTOMOINTI ---
+  // --- TEEMOJEN HALLINTA & KUSTOMOINTI (DAY / NIGHT & PRESETS) ---
   async initTheme() {
     this.customThemes = await this.storage.getSetting("custom_themes", []);
     this.activeTheme = await this.storage.getSetting("active_theme", "original");
+    this.themeMode = await this.storage.getSetting("theme_mode", "dark");
+
+    this.updateThemeModeButtons();
+
+    // Kuuntele järjestelmän värimallin muutoksia automaattitilassa
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (this.themeMode === "auto") {
+          const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
+          let current = all.find(t => t.id === this.activeTheme) || BudjettiApp.DEFAULT_THEMES[0];
+          this.applyTheme(current, false);
+        }
+      });
+    }
 
     const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
     let current = all.find(t => t.id === this.activeTheme) || BudjettiApp.DEFAULT_THEMES[0];
@@ -2435,23 +2636,88 @@ class BudjettiApp {
     this.renderThemePresets();
   }
 
-  applyTheme(theme, save = true) {
-    if (!theme || !theme.colors) return;
-    const root = document.documentElement;
-    const c = theme.colors;
+  isDarkModeActive() {
+    if (this.themeMode === "dark") return true;
+    if (this.themeMode === "light") return false;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
 
-    root.style.setProperty("--c-bg", c.bg);
+  resolveThemePalette(theme) {
+    if (!theme) return null;
+    const isDark = this.isDarkModeActive();
+    if (isDark) {
+      return theme.dark || theme.colors || theme.light;
+    } else {
+      return theme.light || theme.colors || theme.dark;
+    }
+  }
+
+  async setThemeMode(mode) {
+    if (!["dark", "light", "auto"].includes(mode)) mode = "dark";
+    this.themeMode = mode;
+    await this.storage.setSetting("theme_mode", mode);
+    this.updateThemeModeButtons();
+
+    const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
+    let current = all.find(t => t.id === this.activeTheme) || BudjettiApp.DEFAULT_THEMES[0];
+    this.applyTheme(current, false);
+    this.renderThemePresets();
+    this.storage.triggerBackgroundSync();
+  }
+
+  updateThemeModeButtons() {
+    const darkBtn = document.getElementById("btnThemeModeDark");
+    const lightBtn = document.getElementById("btnThemeModeLight");
+    const autoBtn = document.getElementById("btnThemeModeAuto");
+    if (darkBtn) darkBtn.classList.toggle("active", this.themeMode === "dark");
+    if (lightBtn) lightBtn.classList.toggle("active", this.themeMode === "light");
+    if (autoBtn) autoBtn.classList.toggle("active", this.themeMode === "auto");
+  }
+
+  applyTheme(theme, save = true) {
+    if (!theme) return;
+    const isDark = this.isDarkModeActive();
+    const c = this.resolveThemePalette(theme);
+    if (!c) return;
+
+    const root = document.documentElement;
+    document.documentElement.setAttribute("data-theme-mode", isDark ? "dark" : "light");
+
+    const surface = c.surface || (isDark ? (c.cardSub || "#171718") : "#FFFFFF");
+    const bg = c.bg || (isDark ? "#0F0F10" : "#F4F4F6");
+
+    root.style.setProperty("--c-bg", bg);
+    root.style.setProperty("--c-surface", surface);
     root.style.setProperty("--c-card", c.card);
     root.style.setProperty("--c-card-sub", c.cardSub || c.card);
     root.style.setProperty("--c-border", c.border);
     root.style.setProperty("--c-border-active", c.borderActive || c.border);
     root.style.setProperty("--c-crimson", c.primary);
-    root.style.setProperty("--c-crimson-hover", c.primary);
+    root.style.setProperty("--c-crimson-hover", c.primaryHover || c.primary);
     root.style.setProperty("--c-text-primary", c.text);
     root.style.setProperty("--c-stone", c.muted);
     root.style.setProperty("--c-olive", c.olive || "#3F4F38");
     root.style.setProperty("--c-income", c.income || c.olive || "#4E8C6A");
     root.style.setProperty("--c-input-bg", c.inputBg || c.card);
+
+    // Dynaamiset yläpalkin ja alapalkin sävyt
+    if (isDark) {
+      root.style.setProperty("--c-header-bg", "rgba(23, 23, 24, 0.94)");
+      root.style.setProperty("--c-tab-bar-bg", "rgba(23, 23, 24, 0.94)");
+      root.style.setProperty("--c-btn-secondary", "rgba(255, 255, 255, 0.08)");
+      root.style.setProperty("--c-btn-secondary-hover", "rgba(255, 255, 255, 0.14)");
+    } else {
+      root.style.setProperty("--c-header-bg", "rgba(255, 255, 255, 0.94)");
+      root.style.setProperty("--c-tab-bar-bg", "rgba(255, 255, 255, 0.94)");
+      root.style.setProperty("--c-btn-secondary", "rgba(0, 0, 0, 0.05)");
+      root.style.setProperty("--c-btn-secondary-hover", "rgba(0, 0, 0, 0.09)");
+    }
+
+    // Päivitetään mobiilin osoitepalkki / selaimen teemaväri
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute("content", surface);
+    }
 
     if (theme.font) {
       root.style.setProperty("--font-main", theme.font);
@@ -2461,8 +2727,8 @@ class BudjettiApp {
       const el = document.getElementById(id);
       if (el) el.value = val;
     };
-    setVal("themeColorBg", c.bg);
-    setVal("themeColorBgHex", c.bg);
+    setVal("themeColorBg", bg);
+    setVal("themeColorBgHex", bg);
     setVal("themeColorCard", c.card);
     setVal("themeColorCardHex", c.card);
     setVal("themeColorPrimary", c.primary);
@@ -2481,7 +2747,8 @@ class BudjettiApp {
 
     const badge = document.getElementById("activeThemeBadge");
     if (badge) {
-      badge.innerText = theme.name || "Original Kraft";
+      const modeLabel = this.themeMode === "auto" ? (isDark ? "Auto / Tumma" : "Auto / Vaalea") : (isDark ? "Tumma" : "Vaalea");
+      badge.innerText = `${theme.name || "Original Kraft"} (${modeLabel})`;
     }
 
     this.activeTheme = theme.id || "original";
@@ -2499,7 +2766,8 @@ class BudjettiApp {
     const all = [...BudjettiApp.DEFAULT_THEMES, ...this.customThemes];
     grid.innerHTML = all.map(t => {
       const isActive = t.id === this.activeTheme;
-      const c = t.colors;
+      const c = this.resolveThemePalette(t);
+      if (!c) return "";
       return `
         <div class="theme-preset-card ${isActive ? 'active' : ''}" onclick="app.selectThemePreset('${t.id}')">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
@@ -2510,10 +2778,10 @@ class BudjettiApp {
             ${t.isOriginal ? '<span style="font-size: 8px; padding: 2px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson); font-weight: 600;">ORIGINAL</span>' : (t.isCustom ? `<button type="button" onclick="app.deleteCustomTheme('${t.id}', event)" title="Poista tämä teema" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 2px 4px; font-size: 12px; line-height: 1;">✕</button>` : '')}
           </div>
           <div class="theme-palette-preview">
-            <div class="theme-palette-slice" style="background: ${c.bg};"></div>
-            <div class="theme-palette-slice" style="background: ${c.card};"></div>
-            <div class="theme-palette-slice" style="background: ${c.primary};"></div>
-            <div class="theme-palette-slice" style="background: ${c.olive || c.text};"></div>
+            <div class="theme-palette-slice" style="background: ${c.bg}; border: 1px solid var(--c-border);" title="Tausta"></div>
+            <div class="theme-palette-slice" style="background: ${c.card}; border: 1px solid var(--c-border);" title="Kortti"></div>
+            <div class="theme-palette-slice" style="background: ${c.primary};" title="Pääväri"></div>
+            <div class="theme-palette-slice" style="background: ${c.olive || c.text};" title="Aksentti"></div>
           </div>
         </div>
       `;
@@ -2548,8 +2816,11 @@ class BudjettiApp {
     setHex("themeColorOliveHex", olive);
 
     const root = document.documentElement;
+    // Molemmat taustat päivittyvät heti livenä
     root.style.setProperty("--c-bg", bg);
+    root.style.setProperty("--c-surface", bg);
     root.style.setProperty("--c-card", card);
+    root.style.setProperty("--c-card-sub", this.adjustHexBrightness(card, 5));
     root.style.setProperty("--c-border", this.adjustHexBrightness(card, 15));
     root.style.setProperty("--c-border-active", this.adjustHexBrightness(card, 25));
     root.style.setProperty("--c-crimson", primary);
@@ -2559,6 +2830,9 @@ class BudjettiApp {
     root.style.setProperty("--c-olive", olive);
     root.style.setProperty("--c-income", olive);
     root.style.setProperty("--c-input-bg", card);
+
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute("content", bg);
 
     const badge = document.getElementById("activeThemeBadge");
     if (badge) badge.innerText = "Mukautettu";
@@ -2614,6 +2888,7 @@ class BudjettiApp {
     const muted = document.getElementById("themeColorMuted")?.value || "#8E8E93";
     const olive = document.getElementById("themeColorOlive")?.value || "#3F4F38";
     const font = document.getElementById("themeFontSelect")?.value || "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    const isDark = this.isDarkModeActive();
 
     const newTheme = {
       id: "custom_" + Date.now(),
@@ -2621,13 +2896,45 @@ class BudjettiApp {
       tag: "Oma Teema",
       isCustom: true,
       font: font,
+      dark: {
+        bg: isDark ? bg : "#0F0F10",
+        surface: isDark ? bg : "#171718",
+        card: isDark ? card : "#1C1C1E",
+        cardSub: this.adjustHexBrightness(isDark ? card : "#1C1C1E", 5),
+        border: this.adjustHexBrightness(isDark ? card : "#1C1C1E", 15),
+        borderActive: this.adjustHexBrightness(isDark ? card : "#1C1C1E", 25),
+        primary,
+        primaryHover: primary,
+        text: isDark ? text : "#EDEDED",
+        muted: isDark ? muted : "#8E8E93",
+        olive,
+        income: olive,
+        inputBg: isDark ? card : "#1C1C1E"
+      },
+      light: {
+        bg: !isDark ? bg : "#F4F4F6",
+        surface: !isDark ? bg : "#FFFFFF",
+        card: !isDark ? card : "#FFFFFF",
+        cardSub: this.adjustHexBrightness(!isDark ? card : "#FFFFFF", -5),
+        border: this.adjustHexBrightness(!isDark ? card : "#FFFFFF", -15),
+        borderActive: this.adjustHexBrightness(!isDark ? card : "#FFFFFF", -25),
+        primary,
+        primaryHover: primary,
+        text: !isDark ? text : "#111827",
+        muted: !isDark ? muted : "#52525B",
+        olive,
+        income: olive,
+        inputBg: !isDark ? card : "#F4F4F6"
+      },
       colors: {
         bg,
+        surface: bg,
         card,
         cardSub: this.adjustHexBrightness(card, 5),
         border: this.adjustHexBrightness(card, 15),
         borderActive: this.adjustHexBrightness(card, 25),
         primary,
+        primaryHover: primary,
         text,
         muted,
         olive,
