@@ -4,6 +4,7 @@ Budjetti Web App - Automated Test Suite & Regression Guard
 Validates HTML, CSS color tokens, JavaScript syntax, calculations, and PWA manifest.
 """
 import os
+import re
 import json
 import unittest
 import subprocess
@@ -280,6 +281,67 @@ class TestBudjettiApp(unittest.TestCase):
         res = subprocess.run(["node", "-e", storage_test_js], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, f"Revisio 4 -tallennustesti epäonnistui:\n{res.stderr}")
         self.assertIn("OK", res.stdout)
+
+    def test_10_revision_5_navigation_and_safe_export(self):
+        """Varmistaa Revisio 5:n 4-painikkeisen alanavigaation, yläpalkin ratasikonin, budjettinäkymän ja 100% anonymiteetin (Safe Export)."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # 1. Alanavigaation 4 ydinvälilehteä
+        self.assertIn('id="navKoti"', html)
+        self.assertIn('id="navTapahtumat"', html)
+        self.assertIn('id="navBudjetit"', html)
+        self.assertIn('id="navVelat"', html)
+
+        # 2. Varmistetaan että navAsetukset EI ole alanavigaatiossa, vaan ratasikoni yläpalkissa
+        bottom_nav_match = re.search(r'<nav class="bottom-nav">([\s\S]*?)</nav>', html)
+        self.assertIsNotNone(bottom_nav_match, "Alanavigaatiota ei löytynyt index.html:stä")
+        bottom_nav_content = bottom_nav_match.group(1)
+        self.assertNotIn('id="navAsetukset"', bottom_nav_content, "Asetukset-painike ei saa olla alanavigaatiossa!")
+        self.assertIn('id="btnHeaderSettings"', html, "Yläpalkin ratasikoni (btnHeaderSettings) puuttuu!")
+
+        # 3. viewBudjetit yhdistetyt näkymät
+        self.assertIn('id="btnSubTabCategories"', html)
+        self.assertIn('id="btnSubTabSubscriptions"', html)
+        self.assertIn('id="catTotalBudgetMonthly"', html)
+        self.assertIn('id="catTotalSpentMonthly"', html)
+        self.assertIn('id="catTotalRemainingMonthly"', html)
+
+        # 4. Safe Export - Tiukka anonymiteettitarkastus kaikille git-seuratuille tiedostoille
+        tracked_files_proc = subprocess.run(
+            ["git", "ls-files"],
+            cwd=SCRIPT_DIR,
+            capture_output=True,
+            text=True
+        )
+        tracked_files = [f.strip() for f in tracked_files_proc.stdout.splitlines() if f.strip()]
+        
+        forbidden_patterns = [
+            ("Budjetti-Jussi", "Yksityinen pilvikansion nimi"),
+            ("14636", "Yksityinen ulosottosumma"),
+            ("2043.97", "Yksityinen nettopalkkasumma"),
+            ("3915.14", "Yksityinen bruttopalkkasumma"),
+            ("317.08", "Yksityinen perintävelan summa"),
+            ("Intrum", "Yksityinen perintätoimisto"),
+            ("Lowell", "Yksityinen perintätoimisto"),
+            ("Svea", "Yksityinen perintätoimisto")
+        ]
+
+        for rel_path in tracked_files:
+            # Ohitetaan itse test_suite.py jotta tarkistussanat eivät aiheuta väärää hälytystä
+            if rel_path == "test_suite.py":
+                continue
+            abs_path = os.path.join(SCRIPT_DIR, rel_path)
+            if not os.path.isfile(abs_path):
+                continue
+            with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            for pattern, desc in forbidden_patterns:
+                self.assertNotIn(
+                    pattern,
+                    content,
+                    f"SAFE EXPORT RIKKOMUS: {desc} ('{pattern}') löytyi tiedostosta {rel_path}!"
+                )
 
 if __name__ == "__main__":
     unittest.main()

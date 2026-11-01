@@ -17,8 +17,9 @@ class BudjettiApp {
     this.receiptInbox = [];
 
     this.currentView = "viewKoti";
+    this.previousView = "viewKoti";
     this.currentLedgerTab = "tx";
-    this.currentBudgetsTab = "subscriptions";
+    this.currentBudgetsTab = "categories";
     this.currentDebtTab = "debts";
     this.p2pType = "lent";
 
@@ -859,6 +860,37 @@ class BudjettiApp {
     if (!container) return;
     container.innerHTML = "";
 
+    const now = new Date();
+    const periodRange = FinanceCalculator.getCurrentPeriodRange(this.paydayDay, now);
+    const stats = FinanceCalculator.calculateStats(
+      this.transactions,
+      this.categories.getAll(),
+      undefined,
+      undefined,
+      periodRange
+    );
+    const categoryTotals = stats.categoryTotals || {};
+
+    let totalBudget = 0;
+    let totalSpent = 0;
+
+    const allCats = this.categories.getAll();
+    allCats.forEach(c => {
+      if (c.type !== "income") {
+        totalBudget += (c.budgetMonthly || 0);
+        totalSpent += (categoryTotals[c.id] || 0);
+      }
+    });
+
+    const totalRemaining = Math.max(0, totalBudget - totalSpent);
+
+    const elBudget = document.getElementById("catTotalBudgetMonthly");
+    if (elBudget) elBudget.innerText = FinanceCalculator.formatCurrency(totalBudget);
+    const elSpent = document.getElementById("catTotalSpentMonthly");
+    if (elSpent) elSpent.innerText = FinanceCalculator.formatCurrency(totalSpent);
+    const elRemaining = document.getElementById("catTotalRemainingMonthly");
+    if (elRemaining) elRemaining.innerText = FinanceCalculator.formatCurrency(totalRemaining);
+
     const groups = this.categories.getGroups();
     groups.forEach(g => {
       const groupCats = this.categories.getByGroup(g.id);
@@ -868,30 +900,48 @@ class BudjettiApp {
 
       let catsHtml = "";
       groupCats.forEach(c => {
+        const spent = categoryTotals[c.id] || 0;
+        const budget = c.budgetMonthly || 0;
+        const hasBudget = budget > 0;
+        const pct = hasBudget ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+        let barColor = c.color || "var(--c-olive)";
+        if (pct > 90) barColor = "var(--c-crimson)";
+
         catsHtml += `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(165,160,136,0.1);">
-            <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
-              <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${c.color};"></span>
-              <span style="font-size: 13px; font-weight: 500;">${c.name}</span>
-              ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson);">PIKA</span>' : ''}
+          <div style="padding: 10px 0; border-bottom: 1px solid rgba(165,160,136,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
+                <span style="font-size: 13px; font-weight: 500;">${c.name}</span>
+                ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson); font-family: ui-monospace, monospace;">PIKA</span>' : ''}
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;" class="font-num">
+                <span style="font-size: 12px; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'}; cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
+                  ${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-size: 11px;">/ ' + budget.toFixed(0) + ' €</span>' : '<span style="color: rgba(165,160,136,0.5); font-size: 10px;">(ei tavoitetta)</span>'}
+                </span>
+                <button onclick="app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                </button>
+                <button onclick="app.deleteCategory('${c.id}')" title="Poista kategoria" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px; font-size: 15px; line-height: 1;">&times;</button>
+              </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;" class="font-num">
-              <span style="font-size: 12px; color: var(--c-stone); cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
-                ${c.budgetMonthly > 0 ? c.budgetMonthly.toFixed(0) + ' €' : '<span style="color: rgba(165,160,136,0.5);">Ei tavoitetta</span>'}
-              </span>
-              <button onclick="app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-              </button>
-              <button onclick="app.deleteCategory('${c.id}')" title="Poista kategoria" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px; font-size: 15px;">&times;</button>
-            </div>
+            ${hasBudget ? `
+              <div class="meter-track" style="margin-top: 6px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px;">
+                <div class="meter-fill" style="width: ${pct}%; height: 100%; border-radius: 2px; background-color: ${barColor};"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--c-stone); margin-top: 3px; font-family: ui-monospace, monospace;">
+                <span>${pct} % käytetty</span>
+                <span>${Math.max(0, budget - spent).toFixed(2).replace(".", ",")} € jäljellä</span>
+              </div>
+            ` : ''}
           </div>
         `;
       });
 
       groupCard.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <span class="card-label" style="margin: 0; color: ${g.color};">${g.name}</span>
           <button onclick="app.openCategoryModal(null, '${g.id}')" style="background: none; border: none; font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em;">
             + Lisää
@@ -1501,7 +1551,7 @@ class BudjettiApp {
       if (el) el.style.display = v === viewId ? "block" : "none";
     });
 
-    const navs = ["navKoti", "navTapahtumat", "navBudjetit", "navVelat", "navAsetukset"];
+    const navs = ["navKoti", "navTapahtumat", "navBudjetit", "navVelat"];
     navs.forEach(n => {
       const el = document.getElementById(n);
       if (el) el.classList.remove("active");
@@ -1510,6 +1560,18 @@ class BudjettiApp {
     const activeNav = document.getElementById("nav" + viewId.replace("view", ""));
     if (activeNav) activeNav.classList.add("active");
 
+    const btnSettings = document.getElementById("btnHeaderSettings");
+    if (btnSettings) {
+      if (viewId === "viewAsetukset") {
+        btnSettings.classList.add("active");
+      } else {
+        btnSettings.classList.remove("active");
+      }
+    }
+
+    if (this.currentView !== "viewAsetukset") {
+      this.previousView = this.currentView;
+    }
     this.currentView = viewId;
 
     if (subTab) {
@@ -1520,6 +1582,20 @@ class BudjettiApp {
       } else if (viewId === "viewVelat") {
         this.switchDebtTab(subTab);
       }
+    } else {
+      if (viewId === "viewBudjetit") {
+        if (!this.currentBudgetsTab) this.currentBudgetsTab = "categories";
+        this.switchBudgetsTab(this.currentBudgetsTab);
+      }
+    }
+  }
+
+  toggleSettingsView() {
+    if (this.currentView === "viewAsetukset") {
+      this.switchView(this.previousView || "viewKoti");
+    } else {
+      this.previousView = this.currentView;
+      this.switchView("viewAsetukset");
     }
   }
 
