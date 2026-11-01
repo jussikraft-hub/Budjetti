@@ -92,11 +92,25 @@
           </div>
         </div>
 
-        <!-- Quick Allocation Chips -->
+        <!-- Kuitti-Inbox Alert Banner (Visible when unprocessed receipts exist) -->
+        <div id="inboxAlertBanner" style="display: none; margin-top: 14px; background: rgba(166,36,60,0.12); border: 1px solid rgba(166,36,60,0.3); border-radius: 12px; padding: 10px 14px; align-items: center; justify-content: space-between; cursor: pointer;" onclick="app.switchView('viewTapahtumat', 'inbox')">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 14px;">📎</span>
+            <span style="font-size: 11px; font-weight: 500; color: var(--c-text-primary);">Kuitti-Inboxissa <span id="inboxAlertCount" class="font-num">0</span> käsittelemätöntä kuittia</span>
+          </div>
+          <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-crimson); font-weight: 600;">Käsittele &rarr;</span>
+        </div>
+
+        <!-- Quick Allocation Chips & Pikakuitti -->
         <div style="margin-top: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 2px;">
             <span class="card-label" style="margin: 0;">Pika-allokaatiot</span>
-            <span style="font-size: 11px; color: var(--c-stone); cursor: pointer;" onclick="app.switchView('viewBudjetit')">Muokkaa</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" style="background: none; border: none; font-size: 11px; color: var(--c-crimson); cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;" onclick="app.openQuickReceiptModal()">
+                + Pikakuitti
+              </button>
+              <span style="font-size: 11px; color: var(--c-stone); cursor: pointer;" onclick="app.switchView('viewBudjetit')">Muokkaa</span>
+            </div>
           </div>
           <div class="chips-grid" id="quickChipsContainer">
             <!-- Dynamic Chips Injected Here -->
@@ -110,7 +124,7 @@
               <span class="card-label" style="margin: 0;">Allokaatiot</span>
               <h3 style="font-size: 13px; font-weight: 500; color: var(--c-text-primary);">Kuukausitavoitteet</h3>
             </div>
-            <span style="font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; font-family: ui-monospace, monospace;" onclick="app.switchView('viewBudjetit')">Kaikki &rarr;</span>
+            <span style="font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; font-family: ui-monospace, monospace;" onclick="app.switchView('viewBudjetit', 'categories')">Kaikki &rarr;</span>
           </div>
           <div id="dashboardCategoryMeters" style="display: flex; flex-direction: column; gap: 14px;">
             <!-- Meters Injected Here -->
@@ -121,7 +135,7 @@
         <div class="luxury-card" style="margin-top: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(165,160,136,0.12); margin-bottom: 8px;">
             <span class="card-label" style="margin: 0;">Viimeisimmät kirjaukset</span>
-            <span style="font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; font-family: ui-monospace, monospace;" onclick="app.switchView('viewTapahtumat')">Päiväkirja &rarr;</span>
+            <span style="font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; font-family: ui-monospace, monospace;" onclick="app.switchView('viewTapahtumat', 'tx')">Päiväkirja &rarr;</span>
           </div>
           <div class="ledger-list" id="dashboardRecentLedger">
             <!-- Recent Transactions Injected Here -->
@@ -131,52 +145,216 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- VIEW 2: TAPAHTUMAT (PÄIVÄKIRJA)                -->
+      <!-- VIEW 2: TAPAHTUMAT (PÄIVÄKIRJA & KUITTI-INBOX) -->
       <!-- ============================================== -->
       <section id="viewTapahtumat" class="app-view" style="display: none;">
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
-          <input type="text" id="txSearchInput" placeholder="Hae kauppaa tai kuvausta..." class="form-input" style="padding: 8px 12px; font-size: 13px;" oninput="app.filterTransactions()">
-          <select id="txMonthFilter" class="form-input" style="width: auto; padding: 8px 12px; font-size: 12px;" onchange="app.filterTransactions()">
-            <option value="all">Kaikki kuukaudet</option>
-            <option value="current" selected>Tämä kuukausi</option>
-          </select>
-        </div>
-
-        <div class="luxury-card" style="padding: 16px;">
-          <div id="fullLedgerList" class="ledger-list">
-            <!-- Full transactions list injected here -->
-          </div>
-          <div id="ledgerEmptyState" style="display: none; text-align: center; padding: 30px; font-size: 12px; color: var(--c-stone);">
-            Ei tapahtumia valitulla suodatuksella.
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ============================================== -->
-      <!-- VIEW 3: BUDJETIT (RAJAT & KATEGORIAT)          -->
-      <!-- ============================================== -->
-      <section id="viewBudjetit" class="app-view" style="display: none;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <div>
-            <span class="card-label" style="margin: 0;">Kategoriarakenne</span>
-            <h2 style="font-size: 15px; font-weight: 500;">Kuukausibudjetit</h2>
-          </div>
-          <button class="btn-primary" style="width: auto; padding: 8px 14px; font-size: 10px;" onclick="app.openCategoryModal()">
-            + Uusi kategoria
+        <!-- Segmented Tab: Pääkirja vs Kuitti-Inbox -->
+        <div class="segmented-control">
+          <button type="button" class="segmented-btn active" id="tabLedgerTx" onclick="app.switchLedgerTab('tx')">
+            Pääkirja
+          </button>
+          <button type="button" class="segmented-btn" id="tabLedgerInbox" onclick="app.switchLedgerTab('inbox')">
+            Kuitti-Inbox <span id="ledgerInboxBadge" class="font-num" style="display: none; padding: 1px 6px; border-radius: 8px; font-size: 9px; background: var(--c-crimson); color: white; margin-left: 4px;">0</span>
           </button>
         </div>
 
-        <div id="categoryGroupsContainer" style="display: flex; flex-direction: column; gap: 16px;">
-          <!-- 2-level category groups injected here -->
+        <!-- SUBVIEW: PÄÄKIRJAN TAPAHTUMAT -->
+        <div id="subviewLedgerTx">
+          <!-- Filter Controls -->
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="txSearchInput" placeholder="Hae kauppaa, kuvausta tai kategoriaa..." class="form-input" style="padding: 9px 12px; font-size: 13px; flex: 1;" oninput="app.filterTransactions()">
+              <button type="button" class="btn-primary" style="width: auto; padding: 9px 12px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.openQuickReceiptModal()" title="Ota nopea kuittikuva">
+                📷 Kuitti
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: flex-end;">
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 2px;">Kuukausi</label>
+                <input type="month" id="txMonthPicker" class="form-input font-num" style="padding: 7px 8px; font-size: 11px;" onchange="app.handleMonthPickerChange()">
+              </div>
+              <div>
+                <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 2px;">Tarkka päivä</label>
+                <input type="date" id="txDatePicker" class="form-input font-num" style="padding: 7px 8px; font-size: 11px;" onchange="app.handleDatePickerChange()">
+              </div>
+              <div>
+                <button type="button" style="background: none; border: none; color: var(--c-stone); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; text-decoration: underline; padding-bottom: 8px;" onclick="app.resetTxFilters()">
+                  Nollaa
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="luxury-card" style="padding: 16px;">
+            <div id="fullLedgerList" class="ledger-list">
+              <!-- Full transactions list injected here -->
+            </div>
+            <div id="ledgerEmptyState" style="display: none; text-align: center; padding: 30px; font-size: 12px; color: var(--c-stone);">
+              Ei tapahtumia valitulla suodatuksella.
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBVIEW: KUITTI-INBOX -->
+        <div id="subviewLedgerInbox" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <span class="card-label" style="margin: 0;">Käsittelemättömät kuitit</span>
+              <p style="font-size: 11px; color: var(--c-stone);">Tallenna nopea kuitti ja täydennä tiedot myöhemmin.</p>
+            </div>
+            <button class="btn-primary" style="width: auto; padding: 8px 12px; font-size: 10px;" onclick="app.openQuickReceiptModal()">
+              + Lisää kuitti
+            </button>
+          </div>
+
+          <div id="inboxReceiptsList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Inbox Receipts Injected Here -->
+          </div>
+          <div id="inboxEmptyState" style="display: none; text-align: center; padding: 36px 20px; font-size: 12px; color: var(--c-stone); background: var(--c-card); border-radius: 14px; border: 1px dashed var(--c-border);">
+            Kuitti-Inbox on tyhjä. Kaikki kuitit on käsitelty!
+          </div>
         </div>
 
       </section>
 
       <!-- ============================================== -->
-      <!-- VIEW 4: ASETUKSET (JÄRJESTELMÄ & SYNC)         -->
+      <!-- VIEW 3: TILAUKSET & RAJAT                      -->
+      <!-- ============================================== -->
+      <section id="viewBudjetit" class="app-view" style="display: none;">
+        
+        <div class="segmented-control">
+          <button type="button" class="segmented-btn active" id="btnSubTabSubscriptions" onclick="app.switchBudgetsTab('subscriptions')">
+            Kuukausipalvelut
+          </button>
+          <button type="button" class="segmented-btn" id="btnSubTabCategories" onclick="app.switchBudgetsTab('categories')">
+            Kategoriat & Rajat
+          </button>
+        </div>
+
+        <!-- SUBVIEW: KUUKAUSIPALVELUT -->
+        <div id="subviewSubscriptions">
+          <div class="luxury-card" style="margin-bottom: 14px;">
+            <span class="card-label">Toistuvat kiinteät kulut</span>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+              <span style="font-size: 24px; font-weight: 300;" class="font-num" id="subTotalMonthly">0,00 €</span>
+              <span style="font-size: 11px; color: var(--c-stone); text-transform: uppercase;">/ kuukausi</span>
+            </div>
+            <div id="subAccountBreakdown" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(165,160,136,0.12); display: flex; flex-wrap: wrap; gap: 8px;">
+              <!-- Source account breakdown injected here -->
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="card-label" style="margin: 0;">Tilaukset & Sopimukset</span>
+            <button class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 10px;" onclick="app.openSubscriptionModal()">
+              + Uusi kuukausipalvelu
+            </button>
+          </div>
+
+          <div id="subscriptionsList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Subscriptions injected here -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW: KATEGORIAT & RAJAT -->
+        <div id="subviewCategories" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div>
+              <span class="card-label" style="margin: 0;">Kategoriarakenne</span>
+              <h2 style="font-size: 15px; font-weight: 500;">Kuukausibudjetit</h2>
+            </div>
+            <button class="btn-primary" style="width: auto; padding: 8px 14px; font-size: 10px;" onclick="app.openCategoryModal()">
+              + Uusi kategoria
+            </button>
+          </div>
+
+          <div id="categoryGroupsContainer" style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- 2-level category groups injected here -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VIEW 4: VELAT & LAINAT (SITOUMUKSET & P2P)     -->
+      <!-- ============================================== -->
+      <section id="viewVelat" class="app-view" style="display: none;">
+        
+        <div class="segmented-control">
+          <button type="button" class="segmented-btn active" id="btnDebtTabDebts" onclick="app.switchDebtTab('debts')">
+            Velat & Sitoumukset
+          </button>
+          <button type="button" class="segmented-btn" id="btnDebtTabP2P" onclick="app.switchDebtTab('p2p')">
+            Lainat muille & Saatavat
+          </button>
+        </div>
+
+        <!-- SUBVIEW: VELAT & SITOUMUKSET -->
+        <div id="subviewDebts">
+          <div class="luxury-card" style="margin-bottom: 14px;">
+            <span class="card-label">Velkasaldo & Lyhennykset</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+              <div>
+                <span style="font-size: 10px; color: var(--c-stone); text-transform: uppercase;">Kokonaisvelka</span>
+                <p style="font-size: 20px; font-weight: 400; color: #d4566e;" class="font-num" id="debtTotalRemaining">0,00 €</p>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 10px; color: var(--c-stone); text-transform: uppercase;">Kuukausierät yht.</span>
+                <p style="font-size: 20px; font-weight: 400; color: var(--c-text-primary);" class="font-num" id="debtTotalMonthly">0,00 €</p>
+              </div>
+            </div>
+            <div id="debtSourceBreakdown" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(165,160,136,0.12); display: flex; justify-content: space-between; font-size: 11px; color: var(--c-stone);">
+              <span>Palkasta suoraan: <b id="debtFromSalary" style="color: var(--c-text-primary);" class="font-num">0,00 €</b></span>
+              <span>Itse maksettavat: <b id="debtFromSelf" style="color: var(--c-text-primary);" class="font-num">0,00 €</b></span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="card-label" style="margin: 0;">Velat, Ulosotto & Maksut</span>
+            <button class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 10px;" onclick="app.openDebtModal()">
+              + Uusi velka / sitoumus
+            </button>
+          </div>
+
+          <div id="debtsList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Debts injected here -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW: LAINAT & SAATAVAT (P2P) -->
+        <div id="subviewP2P" style="display: none;">
+          <div class="luxury-card" style="margin-bottom: 14px;">
+            <span class="card-label">P2P Saatavat & Lainat</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+              <div>
+                <span style="font-size: 10px; color: var(--c-stone); text-transform: uppercase;">Saatavat muilta</span>
+                <p style="font-size: 20px; font-weight: 400; color: #9fbe8e;" class="font-num" id="p2pTotalReceivable">+0,00 €</p>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 10px; color: var(--c-stone); text-transform: uppercase;">Velkaa muille</span>
+                <p style="font-size: 20px; font-weight: 400; color: #d4566e;" class="font-num" id="p2pTotalPayable">-0,00 €</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="card-label" style="margin: 0;">Lainat & Kulujen jaot</span>
+            <button class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 10px;" onclick="app.openP2PModal()">
+              + Uusi laina / saatava
+            </button>
+          </div>
+
+          <div id="p2pList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- P2P list injected here -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VIEW 5: ASETUKSET (JÄRJESTELMÄ & SYNC)         -->
       <!-- ============================================== -->
       <section id="viewAsetukset" class="app-view" style="display: none;">
         
@@ -187,11 +365,13 @@
             <div>
               <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Tallennuskohde</label>
               <select id="settingSyncTarget" class="form-input" onchange="app.handleSyncTargetChange()">
-                <option value="dropbox">Dropbox (/budjetti_data.json)</option>
+                <option value="dropbox">Dropbox (Pilvi)</option>
+                <option value="gdrive">Google Drive (Pilvi)</option>
                 <option value="local">Vain lokaali laitemuisti (IndexedDB)</option>
               </select>
             </div>
 
+            <!-- Dropbox Config -->
             <div id="dropboxConfigSection">
               <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Dropbox Access Token</label>
               <div style="display: flex; gap: 8px;">
@@ -203,10 +383,40 @@
               </p>
 
               <div style="margin-top: 12px;">
-                <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Dropbox-tallennuskansio</label>
-                <input type="text" id="settingDropboxFolder" value="/Apps/Budjetti-Jussi" placeholder="/Apps/Budjetti-Jussi" class="form-input font-num" style="font-size: 12px;" onchange="app.saveDropboxFolder()">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block;">Dropbox-tallennuskansio</label>
+                  <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingDropboxFolder')">
+                    Valitse kansio &hellip;
+                  </button>
+                </div>
+                <input type="text" id="settingDropboxFolder" value="/Apps/Budjetti" placeholder="/Apps/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveDropboxFolder()">
                 <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                  Polku Dropboxissasi (esim. <code>/Apps/Budjetti-Jussi</code> tai <code>/</code> jos token on rajattu suoraan sovelluskansioon).
+                  Polku Dropboxissasi (esim. <code>/Apps/Budjetti</code> tai <code>/</code> jos token on rajattu suoraan sovelluskansioon). Voidaan valita selaimella tai kirjoittaa käsin.
+                </p>
+              </div>
+            </div>
+
+            <!-- Google Drive Config -->
+            <div id="gdriveConfigSection" style="display: none;">
+              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Google Drive Access Token</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="password" id="settingGDriveToken" placeholder="Syötä Google Drive OAuth/API Token..." class="form-input" style="font-family: monospace; font-size: 12px;">
+                <button class="btn-primary" style="width: auto; padding: 10px 16px; font-size: 10px;" onclick="app.saveGDriveConfig()">Tallenna</button>
+              </div>
+              <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
+                Google Drive API v3 -yhteys. Avain pysyy ainoastaan laitteesi selaimessa.
+              </p>
+
+              <div style="margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block;">Google Drive -tallennuskansio</label>
+                  <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingGDriveFolder')">
+                    Valitse kansio &hellip;
+                  </button>
+                </div>
+                <input type="text" id="settingGDriveFolder" value="/Budjetti" placeholder="/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveGDriveFolder()">
+                <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
+                  Kansion nimi tai polku Google Drivessa. Voidaan valita selaimella tai kirjoittaa käsin.
                 </p>
               </div>
             </div>
@@ -231,16 +441,38 @@
               <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuittien tallennuskohde</label>
               <select id="settingReceiptsTarget" class="form-input" onchange="app.handleReceiptsConfigChange()">
                 <option value="dropbox">Dropbox (Pilvi)</option>
+                <option value="gdrive">Google Drive (Pilvi)</option>
                 <option value="local">Lokaali laitemuisti (IndexedDB)</option>
               </select>
             </div>
             <div id="receiptsFolderSection">
-              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuittikansio Dropboxissa</label>
-              <input type="text" id="settingReceiptsFolder" placeholder="/Apps/Budjetti-Jussi/Kuitit" class="form-input font-num" style="font-size: 12px;" onchange="app.handleReceiptsConfigChange()">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block;">Kuittikansio pilvessä</label>
+                <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingReceiptsFolder')">
+                  Valitse kansio &hellip;
+                </button>
+              </div>
+              <input type="text" id="settingReceiptsFolder" placeholder="/Apps/Budjetti/Kuitit" class="form-input font-num" style="font-size: 12px;" onchange="app.handleReceiptsConfigChange()">
               <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                Kuvat tallentuvat tiivistettyinä JPEG-tiedostoina tähän kansioon.
+                Kuvat tallentuvat tiivistettyinä JPEG-tiedostoina tähän kansioon. Voidaan valita kansioselaimella tai kirjoittaa käsin.
               </p>
             </div>
+          </div>
+        </div>
+
+        <!-- Tilit & Maksutavat (User-defined Accounts) -->
+        <div class="luxury-card" style="margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="card-label" style="margin: 0;">Tilit & Maksutavat</span>
+            <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="app.openAccountModal()">
+              + Uusi tili
+            </button>
+          </div>
+          <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 12px;">
+            Määritä omat tilisi (esim. käyttötili, käteinen, luottokortti, puhelinlaskulla maksettavat).
+          </p>
+          <div id="accountsList" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Accounts Injected Here -->
           </div>
         </div>
 
@@ -309,7 +541,7 @@
       </svg>
     </button>
 
-    <!-- BOTTOM NAVIGATION BAR -->
+    <!-- BOTTOM NAVIGATION BAR (5 TABS) -->
     <nav class="bottom-nav">
       <button class="nav-btn active" id="navKoti" onclick="app.switchView('viewKoti')">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
@@ -330,7 +562,14 @@
           <path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
           <path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
         </svg>
-        <span>Rajat</span>
+        <span>Tilaukset</span>
+      </button>
+
+      <button class="nav-btn" id="navVelat" onclick="app.switchView('viewVelat')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+          <path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <span>Velat & P2P</span>
       </button>
 
       <button class="nav-btn" id="navAsetukset" onclick="app.switchView('viewAsetukset')">
@@ -404,6 +643,14 @@
           </div>
         </div>
 
+        <!-- Account / Payment Method Selector -->
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Maksutapa / Tili</label>
+          <select id="formAccount" class="form-input font-num" style="font-size: 12px;">
+            <!-- Accounts Injected Here -->
+          </select>
+        </div>
+
         <!-- Description -->
         <div>
           <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuvaus (Valinnainen)</label>
@@ -449,11 +696,67 @@
           </div>
         </div>
 
+        <!-- Split Expense Action Button (Visible when editing an existing transaction) -->
+        <div id="splitExpenseActionRow" style="display: none;">
+          <button type="button" class="btn-primary" style="background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary); padding: 10px; font-size: 10px;" onclick="app.openSplitModalForCurrentTx()">
+            Jaa tämä kulu toisen kanssa &rarr;
+          </button>
+        </div>
+
         <button type="submit" class="btn-primary" style="margin-top: 6px;">
           Tallenna kirjaus
         </button>
       </form>
 
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: PIKAKUITTI (VAIN KUITIN NOPEA TALLENNUS)-->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalQuickReceipt" onclick="if(event.target === this) app.closeModal('modalQuickReceipt')">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div>
+          <span class="card-label" style="margin: 0;">Kuitti-Inbox</span>
+          <h3 style="font-size: 14px; font-weight: 500;">Tallenna nopea kuitti</h3>
+        </div>
+        <button onclick="app.closeModal('modalQuickReceipt')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <p style="font-size: 11px; color: var(--c-stone);">
+          Ota kuva tai valitse kuitti. Se tallentuu heti Kuitti-Inboxiin ja voit täyttää summan ja kululuokan myöhemmin rauhassa.
+        </p>
+
+        <div style="background: #171718; border: 1px dashed var(--c-border); border-radius: 12px; padding: 16px; text-align: center;">
+          <div id="quickReceiptPreview" style="display: none; margin-bottom: 12px;">
+            <img id="quickReceiptPreviewImg" src="" style="max-height: 180px; max-width: 100%; border-radius: 8px; border: 1px solid var(--c-border);">
+          </div>
+          <span id="quickReceiptStatusText" style="font-size: 12px; color: var(--c-stone); display: block; margin-bottom: 10px;">Valitse kuva tai ota valokuva kameralla:</span>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" class="btn-primary" style="padding: 12px 8px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="document.getElementById('quickReceiptCamera').click()">
+              📷 Ota kuva
+            </button>
+            <input type="file" id="quickReceiptCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handleQuickReceiptSelect(event)">
+
+            <button type="button" class="btn-primary" style="padding: 12px 8px; font-size: 11px; background: #252527; border: 1px solid var(--c-border);" onclick="document.getElementById('quickReceiptFile').click()">
+              🖼️ Tiedosto
+            </button>
+            <input type="file" id="quickReceiptFile" accept="image/*,application/pdf" style="display: none;" onchange="app.handleQuickReceiptSelect(event)">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Muistiinpano (valinnainen)</label>
+          <input type="text" id="quickReceiptNotes" placeholder="esim. Lounas asiakkaan kanssa" class="form-input">
+        </div>
+
+        <button type="button" id="btnSaveQuickReceipt" class="btn-primary" style="margin-top: 6px; display: none;" onclick="app.saveQuickReceiptToInbox()">
+          Tallenna Kuitti-Inboxiin
+        </button>
+      </div>
     </div>
   </div>
 
@@ -491,6 +794,247 @@
           <input type="number" id="catFormQuickAmount" step="0.01" min="0" placeholder="esim. 15,00" class="form-input font-num">
         </div>
         <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna kategoria & tavoite</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: KUUKAUSIPALVELU / TILAUS                -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalSubscription" onclick="if(event.target === this) app.closeModal('modalSubscription')">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 14px; font-weight: 500;" id="modalSubTitle">Uusi kuukausipalvelu</h3>
+        <button onclick="app.closeModal('modalSubscription')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+      <form id="subForm" onsubmit="app.handleSubscriptionSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="hidden" id="subFormId">
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Palvelun nimi</label>
+          <input type="text" id="subFormName" required placeholder="esim. Netflix, Kuntosali, Spotify..." class="form-input">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Summa (€ / kk)</label>
+            <input type="number" id="subFormAmount" step="0.01" min="0.01" required placeholder="0,00" class="form-input font-num">
+          </div>
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Veloituspäivä (pv)</label>
+            <input type="number" id="subFormBillingDay" min="1" max="31" value="1" required class="form-input font-num" style="text-align: center;">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Mistä otetaan (Tili / Maksutapa)</label>
+          <select id="subFormAccount" class="form-input font-num" style="font-size: 12px;">
+            <!-- Accounts injected -->
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kategoria</label>
+          <select id="subFormCategory" class="form-input font-num" style="font-size: 12px;">
+            <!-- Categories injected -->
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Lisätiedot</label>
+          <input type="text" id="subFormNotes" placeholder="esim. Määräaikainen 31.12. saakka" class="form-input">
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 0;">
+          <input type="checkbox" id="subFormActive" checked style="accent-color: var(--c-crimson);">
+          <label for="subFormActive" style="font-size: 12px; color: var(--c-text-primary); cursor: pointer;">Tilaus on aktiivinen</label>
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna kuukausipalvelu</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: VELKA / SITOUMUS                        -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalDebt" onclick="if(event.target === this) app.closeModal('modalDebt')">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 14px; font-weight: 500;" id="modalDebtTitle">Uusi velka / sitoumus</h3>
+        <button onclick="app.closeModal('modalDebt')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+      <form id="debtForm" onsubmit="app.handleDebtSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="hidden" id="debtFormId">
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Velan / sitoumuksen nimi</label>
+          <input type="text" id="debtFormName" required placeholder="esim. Ulosotto, Opintolaina, Elatusmaksu..." class="form-input">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kokonaisvelka (€)</label>
+            <input type="number" id="debtFormTotal" step="0.01" min="0" placeholder="esim. 5000,00" class="form-input font-num">
+          </div>
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Jäljellä oleva saldo (€)</label>
+            <input type="number" id="debtFormRemaining" step="0.01" min="0" required placeholder="esim. 3200,00" class="form-input font-num">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuukausierä (€ / kk)</label>
+            <input type="number" id="debtFormMonthly" step="0.01" min="0" required placeholder="esim. 250,00" class="form-input font-num">
+          </div>
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Eräpäivä (pv / kk)</label>
+            <input type="number" id="debtFormDueDay" min="1" max="31" value="20" class="form-input font-num" style="text-align: center;">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Mistä maksetaan</label>
+          <select id="debtFormPaymentSource" class="form-input font-num" style="font-size: 12px;">
+            <option value="salary">Palkasta suoraan (ulosotto / pidätys)</option>
+            <option value="self_account">Itse käyttötililtä</option>
+            <option value="other">Muu / Sovittu erikseen</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Muistiinpanot</label>
+          <input type="text" id="debtFormNotes" placeholder="Viitenumero, yhteyshenkilö tms." class="form-input">
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna velka</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: LAINAT & SAATAVAT (P2P)                 -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalP2P" onclick="if(event.target === this) app.closeModal('modalP2P')">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 14px; font-weight: 500;" id="modalP2PTitle">Uusi laina / saatava</h3>
+        <button onclick="app.closeModal('modalP2P')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+      <form id="p2pForm" onsubmit="app.handleP2PSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="hidden" id="p2pFormId">
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btnP2PLent" class="btn-primary" style="flex: 1; padding: 8px; font-size: 10px; background-color: var(--c-olive);" onclick="app.setP2PType('lent')">
+            Olen lainannut (Saatava)
+          </button>
+          <button type="button" id="btnP2PBorrowed" class="btn-primary" style="flex: 1; padding: 8px; font-size: 10px; background-color: var(--c-card); border: 1px solid var(--c-border); color: var(--c-stone);" onclick="app.setP2PType('borrowed')">
+            Olen velkaa (Velka)
+          </button>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Henkilö</label>
+          <input type="text" id="p2pFormPerson" required placeholder="esim. Matti Meikäläinen" class="form-input">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Summa (€)</label>
+            <input type="number" id="p2pFormAmount" step="0.01" min="0.01" required placeholder="0,00" class="form-input font-num">
+          </div>
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Päivämäärä</label>
+            <input type="date" id="p2pFormDate" required class="form-input font-num">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Sovittu takaisinmaksupäivä (valinnainen)</label>
+          <input type="date" id="p2pFormDueDate" class="form-input font-num">
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuvaus / syy</label>
+          <input type="text" id="p2pFormNotes" placeholder="esim. Mökkireissun bensat puoliksi" class="form-input">
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: KULUJEN JAKO (SPLIT EXPENSE)            -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalSplitExpense" onclick="if(event.target === this) app.closeModal('modalSplitExpense')">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div>
+          <span class="card-label" style="margin: 0;">Kulujen jako</span>
+          <h3 style="font-size: 14px; font-weight: 500;">Jaa kirjaus muiden kanssa</h3>
+        </div>
+        <button onclick="app.closeModal('modalSplitExpense')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #171718; padding: 12px; border-radius: 10px; border: 1px solid var(--c-border);">
+          <span style="font-size: 10px; color: var(--c-stone); text-transform: uppercase;">Koko ostos</span>
+          <p style="font-size: 18px; font-weight: 500;" class="font-num" id="splitModalTotalAmt">0,00 €</p>
+          <p style="font-size: 11px; color: var(--c-stone);" id="splitModalVendor">Kauppa</p>
+        </div>
+
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kenen kanssa jaat?</label>
+          <input type="text" id="splitPersonName" placeholder="esim. Mikko" class="form-input">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Toisen osuus (€)</label>
+            <input type="number" id="splitPersonAmount" step="0.01" min="0.01" class="form-input font-num" oninput="app.calculateSplitRemainder()">
+          </div>
+          <div>
+            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Oma osuus (€)</label>
+            <input type="number" id="splitMyAmount" step="0.01" min="0" class="form-input font-num" readonly style="opacity: 0.8;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-primary" style="background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary); padding: 8px; font-size: 10px;" onclick="app.setEqualSplit()">
+            Puoliksi (50/50)
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 4px 0;">
+          <input type="checkbox" id="splitAutoAddP2P" checked style="accent-color: var(--c-crimson);">
+          <label for="splitAutoAddP2P" style="font-size: 11px; color: var(--c-text-primary); cursor: pointer;">
+            Lisää automaattisesti saatavaksi Lainat & Saatavat -listaan
+          </label>
+        </div>
+
+        <button type="button" class="btn-primary" style="margin-top: 6px;" onclick="app.confirmSplitExpense()">
+          Vahvista kulujen jako
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: TILIN / MAKSUTAVAN MUOKKAUS / LISÄYS    -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalAccount" onclick="if(event.target === this) app.closeModal('modalAccount')">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 14px; font-weight: 500;" id="modalAccountTitle">Uusi tili / maksutapa</h3>
+        <button onclick="app.closeModal('modalAccount')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+      <form id="accountForm" onsubmit="app.handleAccountSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="hidden" id="accountFormId">
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Tilin / Maksutavan nimi</label>
+          <input type="text" id="accountFormName" required placeholder="esim. Käyttötili, Käteinen, Puhelinlasku..." class="form-input">
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Tyyppi</label>
+          <select id="accountFormType" class="form-input">
+            <option value="bank">Pankkitili</option>
+            <option value="cash">Käteinen</option>
+            <option value="credit">Luottokortti</option>
+            <option value="bill">Puhelinlasku / Laskutus</option>
+            <option value="other">Muu</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Teemaväri</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="color" id="accountFormColor" value="#BFB99E" style="width: 44px; height: 38px; border: 1px solid var(--c-border); background: none; border-radius: 8px; cursor: pointer;">
+            <input type="text" id="accountFormColorHex" value="#BFB99E" class="form-input font-num" style="flex: 1;" onchange="document.getElementById('accountFormColor').value = this.value">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna tili</button>
       </form>
     </div>
   </div>

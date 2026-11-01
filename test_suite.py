@@ -124,8 +124,8 @@ class TestBudjettiApp(unittest.TestCase):
         const sp = new StorageProvider();
 
         // Oletuskansio
-        if (sp.getDropboxFolder() !== "/Apps/Budjetti-Jussi") throw new Error("Oletuskansio väärin: " + sp.getDropboxFolder());
-        if (sp.getDataFilePath() !== "/Apps/Budjetti-Jussi/budjetti_data.json") throw new Error("Datafile path väärin");
+        if (sp.getDropboxFolder() !== "/Apps/Budjetti") throw new Error("Oletuskansio väärin: " + sp.getDropboxFolder());
+        if (sp.getDataFilePath() !== "/Apps/Budjetti/budjetti_data.json") throw new Error("Datafile path väärin");
 
         // Räätälöity kansio
         sp.setDropboxFolder("OmaTalous/2026");
@@ -138,7 +138,7 @@ class TestBudjettiApp(unittest.TestCase):
 
         // Dropbox URL syötetty vahingossa
         sp.setDropboxFolder("https://www.dropbox.com/scl/fo/yp7t3v0er6by2w14atioz/ABG3GRDAdrqv7WXpBOeKHIE?rlkey=h6ti13xi04bf3jdcjs262m4bq&dl=0");
-        if (sp.getDropboxFolder() !== "/Apps/Budjetti-Jussi") throw new Error("URL-puhdistus epäonnistui: " + sp.getDropboxFolder());
+        if (sp.getDropboxFolder() !== "/Apps/Budjetti") throw new Error("URL-puhdistus epäonnistui: " + sp.getDropboxFolder());
 
         console.log("OK");
         """
@@ -191,6 +191,95 @@ class TestBudjettiApp(unittest.TestCase):
             css = f.read()
         self.assertIn('safe-area-inset-top', css)
         self.assertIn('safe-area-inset-bottom', css)
+
+    def test_09_revision_4_features(self):
+        """Varmistaa Revisio 4:n uudet näkymät, modaalit, suodattimet ja Google Drive -synkronoinnin."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # Uudet näkymät ja modaalit
+        new_elements = [
+            'id="viewVelat"',
+            'id="modalSubscription"',
+            'id="modalDebt"',
+            'id="modalP2P"',
+            'id="modalSplitExpense"',
+            'id="modalAccount"',
+            'id="modalQuickReceipt"',
+            'id="txMonthPicker"',
+            'id="txDatePicker"',
+            'id="settingGDriveToken"',
+            'id="settingGDriveFolder"',
+            'id="accountsList"',
+            'id="subviewSubscriptions"',
+            'id="subviewDebts"',
+            'id="subviewP2P"',
+            'id="inboxAlertBanner"',
+            'id="ledgerInboxBadge"'
+        ]
+        for elem in new_elements:
+            self.assertIn(elem, html, f"Uusi Revisio 4 -elementti puuttuu: {elem}")
+
+        # Varmistetaan että käyttäjän yksityinen Dropbox-kansionimi ei esiinny missään koodissa
+        for fname in ["index.html", "js/storage.js", "app.js", "style.css"]:
+            with open(os.path.join(SCRIPT_DIR, fname), "r", encoding="utf-8") as f:
+                c = f.read()
+            self.assertNotIn("Budjetti-Jussi", c, f"Yksityinen Dropbox-kansionimi löytyi tiedostosta {fname}!")
+
+        # Testataan Google Drive & entity-tallennuslogiikka Node.js:llä
+        storage_test_js = """
+        global.localStorage = {
+          _data: {},
+          getItem(k) { return this._data[k] || null; },
+          setItem(k, v) { this._data[k] = String(v); },
+          removeItem(k) { delete this._data[k]; }
+        };
+        const { StorageProvider } = require('""" + os.path.join(SCRIPT_DIR, "js/storage.js") + """');
+        const sp = new StorageProvider();
+
+        // GDrive-token ja oletuskansio
+        sp.setGDriveToken("ya29.test_token_123");
+        if (sp.getGDriveToken() !== "ya29.test_token_123") throw new Error("GDrive token väärin");
+        if (sp.getGDriveFolder() !== "/Budjetti") throw new Error("GDrive oletuskansio väärin: " + sp.getGDriveFolder());
+
+        sp.setGDriveFolder("OmatTiedostot/Budjetti");
+        if (sp.getGDriveFolder() !== "/OmatTiedostot/Budjetti") throw new Error("GDrive polku väärin: " + sp.getGDriveFolder());
+
+        // Mock IndexedDB ja exportFullPayload testaus
+        sp.db = {
+          transaction() {
+            return {
+              objectStore() {
+                return {
+                  getAll() {
+                    const req = { onsuccess: null, onerror: null };
+                    setTimeout(() => { req.result = []; if (req.onsuccess) req.onsuccess(); }, 0);
+                    return req;
+                  },
+                  get(key) {
+                    const req = { onsuccess: null, onerror: null };
+                    setTimeout(() => { req.result = null; if (req.onsuccess) req.onsuccess(); }, 0);
+                    return req;
+                  }
+                };
+              }
+            };
+          }
+        };
+
+        sp.exportFullPayload().then(payload => {
+          if (!payload.settings) throw new Error("Asetukset puuttuvat payloadista");
+          if (!Array.isArray(payload.settings.accounts)) throw new Error("Tilit puuttuvat payloadista");
+          if (!Array.isArray(payload.settings.subscriptions)) throw new Error("Tilaukset puuttuvat payloadista");
+          if (!Array.isArray(payload.settings.debts)) throw new Error("Velat puuttuvat payloadista");
+          if (!Array.isArray(payload.settings.p2pLoans)) throw new Error("P2P-lainat puuttuvat payloadista");
+          if (!Array.isArray(payload.settings.receiptInbox)) throw new Error("Kuitti-inbox puuttuu payloadista");
+          console.log("OK");
+        });
+        """
+        res = subprocess.run(["node", "-e", storage_test_js], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, f"Revisio 4 -tallennustesti epäonnistui:\n{res.stderr}")
+        self.assertIn("OK", res.stdout)
 
 if __name__ == "__main__":
     unittest.main()
