@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css?v=20261101_1830">
+  <link rel="stylesheet" href="style.css?v=20261101_1930">
 
   <!-- External Parsers & Visualizers (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -126,17 +126,79 @@
           </div>
         </div>
 
-        <!-- Category Budgets / Progress Meters -->
+        <!-- Category Budgets / Progress Meters & Charts Carousel -->
         <div class="luxury-card" style="margin-top: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(165,160,136,0.12); margin-bottom: 12px;">
-            <div>
-              <span class="card-label" style="margin: 0;">Allokaatiot</span>
-              <h3 style="font-size: 13px; font-weight: 500; color: var(--c-text-primary);">Kuukausitavoitteet</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(165,160,136,0.12); margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span class="card-label" style="margin: 0;">Allokaatiot</span>
+                <h3 style="font-size: 13px; font-weight: 500; color: var(--c-text-primary);" id="allocationViewTitle">Kuukausitavoitteet & Rakenne</h3>
+              </div>
+              <span style="font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; font-family: ui-monospace, monospace;" onclick="app.switchView('viewBudjetit', 'categories')">Kaikki &rarr;</span>
             </div>
-            <span style="font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; font-family: ui-monospace, monospace;" onclick="app.switchView('viewBudjetit', 'categories')">Kaikki &rarr;</span>
+
+            <!-- Carousel Segmented Tabs & User Data Configuration -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <!-- View mode switcher: Palkit | Piirakka | Pylväät -->
+              <div class="segmented-control" style="margin: 0; padding: 2px; flex: 1; min-width: 170px;">
+                <button type="button" class="segmented-btn active" id="btnAllocViewBars" onclick="app.setAllocationSlide(0)" style="font-size: 10px; padding: 5px;">
+                  📊 Palkit
+                </button>
+                <button type="button" class="segmented-btn" id="btnAllocViewPie" onclick="app.setAllocationSlide(1)" style="font-size: 10px; padding: 5px;">
+                  🍩 Piirakka
+                </button>
+                <button type="button" class="segmented-btn" id="btnAllocViewBar" onclick="app.setAllocationSlide(2)" style="font-size: 10px; padding: 5px;">
+                  📈 Pylväät
+                </button>
+              </div>
+
+              <!-- Data Definition Selectors (User Configurable) -->
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <select id="allocDataAggregation" class="form-input font-num" style="padding: 5px 6px; font-size: 10px; width: auto; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary); border-radius: 8px;" onchange="app.handleAllocDataConfigChange()" title="Valitse datataso">
+                  <option value="groups" selected>Pääryhmät</option>
+                  <option value="categories">Kategoriat</option>
+                </select>
+                <select id="allocDataMetric" class="form-input font-num" style="padding: 5px 6px; font-size: 10px; width: auto; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary); border-radius: 8px;" onchange="app.handleAllocDataConfigChange()" title="Valitse mittari">
+                  <option value="spent" selected>Toteutunut</option>
+                  <option value="budget">Budjetti</option>
+                  <option value="both">Vertailu</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div id="dashboardCategoryMeters" style="display: flex; flex-direction: column; gap: 14px;">
-            <!-- Meters Injected Here -->
+
+          <!-- Carousel Container (Horizontal snap scroll) -->
+          <div class="allocation-carousel" id="allocationCarousel" onscroll="app.handleAllocCarouselScroll()">
+            <!-- Slide 0: Progress Bars (Palkit) -->
+            <div class="allocation-slide" id="allocSlideBars">
+              <div id="dashboardCategoryMeters" style="display: flex; flex-direction: column; gap: 12px; min-height: 180px;">
+                <!-- Meters Injected Here -->
+              </div>
+            </div>
+
+            <!-- Slide 1: Donut/Pie Chart -->
+            <div class="allocation-slide" id="allocSlidePie">
+              <div style="position: relative; height: 185px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                <canvas id="chartAllocationPie" style="max-height: 185px; width: 100%;"></canvas>
+              </div>
+              <div id="chartPieLegend" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px;">
+                <!-- Interactive legend chips injected here -->
+              </div>
+            </div>
+
+            <!-- Slide 2: Bar Chart -->
+            <div class="allocation-slide" id="allocSlideBar">
+              <div style="position: relative; height: 185px; width: 100%;">
+                <canvas id="chartAllocationBar" style="max-height: 185px; width: 100%;"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Carousel Indicators (Dots) -->
+          <div style="display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px;">
+            <span class="carousel-dot active" id="allocDot0" onclick="app.setAllocationSlide(0)"></span>
+            <span class="carousel-dot" id="allocDot1" onclick="app.setAllocationSlide(1)"></span>
+            <span class="carousel-dot" id="allocDot2" onclick="app.setAllocationSlide(2)"></span>
           </div>
         </div>
 
@@ -198,8 +260,8 @@
                 <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Rajaa kuukaudella</label>
                 <input type="month" id="txMonthPicker" class="form-input font-num" style="padding: 7px 10px; font-size: 12px; width: 100%;" onchange="app.handleMonthPickerChange()">
               </div>
-              <button type="button" style="background: none; border: none; color: var(--c-crimson); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding-top: 14px; font-weight: 600; flex-shrink: 0;" onclick="app.resetMonthFilter()">
-                ✕ Nollaa
+              <button type="button" class="btn-filter-clear" onclick="app.resetMonthFilter()" title="Tyhjennä kuukausirajaus">
+                ✕
               </button>
             </div>
 
@@ -209,8 +271,8 @@
                 <label style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Rajaa tarkalla päivällä</label>
                 <input type="date" id="txDatePicker" class="form-input font-num" style="padding: 7px 10px; font-size: 12px; width: 100%;" onchange="app.handleDatePickerChange()">
               </div>
-              <button type="button" style="background: none; border: none; color: var(--c-crimson); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; padding-top: 14px; font-weight: 600; flex-shrink: 0;" onclick="app.resetDateFilter()">
-                ✕ Nollaa
+              <button type="button" class="btn-filter-clear" onclick="app.resetDateFilter()" title="Tyhjennä päivämäärärajaus">
+                ✕
               </button>
             </div>
           </div>
@@ -275,11 +337,16 @@
             </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <span class="card-label" style="margin: 0;">Kategoriaryhmät & Rajat</span>
-            <button class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 10px;" onclick="app.openCategoryModal()">
-              + Uusi kategoria
-            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-primary" style="width: auto; padding: 7px 10px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.openGroupModal()">
+                + Uusi pääryhmä
+              </button>
+              <button type="button" class="btn-primary" style="width: auto; padding: 7px 10px; font-size: 10px;" onclick="app.openCategoryModal()">
+                + Uusi kategoria
+              </button>
+            </div>
           </div>
 
           <div id="categoryGroupsContainer" style="display: flex; flex-direction: column; gap: 14px;">
@@ -631,8 +698,11 @@
         <span style="font-size: 14px;">🧾</span>
         <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-sand);" id="receiptOverlayTitle">Kuitin esikatselu</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <button type="button" class="btn-overlay-ctrl" onclick="app.toggleReceiptOverlayZoom()" title="Suurenna / Pienennä">⤢</button>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <button type="button" class="btn-overlay-ctrl" onclick="app.zoomReceipt(-0.3)" title="Loitonna (zoom -)">−</button>
+        <button type="button" class="btn-overlay-ctrl" onclick="app.resetReceiptZoom()" title="Palauta 1:1" style="font-size: 10px;">1:1</button>
+        <button type="button" class="btn-overlay-ctrl" onclick="app.zoomReceipt(0.3)" title="Lähennä (zoom +)">+</button>
+        <button type="button" class="btn-overlay-ctrl" onclick="app.toggleReceiptOverlayZoom()" title="Suurenna / Pienennä ikkuna">⤢</button>
         <button type="button" class="btn-overlay-ctrl" onclick="app.closeReceiptOverlay()" title="Sulje esikatselu">&times;</button>
       </div>
     </div>
@@ -758,7 +828,7 @@
 
       <!-- Apply Amount Button -->
       <button type="button" class="btn-primary" style="padding: 12px; font-weight: 600;" onclick="app.applyCalculatorAmount()">
-        ✓ Aseta summa kirjauskenttään
+        ✓ Käytä summaa
       </button>
     </div>
   </div>
@@ -803,8 +873,8 @@
             </button>
           </div>
           <div style="position: relative;">
-            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 30px; font-weight: 300; padding: 10px 38px 10px 14px;">
-            <span style="position: absolute; right: 14px; top: 12px; font-size: 24px; color: var(--c-stone); font-weight: 300;">€</span>
+            <input type="text" readonly inputmode="none" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 30px; font-weight: 300; padding: 10px 38px 10px 14px; cursor: pointer; caret-color: transparent;" onclick="app.openCalculatorModal()" title="Napauta syöttääksesi summan laskinnäppäimistöllä">
+            <span style="position: absolute; right: 14px; top: 12px; font-size: 24px; color: var(--c-stone); font-weight: 300; pointer-events: none;">€</span>
           </div>
         </div>
 
@@ -984,6 +1054,47 @@
           <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="catFormQuickAmount" placeholder="esim. 15,00" class="form-input font-num">
         </div>
         <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna kategoria & tavoite</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: PÄÄRYHMÄN MUOKKAUS / LISÄYS             -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="modalCategoryGroup" onclick="if(event.target === this) app.closeModal('modalCategoryGroup')">
+    <div class="modal-content" style="max-width: 400px; width: 100%; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div>
+          <span class="card-label" style="margin: 0;">Kategoriaryhmä</span>
+          <h3 style="font-size: 14px; font-weight: 500;" id="modalGroupTitle">Uusi pääryhmä</h3>
+        </div>
+        <button onclick="app.closeModal('modalCategoryGroup')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; font-size: 18px;">&times;</button>
+      </div>
+
+      <form id="groupForm" onsubmit="app.handleGroupSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+        <input type="hidden" id="groupFormId">
+
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Pääryhmän nimi</label>
+          <input type="text" id="groupFormName" required placeholder="esim. Vapaa-aika & Harrastukset" class="form-input">
+        </div>
+
+        <div>
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Ryhmän teemaväri</label>
+          <div id="groupColorSwatches" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+            <!-- Swatches generated here -->
+          </div>
+          <input type="hidden" id="groupFormColor" value="#5C6A51">
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+          <button type="submit" class="btn-primary" style="flex: 2; padding: 12px; font-weight: 600;">
+            Tallenna pääryhmä
+          </button>
+          <button type="button" id="btnDeleteCategoryGroup" class="btn-primary" style="flex: 1; padding: 12px; font-size: 11px; background: rgba(166,36,60,0.15); border: 1px solid var(--c-crimson); color: var(--c-crimson); display: none;" onclick="app.deleteCurrentGroup()">
+            Poista
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -1230,10 +1341,10 @@
   </div>
 
   <!-- Application Logic Modules -->
-  <script src="js/storage.js?v=20261101_1830"></script>
-  <script src="js/categories.js?v=20261101_1830"></script>
-  <script src="js/calculator.js?v=20261101_1830"></script>
-  <script src="js/exportImport.js?v=20261101_1830"></script>
-  <script src="app.js?v=20261101_1830"></script>
+  <script src="js/storage.js?v=20261101_1930"></script>
+  <script src="js/categories.js?v=20261101_1930"></script>
+  <script src="js/calculator.js?v=20261101_1930"></script>
+  <script src="js/exportImport.js?v=20261101_1930"></script>
+  <script src="app.js?v=20261101_1930"></script>
 </body>
 </html>

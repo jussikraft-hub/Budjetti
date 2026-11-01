@@ -425,5 +425,96 @@ class TestBudjettiApp(unittest.TestCase):
         res = subprocess.run(["node", "-e", test_parse_js], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0, f"parseAmount node-testi epäonnistui:\n{res.stderr}")
 
+    def test_13_revision_9_keypad_pinch_groups_charts(self):
+        """Varmistaa Revisio 9:n vaatimukset: In-app numeronäppäimistö, kuitti pinch-zoom, ✕-suodattimet, pääryhmien muokkaus ja allokaatiokaruselli."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/categories.js"), "r", encoding="utf-8") as f:
+            cat_js = f.read()
+
+        # 1. Päiväkirjan suodattimet: teksti "✕ Nollaa" korvattu kompaktilla ✕-painikkeella
+        self.assertNotIn("✕ Nollaa", html, "index.html:ssä ei saa enää olla päällekkäin menevää tekstiä '✕ Nollaa'!")
+        self.assertIn("btn-filter-clear", html, "index.html:stä puuttuu .btn-filter-clear luokka!")
+        self.assertIn(".btn-filter-clear", css, "CSS:stä puuttuu .btn-filter-clear määrittely!")
+
+        # 2. In-app numeronäppäimistö ja laitenäppäimistön esto (#formAmount readonly inputmode="none")
+        self.assertIn('id="formAmount"', html)
+        self.assertIn('inputmode="none"', html, "index.html:stä puuttuu inputmode='none' laitenäppäimistön avaamisen estämiseksi!")
+        self.assertIn('#modalCalculator', css, "CSS:stä puuttuu #modalCalculator sääntö!")
+        self.assertIn('z-index: 90', css, "CSS:stä puuttuu #modalCalculator z-index: 90!")
+        self.assertIn('z-index: 95', css, "CSS:stä puuttuu kuittikatselimen z-index: 95!")
+
+        # 3. Kuitti-ikkunan pinch-to-zoom ja zoom-ohjaimet
+        self.assertIn("initReceiptOverlayGestures", app_js, "app.js:stä puuttuu initReceiptOverlayGestures!")
+        self.assertIn("zoomReceipt", app_js, "app.js:stä puuttuu zoomReceipt!")
+        self.assertIn("resetReceiptZoom", app_js, "app.js:stä puuttuu resetReceiptZoom!")
+        self.assertIn("updateReceiptTransform", app_js, "app.js:stä puuttuu updateReceiptTransform!")
+        self.assertIn("touch-action: none", css, "CSS:stä puuttuu touch-action: none kuittirungolle!")
+
+        # 4. Pääryhmien muokkaus ja lisäys
+        self.assertIn('id="modalCategoryGroup"', html, "index.html:stä puuttuu pääryhmien muokkausmodaali (#modalCategoryGroup)!")
+        self.assertIn('app.openGroupModal()', html, "index.html:stä puuttuu kutsu app.openGroupModal()!")
+        self.assertIn("openGroupModal", app_js, "app.js:stä puuttuu openGroupModal!")
+        self.assertIn("handleGroupSubmit", app_js, "app.js:stä puuttuu handleGroupSubmit!")
+        self.assertIn("deleteCurrentGroup", app_js, "app.js:stä puuttuu deleteCurrentGroup!")
+
+        # Testataan CategoryManagerin pääryhmien CRUD node-ympäristössä
+        group_test_js = """
+        const { CategoryManager, DEFAULT_CATEGORY_GROUPS, DEFAULT_CATEGORIES } = require('""" + os.path.join(SCRIPT_DIR, "js/categories.js") + """');
+        let memorySetting = null;
+        const mockStorage = {
+          async getSetting(k, def) { return memorySetting; },
+          async setSetting(k, val) { memorySetting = val; }
+        };
+
+        (async () => {
+          const cm = new CategoryManager(mockStorage);
+          await cm.init();
+          const initialCount = cm.getGroups().length;
+
+          // 1. Lisää ryhmä
+          const newGrp = await cm.addGroup({ name: "Uusi testiryhmä", color: "#A6243C" });
+          if (!newGrp.id || newGrp.name !== "Uusi testiryhmä") throw new Error("addGroup epäonnistui");
+          if (cm.getGroups().length !== initialCount + 1) throw new Error("Ryhmän lisäysmäärä väärin");
+
+          // 2. Muokkaa ryhmää
+          const updated = await cm.updateGroup(newGrp.id, { name: "Päivitetty nimi", color: "#5C6A51" });
+          if (updated.name !== "Päivitetty nimi" || updated.color !== "#5C6A51") throw new Error("updateGroup epäonnistui");
+
+          // 3. Poista ryhmä
+          const delRes = await cm.deleteGroup(newGrp.id);
+          if (!delRes || cm.getGroups().length !== initialCount) throw new Error("deleteGroup epäonnistui");
+
+          console.log("GROUPS_OK");
+        })();
+        """
+        res_group = subprocess.run(["node", "-e", group_test_js], capture_output=True, text=True)
+        self.assertEqual(res_group.returncode, 0, f"CategoryManager group CRUD testi epäonnistui:\n{res_group.stderr}")
+        self.assertIn("GROUPS_OK", res_group.stdout)
+
+        # 5. Etusivun Allokaatiokaruselli ja kaaviot
+        self.assertIn('id="allocationCarousel"', html, "index.html:stä puuttuu allocationCarousel!")
+        self.assertIn('id="chartAllocationPie"', html, "index.html:stä puuttuu chartAllocationPie canvas!")
+        self.assertIn('id="chartAllocationBar"', html, "index.html:stä puuttuu chartAllocationBar canvas!")
+        self.assertIn('id="allocDataAggregation"', html, "index.html:stä puuttuu allocDataAggregation pudotusvalikko!")
+        self.assertIn('id="allocDataMetric"', html, "index.html:stä puuttuu allocDataMetric pudotusvalikko!")
+        self.assertIn('id="btnAllocViewBars"', html)
+        self.assertIn('id="btnAllocViewPie"', html)
+        self.assertIn('id="btnAllocViewBar"', html)
+        self.assertIn('id="allocDot0"', html)
+        self.assertIn('id="allocDot1"', html)
+        self.assertIn('id="allocDot2"', html)
+
+        self.assertIn("setAllocationSlide", app_js, "app.js:stä puuttuu setAllocationSlide!")
+        self.assertIn("handleAllocCarouselScroll", app_js, "app.js:stä puuttuu handleAllocCarouselScroll!")
+        self.assertIn("handleAllocDataConfigChange", app_js, "app.js:stä puuttuu handleAllocDataConfigChange!")
+        self.assertIn("renderAllocationCharts", app_js, "app.js:stä puuttuu renderAllocationCharts!")
+        self.assertIn(".allocation-carousel", css, "CSS:stä puuttuu .allocation-carousel!")
+        self.assertIn("scroll-snap-type: x mandatory", css, "CSS:stä puuttuu scroll-snap-type: x mandatory karusellille!")
+
 if __name__ == "__main__":
     unittest.main()

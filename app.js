@@ -113,6 +113,16 @@ class BudjettiApp {
         balanceEl.value = this.freeBalanceManual;
       }
 
+      // Ladataan allokaationäkymän preferenssit
+      const savedAlloc = await this.storage.getSetting("alloc_config", null);
+      this.allocAggregation = savedAlloc?.aggregation || "groups";
+      this.allocMetric = savedAlloc?.metric || "spent";
+      this.allocCurrentSlide = 0;
+      const aggEl = document.getElementById("allocDataAggregation");
+      if (aggEl) aggEl.value = this.allocAggregation;
+      const metricEl = document.getElementById("allocDataMetric");
+      if (metricEl) metricEl.value = this.allocMetric;
+
       this.updateSyncBadge();
 
       // Taustasynkka pilvestä (jos määritetty)
@@ -273,7 +283,9 @@ class BudjettiApp {
     }
 
     this.renderQuickChips();
-    this.renderCategoryMeters(stats.categoryTotals);
+    this.lastCategoryTotals = stats.categoryTotals || {};
+    this.renderCategoryMeters(this.lastCategoryTotals);
+    this.renderAllocationCharts(this.lastCategoryTotals);
     this.renderRecentLedger();
   }
 
@@ -305,11 +317,111 @@ class BudjettiApp {
     });
   }
 
+  // --- ALLOKAATIOKARUSELLI & KAAVIOT (Palkit / Donitsi / Pylväät) ---
+  setAllocationSlide(index) {
+    this.allocCurrentSlide = index;
+    const carousel = document.getElementById("allocationCarousel");
+    if (carousel) {
+      const slideWidth = carousel.clientWidth || 340;
+      carousel.scrollTo({ left: index * slideWidth, behavior: "smooth" });
+    }
+    this.updateAllocSlideIndicators(index);
+    if (index === 1 || index === 2) {
+      this.renderAllocationCharts(this.lastCategoryTotals);
+    }
+  }
+
+  handleAllocCarouselScroll() {
+    const carousel = document.getElementById("allocationCarousel");
+    if (!carousel) return;
+    const slideWidth = carousel.clientWidth || 1;
+    const index = Math.min(2, Math.max(0, Math.round(carousel.scrollLeft / slideWidth)));
+    if (index !== this.allocCurrentSlide) {
+      this.allocCurrentSlide = index;
+      this.updateAllocSlideIndicators(index);
+      if (index === 1 || index === 2) {
+        this.renderAllocationCharts(this.lastCategoryTotals);
+      }
+    }
+  }
+
+  updateAllocSlideIndicators(index) {
+    const btnBars = document.getElementById("btnAllocViewBars");
+    const btnPie = document.getElementById("btnAllocViewPie");
+    const btnBar = document.getElementById("btnAllocViewBar");
+    if (btnBars) btnBars.classList.toggle("active", index === 0);
+    if (btnPie) btnPie.classList.toggle("active", index === 1);
+    if (btnBar) btnBar.classList.toggle("active", index === 2);
+
+    for (let i = 0; i <= 2; i++) {
+      const dot = document.getElementById(`allocDot${i}`);
+      if (dot) dot.classList.toggle("active", i === index);
+    }
+  }
+
+  async handleAllocDataConfigChange() {
+    this.allocAggregation = document.getElementById("allocDataAggregation")?.value || "groups";
+    this.allocMetric = document.getElementById("allocDataMetric")?.value || "spent";
+    await this.storage.setSetting("alloc_config", {
+      aggregation: this.allocAggregation,
+      metric: this.allocMetric
+    });
+    this.renderCategoryMeters(this.lastCategoryTotals);
+    this.renderAllocationCharts(this.lastCategoryTotals);
+  }
+
   renderCategoryMeters(categoryTotals) {
     const container = document.getElementById("dashboardCategoryMeters");
     if (!container) return;
     container.innerHTML = "";
+    if (!categoryTotals) categoryTotals = this.lastCategoryTotals || {};
 
+    const isGroups = (this.allocAggregation || "groups") === "groups";
+
+    if (isGroups) {
+      const groups = this.categories.getGroups();
+      groups.forEach(g => {
+        const groupCats = this.categories.getByGroup(g.id);
+        let spent = 0;
+        let budget = 0;
+        groupCats.forEach(c => {
+          if (c.type !== "income") {
+            spent += (categoryTotals[c.id] || 0);
+            budget += (c.budgetMonthly || 0);
+          }
+        });
+        const hasBudget = budget > 0;
+        const pct = hasBudget ? Math.min(100, Math.round((spent / budget) * 100)) : (spent > 0 ? 100 : 0);
+        let barColor = g.color || "var(--c-olive)";
+        if (pct > 90 && hasBudget) barColor = "var(--c-crimson)";
+
+        const row = document.createElement("div");
+        row.className = "meter-row";
+        row.style.cursor = "pointer";
+        row.title = "Siirry budjetteihin";
+        row.onclick = () => this.switchView("viewBudjetit", "categories");
+        row.innerHTML = `
+          <div style="display: flex; justify-content: space-between; font-size: 12px;" class="font-num">
+            <span style="font-weight: 500; display: flex; align-items: center; gap: 8px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background-color: ${g.color};"></span>
+              ${g.name}
+            </span>
+            <span>${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-weight: 300;">/ ' + budget.toFixed(0) + ' €</span>' : ''}</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" style="width: ${hasBudget ? pct : (spent > 0 ? 100 : 0)}%; background-color: ${barColor};"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--c-stone); font-family: ui-monospace, monospace;">
+            <span>${hasBudget ? pct + ' % käytetty' : (spent > 0 ? 'Toteutunut' : 'Ei kuluja')}</span>
+            <span>${hasBudget ? Math.max(0, budget - spent).toFixed(2).replace(".", ",") + ' € jäljellä' : ''}</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      return;
+    }
+
+    // Categories Mode
     const catsWithBudget = this.categories.getAll().filter(c => c.budgetMonthly > 0 && c.type !== "income");
 
     if (catsWithBudget.length === 0) {
@@ -324,7 +436,7 @@ class BudjettiApp {
       return;
     }
 
-    catsWithBudget.slice(0, 4).forEach(c => {
+    catsWithBudget.slice(0, 5).forEach(c => {
       const spent = categoryTotals[c.id] || 0;
       const budget = c.budgetMonthly;
       const pct = Math.min(100, Math.round((spent / budget) * 100));
@@ -356,6 +468,215 @@ class BudjettiApp {
       `;
       container.appendChild(row);
     });
+  }
+
+  renderAllocationCharts(categoryTotals) {
+    if (!categoryTotals) categoryTotals = this.lastCategoryTotals || {};
+    this.lastCategoryTotals = categoryTotals;
+
+    if (typeof window === "undefined" || !window.Chart) return;
+
+    const isGroups = (this.allocAggregation || "groups") === "groups";
+    const metric = this.allocMetric || "spent";
+
+    // Build items data
+    let items = [];
+    if (isGroups) {
+      const groups = this.categories.getGroups();
+      items = groups.map(g => {
+        const groupCats = this.categories.getByGroup(g.id);
+        let spent = 0;
+        let budget = 0;
+        groupCats.forEach(c => {
+          if (c.type !== "income") {
+            spent += (categoryTotals[c.id] || 0);
+            budget += (c.budgetMonthly || 0);
+          }
+        });
+        return {
+          id: g.id,
+          name: g.name,
+          color: g.color || "#5C6A51",
+          spent: Math.round(spent * 100) / 100,
+          budget: Math.round(budget * 100) / 100
+        };
+      });
+    } else {
+      const allCats = this.categories.getAll().filter(c => c.type !== "income");
+      items = allCats.map(c => ({
+        id: c.id,
+        name: c.name,
+        color: c.color || "#5C6A51",
+        spent: Math.round((categoryTotals[c.id] || 0) * 100) / 100,
+        budget: Math.round((c.budgetMonthly || 0) * 100) / 100
+      }));
+    }
+
+    // --- DONUT / PIE CHART (Slide 1) ---
+    const pieCanvas = document.getElementById("chartAllocationPie");
+    const pieLegend = document.getElementById("chartPieLegend");
+    if (pieCanvas) {
+      if (this.donutChartInstance) {
+        this.donutChartInstance.destroy();
+        this.donutChartInstance = null;
+      }
+
+      let pieItems = items.filter(i => (metric === "budget" ? i.budget : i.spent) > 0);
+      if (pieItems.length === 0) pieItems = items.slice(0, 5);
+
+      const labels = pieItems.map(i => i.name.split("&")[0].trim());
+      const values = pieItems.map(i => metric === "budget" ? i.budget : i.spent);
+      const colors = pieItems.map(i => i.color);
+
+      const ctx = pieCanvas.getContext("2d");
+      this.donutChartInstance = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderColor: "#171718",
+            borderWidth: 2,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "65%",
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "#1F1F20",
+              titleColor: "#BFB99E",
+              bodyColor: "#FFFFFF",
+              borderColor: "rgba(165,160,136,0.2)",
+              borderWidth: 1,
+              padding: 10,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  const val = context.raw || 0;
+                  return " " + context.label + ": " + val.toFixed(2).replace(".", ",") + " €";
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (pieLegend) {
+        pieLegend.innerHTML = "";
+        pieItems.forEach(i => {
+          const val = metric === "budget" ? i.budget : i.spent;
+          const chip = document.createElement("div");
+          chip.style.cssText = "display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--c-stone); background: rgba(255,255,255,0.04); padding: 3px 8px; border-radius: 6px;";
+          chip.innerHTML = `
+            <span style="width: 7px; height: 7px; border-radius: 50%; background-color: ${i.color}; flex-shrink: 0;"></span>
+            <span>${i.name.split("&")[0].trim()}: <b style="color: var(--c-text-primary);">${val.toFixed(0)} €</b></span>
+          `;
+          pieLegend.appendChild(chip);
+        });
+      }
+    }
+
+    // --- BAR CHART (Slide 2) ---
+    const barCanvas = document.getElementById("chartAllocationBar");
+    if (barCanvas) {
+      if (this.barChartInstance) {
+        this.barChartInstance.destroy();
+        this.barChartInstance = null;
+      }
+
+      let barItems = items.filter(i => (i.spent > 0 || i.budget > 0));
+      if (barItems.length === 0) barItems = items.slice(0, 5);
+
+      const labels = barItems.map(i => i.name.split("&")[0].trim());
+      const spentData = barItems.map(i => i.spent);
+      const budgetData = barItems.map(i => i.budget);
+
+      let datasets = [];
+      if (metric === "both") {
+        datasets = [
+          {
+            label: "Toteutunut (€)",
+            data: spentData,
+            backgroundColor: "#A6243C",
+            borderRadius: 4
+          },
+          {
+            label: "Budjetti (€)",
+            data: budgetData,
+            backgroundColor: "rgba(165,160,136,0.35)",
+            borderRadius: 4
+          }
+        ];
+      } else if (metric === "budget") {
+        datasets = [{
+          label: "Budjetti (€)",
+          data: budgetData,
+          backgroundColor: barItems.map(i => i.color),
+          borderRadius: 4
+        }];
+      } else {
+        datasets = [{
+          label: "Toteutunut (€)",
+          data: spentData,
+          backgroundColor: barItems.map(i => i.color),
+          borderRadius: 4
+        }];
+      }
+
+      const ctxBar = barCanvas.getContext("2d");
+      this.barChartInstance = new Chart(ctxBar, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: metric === "both",
+              labels: {
+                color: "#A5A088",
+                boxWidth: 10,
+                font: { size: 10 }
+              }
+            },
+            tooltip: {
+              backgroundColor: "#1F1F20",
+              titleColor: "#BFB99E",
+              bodyColor: "#FFFFFF",
+              borderColor: "rgba(165,160,136,0.2)",
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  return " " + context.dataset.label + ": " + (context.raw || 0).toFixed(2).replace(".", ",") + " €";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: "#A5A088", font: { size: 9 } }
+            },
+            y: {
+              grid: { color: "rgba(255,255,255,0.06)" },
+              ticks: {
+                color: "#A5A088",
+                font: { size: 9 },
+                callback: function(v) { return v + " €"; }
+              }
+            }
+          }
+        }
+      });
+    }
   }
 
   renderRecentLedger() {
@@ -1012,8 +1333,16 @@ class BudjettiApp {
 
       groupCard.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span class="card-label" style="margin: 0; color: ${g.color};">${g.name}</span>
-          <button onclick="app.openCategoryModal(null, '${g.id}')" style="background: none; border: none; font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em;">
+          <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openGroupModal('${g.id}')" title="Muokkaa pääryhmää">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${g.color}; flex-shrink: 0;"></span>
+            <span class="card-label" style="margin: 0; color: ${g.color}; font-weight: 600;">${g.name}</span>
+            <button type="button" onclick="event.stopPropagation(); app.openGroupModal('${g.id}')" title="Muokkaa pääryhmää" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 2px;">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+            </button>
+          </div>
+          <button type="button" onclick="app.openCategoryModal(null, '${g.id}')" style="background: none; border: none; font-size: 11px; color: var(--c-stone); cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em;">
             + Lisää
           </button>
         </div>
@@ -1712,17 +2041,117 @@ class BudjettiApp {
       actionBtn.style.display = isAdding ? "none" : "block";
     }
 
+    this.initReceiptOverlayGestures();
+    this.resetReceiptZoom();
     viewer.style.display = "flex";
   }
 
   closeReceiptOverlay() {
     const viewer = document.getElementById("receiptOverlayViewer");
     if (viewer) viewer.style.display = "none";
+    this.resetReceiptZoom();
   }
 
   toggleReceiptOverlayZoom() {
     const viewer = document.getElementById("receiptOverlayViewer");
     if (viewer) viewer.classList.toggle("zoomed");
+  }
+
+  initReceiptOverlayGestures() {
+    if (this.receiptGesturesInitialized) return;
+    const body = document.getElementById("receiptOverlayBody");
+    const imgEl = document.getElementById("receiptOverlayImg");
+    if (!body || !imgEl) return;
+
+    this.receiptZoom = 1.0;
+    this.receiptPanX = 0;
+    this.receiptPanY = 0;
+
+    let startDist = 0;
+    let startZoom = 1.0;
+    let startTouchX = 0, startTouchY = 0;
+    let startPanX = 0, startPanY = 0;
+    let isPinching = false;
+    let isPanning = false;
+
+    body.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        isPanning = false;
+        startDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        startZoom = this.receiptZoom || 1.0;
+      } else if (e.touches.length === 1 && (this.receiptZoom || 1.0) > 1.05) {
+        isPanning = true;
+        isPinching = false;
+        startTouchX = e.touches[0].clientX;
+        startTouchY = e.touches[0].clientY;
+        startPanX = this.receiptPanX || 0;
+        startPanY = this.receiptPanY || 0;
+      }
+    }, { passive: false });
+
+    body.addEventListener("touchmove", (e) => {
+      if (isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const scale = startZoom * (dist / (startDist || 1));
+        this.receiptZoom = Math.min(5.0, Math.max(1.0, Math.round(scale * 100) / 100));
+        this.updateReceiptTransform();
+      } else if (isPanning && e.touches.length === 1 && (this.receiptZoom || 1.0) > 1.05) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - startTouchX;
+        const dy = e.touches[0].clientY - startTouchY;
+        this.receiptPanX = startPanX + dx;
+        this.receiptPanY = startPanY + dy;
+        this.updateReceiptTransform();
+      }
+    }, { passive: false });
+
+    body.addEventListener("touchend", (e) => {
+      if (e.touches.length < 2) isPinching = false;
+      if (e.touches.length === 0) {
+        isPanning = false;
+        if ((this.receiptZoom || 1.0) <= 1.05) {
+          this.resetReceiptZoom();
+        }
+      }
+    });
+
+    body.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.25 : -0.25;
+      this.zoomReceipt(delta);
+    }, { passive: false });
+
+    this.receiptGesturesInitialized = true;
+  }
+
+  updateReceiptTransform() {
+    const imgEl = document.getElementById("receiptOverlayImg");
+    if (!imgEl) return;
+    imgEl.style.transform = `translate(${this.receiptPanX || 0}px, ${this.receiptPanY || 0}px) scale(${this.receiptZoom || 1.0})`;
+  }
+
+  zoomReceipt(delta) {
+    this.receiptZoom = Math.min(5.0, Math.max(1.0, Math.round(((this.receiptZoom || 1.0) + delta) * 100) / 100));
+    if (this.receiptZoom <= 1.05) {
+      this.receiptPanX = 0;
+      this.receiptPanY = 0;
+    }
+    this.updateReceiptTransform();
+  }
+
+  resetReceiptZoom() {
+    this.receiptZoom = 1.0;
+    this.receiptPanX = 0;
+    this.receiptPanY = 0;
+    this.updateReceiptTransform();
   }
 
   recordFromReceiptOverlay() {
@@ -2216,6 +2645,85 @@ class BudjettiApp {
     if (confirm("Haluatko poistaa tämän kategorian?")) {
       await this.categories.deleteCategory(id);
       await this.refreshData();
+    }
+  }
+
+  // --- KATEGORIARYHMIEN HALLINTA (PÄÄRYHMÄT) ---
+  openGroupModal(groupId = null) {
+    const swatchesContainer = document.getElementById("groupColorSwatches");
+    const nameInput = document.getElementById("groupFormName");
+    const idInput = document.getElementById("groupFormId");
+    const colorInput = document.getElementById("groupFormColor");
+    const titleEl = document.getElementById("modalGroupTitle");
+    const deleteBtn = document.getElementById("btnDeleteCategoryGroup");
+
+    const palette = ["#5C6A51", "#A6243C", "#683F26", "#A5A088", "#7A8288", "#4A6B82", "#826B4A", "#4B5320", "#3E424B"];
+    let activeColor = palette[0];
+
+    if (groupId) {
+      const grp = this.categories.getGroupById(groupId);
+      if (grp) {
+        if (titleEl) titleEl.innerText = "Muokkaa pääryhmää";
+        if (idInput) idInput.value = grp.id;
+        if (nameInput) nameInput.value = grp.name;
+        activeColor = grp.color || palette[0];
+        if (colorInput) colorInput.value = activeColor;
+        if (deleteBtn) deleteBtn.style.display = "block";
+      }
+    } else {
+      if (titleEl) titleEl.innerText = "Uusi pääryhmä";
+      if (idInput) idInput.value = "";
+      if (nameInput) nameInput.value = "";
+      if (colorInput) colorInput.value = activeColor;
+      if (deleteBtn) deleteBtn.style.display = "none";
+    }
+
+    if (swatchesContainer) {
+      swatchesContainer.innerHTML = "";
+      palette.forEach(c => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = `color-swatch-chip ${c.toLowerCase() === activeColor.toLowerCase() ? "active" : ""}`;
+        chip.style.backgroundColor = c;
+        chip.onclick = () => {
+          if (colorInput) colorInput.value = c;
+          swatchesContainer.querySelectorAll(".color-swatch-chip").forEach(el => el.classList.remove("active"));
+          chip.classList.add("active");
+        };
+        swatchesContainer.appendChild(chip);
+      });
+    }
+
+    this.openModal("modalCategoryGroup");
+  }
+
+  async handleGroupSubmit(event) {
+    event.preventDefault();
+    const id = document.getElementById("groupFormId")?.value;
+    const name = document.getElementById("groupFormName")?.value.trim();
+    const color = document.getElementById("groupFormColor")?.value || "#5C6A51";
+
+    if (!name) return;
+
+    if (id) {
+      await this.categories.updateGroup(id, { name, color });
+    } else {
+      await this.categories.addGroup({ name, color });
+    }
+
+    this.closeModal("modalCategoryGroup");
+    await this.refreshData();
+    this.storage.triggerBackgroundSync();
+  }
+
+  async deleteCurrentGroup() {
+    const id = document.getElementById("groupFormId")?.value;
+    if (!id) return;
+    if (confirm("Haluatko varmasti poistaa tämän pääryhmän? Siihen kuuluvat kategoriat siirretään toiseen ryhmään.")) {
+      await this.categories.deleteGroup(id);
+      this.closeModal("modalCategoryGroup");
+      await this.refreshData();
+      this.storage.triggerBackgroundSync();
     }
   }
 

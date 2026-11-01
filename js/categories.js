@@ -165,6 +165,48 @@ class CategoryManager {
     return this.categories.filter(c => c.groupId === groupId);
   }
 
+  getGroupById(id) {
+    return this.groups.find(g => g.id === id) || null;
+  }
+
+  async addGroup(grp) {
+    const newGroup = {
+      id: grp.id || "grp_" + Date.now(),
+      name: (grp.name || "Uusi pääryhmä").trim(),
+      color: grp.color || "#5C6A51"
+    };
+    this.groups.push(newGroup);
+    await this.save();
+    return newGroup;
+  }
+
+  async updateGroup(id, updates) {
+    const idx = this.groups.findIndex(g => g.id === id);
+    if (idx !== -1) {
+      if (updates.name !== undefined) {
+        this.groups[idx].name = updates.name.trim();
+      }
+      if (updates.color !== undefined) {
+        this.groups[idx].color = updates.color;
+      }
+      await this.save();
+      return this.groups[idx];
+    }
+    return null;
+  }
+
+  async deleteGroup(id) {
+    const fallbackGroup = this.groups.find(g => g.id !== id)?.id || "arki";
+    this.categories.forEach(c => {
+      if (c.groupId === id) {
+        c.groupId = fallbackGroup;
+      }
+    });
+    this.groups = this.groups.filter(g => g.id !== id);
+    await this.save();
+    return true;
+  }
+
   async addCategory(cat) {
     const newCat = {
       id: cat.id || "cat_" + Date.now(),
