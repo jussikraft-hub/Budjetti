@@ -220,11 +220,18 @@ class CategoryManager {
   async updateGroup(id, updates) {
     const idx = this.groups.findIndex(g => g.id === id);
     if (idx !== -1) {
+      const oldColor = this.groups[idx].color;
       if (updates.name !== undefined) {
         this.groups[idx].name = updates.name.trim();
       }
       if (updates.color !== undefined) {
         this.groups[idx].color = updates.color;
+        // Jos alikategorialla oli sama väri kuin pääryhmällä (tai ei omaa poikkeusväriä), päivitetään se ryhmän uuteen väriin
+        this.categories.forEach(c => {
+          if (c.groupId === id && (!c.color || c.color.toLowerCase() === (oldColor || "").toLowerCase())) {
+            c.color = updates.color;
+          }
+        });
       }
       await this.save();
       return this.groups[idx];

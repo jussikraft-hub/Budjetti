@@ -21,7 +21,7 @@ class BudjettiApp {
     this.currentLedgerTab = "tx";
     this.currentFilterMode = "all";
     this.currentBudgetsTab = "categories";
-    this.currentDebtTab = "debts";
+    this.currentDebtTab = "p2p";
     this.p2pType = "lent";
 
     this.formType = "expense";
@@ -32,9 +32,13 @@ class BudjettiApp {
     this.activeProcessingInboxId = null;
     this.currentSplittingTx = null;
 
-    // Laskin ja kuitin esikatselu
+    // Laskin, kulujen pikajako & jäännösosuuksien allokointi
     this.calcTokens = ["0"];
     this.calcSplitDesc = null;
+    this.calcBaseTotal = 0;
+    this.calcSplitPartsCount = 1;
+    this.calcSplitPercentVal = 100;
+    this.pendingSplitAllocations = [];
     this.activeOverlayReceiptId = null;
 
     this.paydayDay = 20;
@@ -549,8 +553,16 @@ class BudjettiApp {
 
     const isGroups = (this.allocAggregation || "groups") === "groups";
 
+    // Lasketaan koko kauden menojen yhteissumma suhteellisen osuuden näyttämistä varten
+    let totalPeriodSpent = 0;
+    this.categories.getAll().forEach(c => {
+      if (c.type !== "income") {
+        totalPeriodSpent += (categoryTotals[c.id] || 0);
+      }
+    });
+
     if (isGroups) {
-      const groups = this.categories.getGroups();
+      const groups = this.categories.getGroups().filter(g => g.id !== "tulot");
       groups.forEach(g => {
         const groupCats = this.categories.getByGroup(g.id);
         let spent = 0;
@@ -562,29 +574,39 @@ class BudjettiApp {
           }
         });
         const hasBudget = budget > 0;
-        const pct = hasBudget ? Math.min(100, Math.round((spent / budget) * 100)) : (spent > 0 ? 100 : 0);
-        let barColor = g.color || "var(--c-olive)";
-        if (pct > 90 && hasBudget) barColor = "var(--c-crimson)";
+        const shareOfTotalPct = totalPeriodSpent > 0 ? Math.min(100, Math.round((spent / totalPeriodSpent) * 100)) : 0;
+        const pct = hasBudget ? Math.min(100, Math.round((spent / budget) * 100)) : shareOfTotalPct;
+        let barColor = g.color || "var(--c-primary)";
+        if (pct > 90 && hasBudget) barColor = "var(--c-expense)";
+
+        const leftStatusText = hasBudget
+          ? `Käytetty ${pct} % tavoitteesta (${budget.toFixed(0)} €)`
+          : (spent > 0 ? `Osuus kauden menoista: ${shareOfTotalPct} %` : "Ei kirjattuja menoja kaudella");
+        const rightStatusText = hasBudget
+          ? `${Math.max(0, budget - spent).toFixed(2).replace(".", ",")} € jäljellä`
+          : (spent > 0 ? "Aseta tavoite →" : "");
 
         const row = document.createElement("div");
         row.className = "meter-row";
         row.style.cursor = "pointer";
-        row.title = "Siirry budjetteihin";
+        row.title = "Napauta tarkastellaksesi tai asettaaksesi budjettitavoitteita";
         row.onclick = () => this.switchView("viewBudjetit", "categories");
         row.innerHTML = `
-          <div style="display: flex; justify-content: space-between; font-size: 12px;" class="font-num">
-            <span style="font-weight: 500; display: flex; align-items: center; gap: 8px;">
-              <span style="width: 7px; height: 7px; border-radius: 50%; background-color: ${g.color};"></span>
-              ${g.name}
+          <div class="meter-row-header">
+            <span class="meter-row-title">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${g.color}; flex-shrink: 0;"></span>
+              <span>${g.name}</span>
             </span>
-            <span>${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-weight: 300;">/ ' + budget.toFixed(0) + ' €</span>' : ''}</span>
+            <span class="meter-row-amount font-num">
+              ${spent.toFixed(2).replace(".", ",")} €${hasBudget ? ` <span style="color: var(--c-stone); font-size: 12px; font-weight: 500;">/ ${budget.toFixed(0)} €</span>` : ""}
+            </span>
           </div>
-          <div class="meter-track">
-            <div class="meter-fill" style="width: ${hasBudget ? pct : (spent > 0 ? 100 : 0)}%; background-color: ${barColor};"></div>
+          <div class="meter-track" style="height: 8px;">
+            <div class="meter-fill" style="width: ${pct}%; background-color: ${barColor};"></div>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--c-stone); font-family: ui-monospace, monospace;">
-            <span>${hasBudget ? pct + ' % käytetty' : (spent > 0 ? 'Toteutunut' : 'Ei kuluja')}</span>
-            <span>${hasBudget ? Math.max(0, budget - spent).toFixed(2).replace(".", ",") + ' € jäljellä' : ''}</span>
+          <div class="meter-row-meta font-num">
+            <span>${leftStatusText}</span>
+            <span style="font-weight: 600;">${rightStatusText}</span>
           </div>
         `;
         container.appendChild(row);
@@ -598,8 +620,8 @@ class BudjettiApp {
     if (catsWithBudget.length === 0) {
       container.innerHTML = `
         <div style="text-align: center; padding: 14px 0;">
-          <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 8px;">Ei asetettuja kuukausitavoitteita.</p>
-          <button class="btn-primary" style="width: auto; padding: 6px 14px; font-size: 10px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.switchView('viewBudjetit', 'categories')">
+          <p style="font-size: 12px; color: var(--c-stone); margin-bottom: 8px;">Ei asetettuja kuukausitavoitteita.</p>
+          <button class="btn-primary btn-secondary-surface" style="width: auto; padding: 7px 14px; font-size: 11px;" onclick="app.switchView('viewBudjetit', 'categories')">
             Aseta tavoitteita &rarr;
           </button>
         </div>
@@ -607,14 +629,14 @@ class BudjettiApp {
       return;
     }
 
-    catsWithBudget.slice(0, 5).forEach(c => {
+    catsWithBudget.slice(0, 6).forEach(c => {
       const spent = categoryTotals[c.id] || 0;
       const budget = c.budgetMonthly;
       const pct = Math.min(100, Math.round((spent / budget) * 100));
       const remaining = Math.max(0, budget - spent);
 
-      let barColor = c.color || "var(--c-olive)";
-      if (pct > 90) barColor = "var(--c-crimson)";
+      let barColor = c.color || "var(--c-primary)";
+      if (pct > 90) barColor = "var(--c-expense)";
 
       const row = document.createElement("div");
       row.className = "meter-row";
@@ -622,19 +644,19 @@ class BudjettiApp {
       row.title = "Klikkaa muokataksesi tavoitetta";
       row.onclick = () => this.openCategoryModal(c.id);
       row.innerHTML = `
-        <div style="display: flex; justify-content: space-between; font-size: 12px;" class="font-num">
-          <span style="font-weight: 500; display: flex; align-items: center; gap: 8px;">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background-color: ${c.color};"></span>
-            ${c.name}
+        <div class="meter-row-header">
+          <span class="meter-row-title">
+            <span style="width: 9px; height: 9px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
+            <span>${c.name}</span>
           </span>
-          <span>${spent.toFixed(2).replace(".", ",")} € <span style="color: var(--c-stone); font-weight: 300;">/ ${budget.toFixed(0)} €</span></span>
+          <span class="meter-row-amount font-num">${spent.toFixed(2).replace(".", ",")} € <span style="color: var(--c-stone); font-size: 12px; font-weight: 500;">/ ${budget.toFixed(0)} €</span></span>
         </div>
-        <div class="meter-track">
+        <div class="meter-track" style="height: 8px;">
           <div class="meter-fill" style="width: ${pct}%; background-color: ${barColor};"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--c-stone); font-family: ui-monospace, monospace;">
-          <span>${pct} % käytetty</span>
-          <span>${remaining.toFixed(2).replace(".", ",")} € jäljellä</span>
+        <div class="meter-row-meta font-num">
+          <span>Käytetty ${pct} % tavoitteesta</span>
+          <span style="font-weight: 600;">${remaining.toFixed(2).replace(".", ",")} € jäljellä</span>
         </div>
       `;
       container.appendChild(row);
@@ -2077,8 +2099,39 @@ class BudjettiApp {
   async toggleP2PSettled(p2pId) {
     const p = this.p2pLoans.find(item => item.id === p2pId);
     if (!p) return;
-    p.settled = !p.settled;
-    await this.storage.saveP2pLoans(this.p2pLoans);
+
+    // Jos saatava merkitään maksetuksi, suljetaan saatava ja tarjotaan kassasaldoa nostava merkintä vaikuttamatta alkuperäiseen kulukategoriaan (esim. Ruokabudjettiin)
+    if (!p.settled && p.type === "lent") {
+      const addCashReturn = await this.showDialog({
+        title: "Kuittaa saatava maksetuksi",
+        message: `${p.person} maksoi takaisin ${FinanceCalculator.formatCurrency(p.amount || 0)}. Merkitäänkö saatava kuitatuksi ja lisätäänkö palautus (+${FinanceCalculator.formatCurrency(p.amount || 0)}) vapaaseen kassasaldoon vaikuttamatta alkuperäisen kategorian kulubudjettiin?`,
+        type: "confirm",
+        icon: "success",
+        confirmText: "Kuittaa & nosta saldoa",
+        cancelText: "Pelkkä kuittaus"
+      });
+      p.settled = true;
+      await this.storage.saveP2pLoans(this.p2pLoans);
+      if (addCashReturn) {
+        const returnTx = {
+          id: "tx_" + Date.now(),
+          date: new Date().toISOString().split("T")[0],
+          type: "income",
+          category: "muu_tulo",
+          amount: p.amount || 0,
+          vendor: p.person,
+          desc: `Saatavan takaisinmaksu (${p.notes || "Jaettu kulu"})`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        await this.storage.saveTransaction(returnTx);
+        await this.refreshData();
+        return;
+      }
+    } else {
+      p.settled = !p.settled;
+      await this.storage.saveP2pLoans(this.p2pLoans);
+    }
     this.renderP2PView();
   }
 
@@ -2394,8 +2447,11 @@ class BudjettiApp {
         if (!this.currentBudgetsTab) this.currentBudgetsTab = "categories";
         this.switchBudgetsTab(this.currentBudgetsTab);
       } else if (viewId === "viewTapahtumat") {
-        if (!this.currentLedgerTab) this.currentLedgerTab = "inbox";
+        if (!this.currentLedgerTab) this.currentLedgerTab = "tx";
         this.switchLedgerTab(this.currentLedgerTab);
+      } else if (viewId === "viewVelat") {
+        if (!this.currentDebtTab) this.currentDebtTab = "p2p";
+        this.switchDebtTab(this.currentDebtTab);
       }
     }
 
@@ -3057,11 +3113,17 @@ class BudjettiApp {
     this.initReceiptOverlayGestures();
     this.resetReceiptZoom();
     viewer.style.display = "flex";
+    if (typeof document !== "undefined") {
+      document.body.classList.add("receipt-split-active");
+    }
   }
 
   closeReceiptOverlay() {
     const viewer = document.getElementById("receiptOverlayViewer");
     if (viewer) viewer.style.display = "none";
+    if (typeof document !== "undefined") {
+      document.body.classList.remove("receipt-split-active");
+    }
     this.resetReceiptZoom();
   }
 
@@ -3173,19 +3235,77 @@ class BudjettiApp {
     }
   }
 
-  // --- IN-APP CALCULATOR & SPLITTER ---
+  // --- IN-APP CALCULATOR, NUMBER STEPPER & MULTI-ALLOCATION SPLITTER ---
   openCalculatorModal(initialVal = null) {
-    if (initialVal === null) {
-      const formVal = document.getElementById("formAmount")?.value;
-      const parsed = this.parseAmount(formVal);
-      this.calcTokens = parsed > 0 ? [parsed.toString()] : ["0"];
+    let baseVal = 0;
+    if (initialVal !== null) {
+      baseVal = this.parseAmount(initialVal);
+    } else if (this.calcBaseTotal > 0 && this.pendingSplitAllocations && this.pendingSplitAllocations.length > 0) {
+      baseVal = this.calcBaseTotal;
     } else {
-      const parsed = this.parseAmount(initialVal);
-      this.calcTokens = parsed > 0 ? [parsed.toString()] : ["0"];
+      const formVal = document.getElementById("formAmount")?.value;
+      baseVal = this.parseAmount(formVal);
     }
+
+    this.calcTokens = baseVal > 0 ? [baseVal.toString()] : ["0"];
+    this.calcBaseTotal = baseVal;
+    this.calcSplitPartsCount = 1;
+    this.calcSplitPercentVal = 100;
     this.calcSplitDesc = null;
+
+    const partsEl = document.getElementById("calcSplitPartsValue");
+    if (partsEl) partsEl.innerText = "1";
+    const pctInput = document.getElementById("calcCustomPercentInput");
+    if (pctInput) pctInput.value = "100";
+    const btnContinue = document.getElementById("btnCalcContinueToSplit");
+    if (btnContinue) btnContinue.style.display = "none";
+
     this.updateCalcDisplay();
     this.openModal("modalCalculator");
+  }
+
+  calcResetSplit() {
+    if (this.calcBaseTotal > 0) {
+      this.calcTokens = [this.calcBaseTotal.toString()];
+    }
+    this.calcSplitPartsCount = 1;
+    this.calcSplitPercentVal = 100;
+    this.calcSplitDesc = null;
+    const partsEl = document.getElementById("calcSplitPartsValue");
+    if (partsEl) partsEl.innerText = "1";
+    const pctInput = document.getElementById("calcCustomPercentInput");
+    if (pctInput) pctInput.value = "100";
+    const btnContinue = document.getElementById("btnCalcContinueToSplit");
+    if (btnContinue) btnContinue.style.display = "none";
+    this.updateCalcDisplay();
+  }
+
+  adjustCalcSplitParts(delta) {
+    // Jos perussummaa ei ole vielä lukittu tai käyttäjä on juuri näppäillyt uuden luvun, lukitaan se pohjasummaksi
+    if (this.calcSplitPartsCount === 1 && this.calcSplitPercentVal === 100) {
+      const currentEval = this.calcEvaluate();
+      if (currentEval > 0) {
+        this.calcBaseTotal = currentEval;
+      }
+    }
+    const nextParts = Math.min(20, Math.max(1, (this.calcSplitPartsCount || 1) + delta));
+    this.calcSplitParts(nextParts);
+  }
+
+  handleCalcPercentInput(rawVal) {
+    if (this.calcSplitPartsCount === 1 && this.calcSplitPercentVal === 100) {
+      const currentEval = this.calcEvaluate();
+      if (currentEval > 0) {
+        this.calcBaseTotal = currentEval;
+      }
+    }
+    const p = this.parseAmount(rawVal);
+    if (p > 0 && p <= 100) {
+      this.calcSplitPartsCount = p < 100 ? 2 : 1;
+      const partsEl = document.getElementById("calcSplitPartsValue");
+      if (partsEl) partsEl.innerText = String(this.calcSplitPartsCount);
+      this.calcSplitPercent(p, false);
+    }
   }
 
   calcInputNum(digit) {
@@ -3199,7 +3319,14 @@ class BudjettiApp {
         this.calcTokens[this.calcTokens.length - 1] = (last || "") + digit;
       }
     }
+    this.calcBaseTotal = 0;
+    this.calcSplitPartsCount = 1;
+    this.calcSplitPercentVal = 100;
     this.calcSplitDesc = null;
+    const partsEl = document.getElementById("calcSplitPartsValue");
+    if (partsEl) partsEl.innerText = "1";
+    const pctInput = document.getElementById("calcCustomPercentInput");
+    if (pctInput) pctInput.value = "100";
     this.updateCalcDisplay();
   }
 
@@ -3243,7 +3370,16 @@ class BudjettiApp {
 
   calcClear() {
     this.calcTokens = ["0"];
+    this.calcBaseTotal = 0;
+    this.calcSplitPartsCount = 1;
+    this.calcSplitPercentVal = 100;
     this.calcSplitDesc = null;
+    const partsEl = document.getElementById("calcSplitPartsValue");
+    if (partsEl) partsEl.innerText = "1";
+    const pctInput = document.getElementById("calcCustomPercentInput");
+    if (pctInput) pctInput.value = "100";
+    const btnContinue = document.getElementById("btnCalcContinueToSplit");
+    if (btnContinue) btnContinue.style.display = "none";
     this.updateCalcDisplay();
   }
 
@@ -3277,30 +3413,60 @@ class BudjettiApp {
   }
 
   calcSplitParts(parts) {
-    const total = this.calcEvaluate();
+    const total = this.calcBaseTotal > 0 ? this.calcBaseTotal : this.calcEvaluate();
     if (total <= 0) return;
-    const share = Math.round((total / parts) * 100) / 100;
-    this.calcTokens = [share.toString()];
-    this.calcSplitDesc = `Koko summa: ${this.formatEuro(total)} | Jaettu ${parts}:lle | Oma osuus: ${this.formatEuro(share)}`;
+    this.calcBaseTotal = total;
+    this.calcSplitPartsCount = Math.max(1, parts);
+    const pct = Math.round((100 / this.calcSplitPartsCount) * 10) / 10;
+    this.calcSplitPercentVal = pct;
+
+    const partsEl = document.getElementById("calcSplitPartsValue");
+    if (partsEl) partsEl.innerText = String(this.calcSplitPartsCount);
+    const pctInput = document.getElementById("calcCustomPercentInput");
+    if (pctInput) pctInput.value = String(pct).replace(".", ",");
+
+    if (this.calcSplitPartsCount === 1) {
+      this.calcTokens = [total.toString()];
+      this.calcSplitDesc = null;
+    } else {
+      const share = Math.round((total / this.calcSplitPartsCount) * 100) / 100;
+      const remainder = Math.max(0, Math.round((total - share) * 100) / 100);
+      this.calcTokens = [share.toString()];
+      this.calcSplitDesc = `Koko kuitti: ${this.formatEuro(total)} · Jaettu ${this.calcSplitPartsCount}:lle · Oma osuus: ${this.formatEuro(share)} · Jäännös: ${this.formatEuro(remainder)}`;
+    }
     this.updateCalcDisplay();
   }
 
-  calcSplitPercent(percent) {
-    const total = this.calcEvaluate();
+  calcSplitPercent(percent, updateInput = true) {
+    const total = this.calcBaseTotal > 0 ? this.calcBaseTotal : this.calcEvaluate();
     if (total <= 0) return;
-    const share = Math.round((total * (percent / 100)) * 100) / 100;
-    this.calcTokens = [share.toString()];
-    this.calcSplitDesc = `Koko summa: ${this.formatEuro(total)} | Oma osuus ${percent} %: ${this.formatEuro(share)}`;
+    this.calcBaseTotal = total;
+    this.calcSplitPercentVal = percent;
+
+    if (updateInput) {
+      const pctInput = document.getElementById("calcCustomPercentInput");
+      if (pctInput) pctInput.value = String(percent).replace(".", ",");
+    }
+
+    if (percent >= 100) {
+      this.calcTokens = [total.toString()];
+      this.calcSplitDesc = null;
+    } else {
+      const share = Math.round((total * (percent / 100)) * 100) / 100;
+      const remainder = Math.max(0, Math.round((total - share) * 100) / 100);
+      this.calcTokens = [share.toString()];
+      this.calcSplitDesc = `Koko kuitti: ${this.formatEuro(total)} · Oma osuus ${String(percent).replace(".", ",")} %: ${this.formatEuro(share)} · Jäännös: ${this.formatEuro(remainder)}`;
+    }
     this.updateCalcDisplay();
   }
 
   async calcSplitCustom() {
     const pStr = await this.showDialog({
       title: "Oma prosenttiosuus",
-      message: "Valitse tai syötä oma prosenttiosuutesi kokonaissummasta (0–100 %):",
+      message: "Syötä oma prosenttiosuutesi kokonaissummasta (0–100 %):",
       type: "prompt",
       icon: "percent",
-      defaultValue: "50",
+      defaultValue: String(this.calcSplitPercentVal || 50),
       suffix: "%",
       confirmText: "Käytä prosenttia",
       cancelText: "Peruuta",
@@ -3309,7 +3475,7 @@ class BudjettiApp {
     if (!pStr) return;
     const p = parseFloat(String(pStr).replace(",", "."));
     if (p > 0 && p <= 100) {
-      this.calcSplitPercent(p);
+      this.calcSplitPercent(p, true);
     }
   }
 
@@ -3317,6 +3483,7 @@ class BudjettiApp {
     const exprEl = document.getElementById("calcExpr");
     const resultEl = document.getElementById("calcResult");
     const splitEl = document.getElementById("calcSplitInfo");
+    const btnContinue = document.getElementById("btnCalcContinueToSplit");
 
     let displayExpr = this.calcTokens.map(t => {
       if (t === "*") return "×";
@@ -3330,6 +3497,8 @@ class BudjettiApp {
     const currentVal = parseFloat(this.calcTokens[this.calcTokens.length - 1]) || 0;
     if (resultEl) resultEl.innerText = currentVal.toFixed(2).replace(".", ",") + " €";
 
+    const hasSplitRemainder = this.calcBaseTotal > 0 && currentVal > 0 && currentVal < this.calcBaseTotal;
+
     if (splitEl) {
       if (this.calcSplitDesc) {
         splitEl.style.display = "block";
@@ -3338,21 +3507,166 @@ class BudjettiApp {
         splitEl.style.display = "none";
       }
     }
+
+    if (btnContinue) {
+      btnContinue.style.display = hasSplitRemainder ? "block" : "none";
+    }
   }
 
-  applyCalculatorAmount() {
+  applyCalculatorAmount(jumpToSplitStep = false) {
     const finalAmt = this.calcEvaluate();
     const amountField = document.getElementById("formAmount");
     if (amountField) {
       amountField.value = finalAmt.toFixed(2).replace(".", ",");
     }
+
+    // Jos kulu on jaettu (kokonaissumma > oma osuus), luodaan jäännösosuusrivit automaattisesti
+    if (this.calcBaseTotal > 0 && finalAmt > 0 && finalAmt < this.calcBaseTotal) {
+      const remainderTotal = Math.max(0, Math.round((this.calcBaseTotal - finalAmt) * 100) / 100);
+      const extraParts = Math.max(1, (this.calcSplitPartsCount || 2) - 1);
+      const eachPart = Math.round((remainderTotal / extraParts) * 100) / 100;
+
+      this.pendingSplitAllocations = [];
+      for (let i = 0; i < extraParts; i++) {
+        const amt = (i === extraParts - 1)
+          ? Math.max(0, Math.round((remainderTotal - eachPart * (extraParts - 1)) * 100) / 100)
+          : eachPart;
+        this.pendingSplitAllocations.push({
+          id: "alloc_" + Date.now() + "_" + i,
+          targetType: "p2p", // 'p2p' (Saatava henkilöltä) tai 'category' (Toinen kategoria)
+          person: "",
+          categoryId: this.selectedCatId || "ruokakauppa",
+          amount: amt
+        });
+      }
+      this.renderSplitAllocationRows();
+      this.updateFormSplitSummaryBanner();
+    } else if (this.calcSplitPartsCount === 1 && this.calcSplitPercentVal === 100) {
+      this.pendingSplitAllocations = [];
+      this.renderSplitAllocationRows();
+      this.updateFormSplitSummaryBanner();
+    }
+
     if (this.calcSplitDesc) {
       const descField = document.getElementById("formDesc");
       if (descField && !descField.value) {
         descField.value = this.calcSplitDesc;
       }
     }
+
     this.closeModal("modalCalculator");
+    if (jumpToSplitStep) {
+      this.setWizardStep(3);
+    }
+  }
+
+  // --- MONIKOHTEINEN JÄÄNNÖSOSUUKSIEN ALLOKAATTORI (Saatavat & Eri kategoriat) ---
+  updateFormSplitSummaryBanner() {
+    const banner = document.getElementById("formSplitSummaryBanner");
+    const textEl = document.getElementById("formSplitSummaryText");
+    if (!banner || !textEl) return;
+
+    if (this.pendingSplitAllocations && this.pendingSplitAllocations.length > 0) {
+      const totalRem = this.pendingSplitAllocations.reduce((sum, a) => sum + (this.parseAmount(a.amount) || 0), 0);
+      banner.style.display = "flex";
+      textEl.innerText = `Jaettu: ${this.pendingSplitAllocations.length} muuta osuutta (${this.formatEuro(totalRem)}) kohdistettavana`;
+    } else {
+      banner.style.display = "none";
+    }
+  }
+
+  addSplitAllocationRow(prefill = {}) {
+    if (!Array.isArray(this.pendingSplitAllocations)) {
+      this.pendingSplitAllocations = [];
+    }
+    this.pendingSplitAllocations.push({
+      id: "alloc_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+      targetType: prefill.targetType || "p2p",
+      person: prefill.person || "",
+      categoryId: prefill.categoryId || this.selectedCatId || "ruokakauppa",
+      amount: prefill.amount !== undefined ? prefill.amount : 0
+    });
+    this.renderSplitAllocationRows();
+    this.updateFormSplitSummaryBanner();
+  }
+
+  removeSplitAllocationRow(allocId) {
+    this.pendingSplitAllocations = (this.pendingSplitAllocations || []).filter(a => a.id !== allocId);
+    this.renderSplitAllocationRows();
+    this.updateFormSplitSummaryBanner();
+  }
+
+  handleSplitAllocChange(allocId, field, value) {
+    const item = (this.pendingSplitAllocations || []).find(a => a.id === allocId);
+    if (!item) return;
+    if (field === "amount") {
+      item.amount = this.parseAmount(value);
+    } else {
+      item[field] = value;
+    }
+    if (field === "targetType") {
+      this.renderSplitAllocationRows();
+    }
+    this.updateFormSplitSummaryBanner();
+  }
+
+  renderSplitAllocationRows() {
+    const container = document.getElementById("splitAllocationRowsContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!this.pendingSplitAllocations || this.pendingSplitAllocations.length === 0) {
+      container.innerHTML = `
+        <p style="font-size: 11px; color: var(--c-stone); padding: 4px 0;">
+          Ei jaettuja lisäosuuksia. Voit jakaa kulun Laskimen Pikajaolla tai napauttamalla "+ Lisää osuus".
+        </p>
+      `;
+      return;
+    }
+
+    const allCats = this.categories.getAll().filter(c => c.type !== "income");
+
+    this.pendingSplitAllocations.forEach((alloc, idx) => {
+      const row = document.createElement("div");
+      row.className = "split-alloc-row";
+
+      const isP2P = alloc.targetType !== "category";
+      const catOptions = allCats.map(c =>
+        `<option value="${c.id}" ${c.id === alloc.categoryId ? "selected" : ""}>${c.name}</option>`
+      ).join("");
+
+      row.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-primary);">Osuus #${idx + 2}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" class="segmented-btn ${isP2P ? 'active' : ''}" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--c-border);" onclick="app.handleSplitAllocChange('${alloc.id}', 'targetType', 'p2p')">
+              Saatavaksi (Henkilö)
+            </button>
+            <button type="button" class="segmented-btn ${!isP2P ? 'active' : ''}" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--c-border);" onclick="app.handleSplitAllocChange('${alloc.id}', 'targetType', 'category')">
+              Eri kategoriaan
+            </button>
+            <button type="button" style="background: none; border: none; color: var(--c-expense); font-size: 15px; cursor: pointer; padding: 2px 4px;" onclick="app.removeSplitAllocationRow('${alloc.id}')" title="Poista osuus">&times;</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 8px; align-items: center;">
+          <div>
+            ${isP2P ? `
+              <input type="text" class="form-input" style="padding: 8px 10px; font-size: 13px;" placeholder="Henkilö (esim. Marika)" value="${(alloc.person || '').replace(/"/g, '&quot;')}" oninput="app.handleSplitAllocChange('${alloc.id}', 'person', this.value)">
+            ` : `
+              <select class="form-input" style="padding: 8px 10px; font-size: 13px;" onchange="app.handleSplitAllocChange('${alloc.id}', 'categoryId', this.value)">
+                ${catOptions}
+              </select>
+            `}
+          </div>
+          <div style="position: relative;">
+            <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" class="form-input font-num" style="padding: 8px 24px 8px 10px; font-size: 13px; font-weight: 700; text-align: right;" value="${alloc.amount ? String(alloc.amount).replace('.', ',') : ''}" placeholder="0,00" oninput="app.handleSplitAllocChange('${alloc.id}', 'amount', this.value)">
+            <span style="position: absolute; right: 8px; top: 8px; font-size: 12px; color: var(--c-stone); pointer-events: none;">€</span>
+          </div>
+        </div>
+      `;
+      container.appendChild(row);
+    });
   }
 
   openFabChoice() {
@@ -3368,14 +3682,18 @@ class BudjettiApp {
     }
   }
 
+  // --- AITO 3-VAIHEINEN STEP-BY-STEP WIZARD ---
   setWizardStep(step) {
+    step = Math.min(3, Math.max(1, parseInt(step, 10) || 1));
     this.currentWizardStep = step;
+
     const btn1 = document.getElementById("wizardStepBtn1");
     const btn2 = document.getElementById("wizardStepBtn2");
     const btn3 = document.getElementById("wizardStepBtn3");
     const pane1 = document.getElementById("wizardStepPane1");
     const pane2 = document.getElementById("wizardStepPane2");
     const pane3 = document.getElementById("wizardStepPane3");
+    const subtitleEl = document.getElementById("wizardStepSubtitle");
 
     if (btn1) {
       btn1.classList.toggle("active", step === 1);
@@ -3390,12 +3708,47 @@ class BudjettiApp {
       btn3.classList.toggle("completed", false);
     }
 
-    // Vieritetään valittuun osioon pehmeästi lomakkeen sisällä
-    const targetPane = step === 1 ? pane1 : (step === 2 ? pane2 : pane3);
-    if (targetPane && typeof targetPane.scrollIntoView === "function") {
-      try {
-        targetPane.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      } catch (_) {}
+    // Näytetään kerrallaan VAIN aktiivisen vaiheen sisältö
+    if (pane1) pane1.style.display = step === 1 ? "flex" : "none";
+    if (pane2) pane2.style.display = step === 2 ? "flex" : "none";
+    if (pane3) pane3.style.display = step === 3 ? "flex" : "none";
+
+    const titles = {
+      1: "Vaihe 1 / 3 · Perustiedot & Kuitti",
+      2: "Vaihe 2 / 3 · Valitse kategoria",
+      3: "Vaihe 3 / 3 · Tili & Jäännösosuuksien jako"
+    };
+    if (subtitleEl) subtitleEl.innerText = titles[step] || titles[1];
+
+    // Päivitetään alareunan vaihepainikkeet
+    const btnPrev = document.getElementById("btnWizardPrev");
+    const btnNext = document.getElementById("btnWizardNext");
+    const btnCalc = document.getElementById("btnWizardCalc");
+
+    if (btnPrev) btnPrev.style.display = step > 1 ? "block" : "none";
+    if (btnCalc) btnCalc.style.display = step === 1 ? "block" : "none";
+    if (btnNext) {
+      if (step === 1) {
+        btnNext.style.display = "block";
+        btnNext.innerHTML = "Seuraava: Kategoria &rarr;";
+      } else if (step === 2) {
+        btnNext.style.display = "block";
+        btnNext.innerHTML = "Seuraava: Tili & Jako &rarr;";
+      } else {
+        btnNext.style.display = "none";
+      }
+    }
+  }
+
+  nextWizardStep() {
+    if (this.currentWizardStep < 3) {
+      this.setWizardStep(this.currentWizardStep + 1);
+    }
+  }
+
+  prevWizardStep() {
+    if (this.currentWizardStep > 1) {
+      this.setWizardStep(this.currentWizardStep - 1);
     }
   }
 
@@ -3405,6 +3758,11 @@ class BudjettiApp {
 
     this.tempReceiptData = null;
     this.currentReceiptId = prefill.receiptId || null;
+    this.calcBaseTotal = 0;
+    this.calcSplitPartsCount = 1;
+    this.calcSplitPercentVal = 100;
+    this.pendingSplitAllocations = [];
+
     if (!prefill.fromInbox && !prefill.receiptId) {
       this.activeProcessingInboxId = null;
       this.activeProcessingReceiptId = null;
@@ -3416,14 +3774,22 @@ class BudjettiApp {
     const nameEl = document.getElementById("receiptFileName");
     const removeBtn = document.getElementById("btnRemoveReceipt");
     const viewBtn = document.getElementById("btnViewFormReceipt");
+    const ocrBtn = document.getElementById("btnRunReceiptOCR");
+    const ocrBox = document.getElementById("ocrStatusBox");
+    const liveTextIn = document.getElementById("formLiveTextScan");
+    if (ocrBox) ocrBox.style.display = "none";
+    if (liveTextIn) liveTextIn.value = "";
+
     if (prefill.receiptId) {
       if (nameEl) nameEl.innerText = "Kuitti tallennettu";
       if (removeBtn) removeBtn.style.display = "inline";
       if (viewBtn) viewBtn.style.display = "inline-block";
+      if (ocrBtn) ocrBtn.style.display = "inline-block";
     } else {
-      if (nameEl) nameEl.innerText = "Liitä kuitti (valinnainen)";
+      if (nameEl) nameEl.innerText = "Kuitti & Älykäs tekstintunnistus (OCR)";
       if (removeBtn) removeBtn.style.display = "none";
       if (viewBtn) viewBtn.style.display = "none";
+      if (ocrBtn) ocrBtn.style.display = "none";
     }
 
     document.getElementById("formTxId").value = prefill.id || "";
@@ -3442,11 +3808,13 @@ class BudjettiApp {
     // Split expense action button
     const splitRow = document.getElementById("splitExpenseActionRow");
     if (splitRow) {
-      splitRow.style.display = prefill.id ? "block" : "none";
+      splitRow.style.display = prefill.id ? "flex" : "none";
     }
 
     this.setFormType(prefill.type || "expense");
     this.renderCategoryPills(prefill.categoryId || this.selectedCatId);
+    this.renderSplitAllocationRows();
+    this.updateFormSplitSummaryBanner();
     this.setWizardStep(1);
 
     modal.classList.add("active");
@@ -3461,11 +3829,15 @@ class BudjettiApp {
     this.tempReceiptData = null;
     this.currentReceiptId = null;
     const nameEl = document.getElementById("receiptFileName");
-    if (nameEl) nameEl.innerText = "Liitä kuitti (valinnainen)";
+    if (nameEl) nameEl.innerText = "Kuitti & Älykäs tekstintunnistus (OCR)";
     const removeBtn = document.getElementById("btnRemoveReceipt");
     if (removeBtn) removeBtn.style.display = "none";
     const viewBtn = document.getElementById("btnViewFormReceipt");
     if (viewBtn) viewBtn.style.display = "none";
+    const ocrBtn = document.getElementById("btnRunReceiptOCR");
+    if (ocrBtn) ocrBtn.style.display = "none";
+    const ocrBox = document.getElementById("ocrStatusBox");
+    if (ocrBox) ocrBox.style.display = "none";
     const cam = document.getElementById("formReceiptCamera");
     if (cam) cam.value = "";
     const file = document.getElementById("formReceiptFile");
@@ -3494,14 +3866,14 @@ class BudjettiApp {
     const btnExp = document.getElementById("btnTypeExpense");
     const btnInc = document.getElementById("btnTypeIncome");
     if (type === "expense") {
-      btnExp.style.backgroundColor = "var(--c-crimson)";
-      btnExp.style.color = "var(--c-text-primary)";
-      btnInc.style.backgroundColor = "var(--c-card)";
+      btnExp.style.backgroundColor = "var(--c-primary)";
+      btnExp.style.color = "#FFFFFF";
+      btnInc.style.backgroundColor = "var(--c-card-sub)";
       btnInc.style.color = "var(--c-stone)";
     } else {
       btnInc.style.backgroundColor = "var(--c-olive)";
-      btnInc.style.color = "var(--c-text-primary)";
-      btnExp.style.backgroundColor = "var(--c-card)";
+      btnInc.style.color = "#FFFFFF";
+      btnExp.style.backgroundColor = "var(--c-card-sub)";
       btnExp.style.color = "var(--c-stone)";
     }
   }
@@ -3519,8 +3891,8 @@ class BudjettiApp {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "form-input";
-      btn.style.padding = "8px 8px";
-      btn.style.fontSize = "11px";
+      btn.style.padding = "10px 10px";
+      btn.style.fontSize = "12px";
       btn.style.textAlign = "left";
       btn.style.cursor = "pointer";
       btn.style.width = "100%";
@@ -3528,26 +3900,25 @@ class BudjettiApp {
       btn.style.minWidth = "0";
       btn.style.display = "flex";
       btn.style.alignItems = "center";
-      btn.style.gap = "6px";
+      btn.style.gap = "8px";
       btn.style.overflow = "hidden";
       btn.style.boxSizing = "border-box";
       btn.title = c.name;
 
       const isSelected = c.id === activeCatId;
       if (isSelected) {
-        btn.style.borderColor = c.color;
+        btn.style.borderColor = c.color || "var(--c-primary)";
         btn.style.backgroundColor = "var(--c-card-sub)";
-        btn.style.fontWeight = "600";
+        btn.style.fontWeight = "700";
       }
 
       btn.onclick = () => {
         this.selectedCatId = c.id;
         this.renderCategoryPills(c.id);
-        this.setWizardStep(2);
       };
 
       btn.innerHTML = `
-        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
+        <span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">${c.name}</span>
       `;
       container.appendChild(btn);
@@ -3555,6 +3926,207 @@ class BudjettiApp {
 
     if (cats.length > 0 && !cats.find(c => c.id === activeCatId)) {
       this.selectedCatId = cats[0].id;
+    }
+  }
+
+  // --- KUITIN TEKSTINTUNNISTUS (OCR Tesseract.js + iPhone Live Text) ---
+  parseReceiptOCRText(rawText) {
+    if (!rawText || typeof rawText !== "string") {
+      return { amount: null, vendor: null, date: null };
+    }
+    const text = rawText.replace(/\r/g, "\n");
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+    // 1. Tunnistetaan tunnettuja suomalaisia kauppoja ja palveluita
+    const knownVendors = [
+      "Alepa", "K-Market", "K-Supermarket", "K-Citymarket", "Prisma", "S-market", "Lidl",
+      "Tokmanni", "R-kioski", "Alko", "Apteekki", "Yliopiston Apteekki", "Clas Ohlson",
+      "Motonet", "Biltema", "Ikea", "Gigantti", "Power", "Verkkokauppa", "HSL", "VR",
+      "Bolt", "Uber", "Wolt", "Foodora", "Hesburger", "McDonald's", "Burger King",
+      "Kotipizza", "Subway", "Espresso House", "Fazer", "ABC", "Neste", "St1", "Shell"
+    ];
+    let detectedVendor = null;
+    for (const v of knownVendors) {
+      const regex = new RegExp("\\b" + v.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "\\b", "i");
+      if (regex.test(text)) {
+        detectedVendor = v;
+        break;
+      }
+    }
+    if (!detectedVendor && lines.length > 0) {
+      const firstLine = lines.find(l => l.length >= 3 && !/^\d+$/.test(l) && !/kuitti|ostos|kopio|pvm/i.test(l));
+      if (firstLine) {
+        detectedVendor = firstLine.slice(0, 28);
+      }
+    }
+
+    // 2. Etsitään YHTEENSÄ / MAKSETTAVA / TOTAL / SUMMA -rivi tai suurin järkevä desimaalisumma
+    let detectedAmount = null;
+    const totalKeywords = /(?:yhteens[äa]|maksettava|summa|total|korttimaksu|veloitus|eur)\s*[:.]?\s*(\d{1,5}[.,]\d{2})/i;
+    for (const line of lines) {
+      const m = line.match(totalKeywords);
+      if (m && m[1]) {
+        const val = parseFloat(m[1].replace(",", "."));
+        if (!isNaN(val) && val > 0 && val < 50000) {
+          detectedAmount = val;
+          break;
+        }
+      }
+    }
+
+    if (detectedAmount === null) {
+      const allAmounts = [];
+      const amtRegex = /\b(\d{1,4}[.,]\d{2})\b/g;
+      let match;
+      while ((match = amtRegex.exec(text)) !== null) {
+        const num = parseFloat(match[1].replace(",", "."));
+        if (!isNaN(num) && num > 0 && num < 20000) {
+          allAmounts.push(num);
+        }
+      }
+      if (allAmounts.length > 0) {
+        detectedAmount = Math.max(...allAmounts);
+      }
+    }
+
+    // 3. Etsitään suomalainen päivämäärä (esim. 2.11.2026 tai 02.11.26)
+    let detectedDate = null;
+    const dateMatch = text.match(/\b(\d{1,2})\.(\d{1,2})\.(20\d{2}|\d{2})\b/);
+    if (dateMatch) {
+      const d = String(dateMatch[1]).padStart(2, "0");
+      const m = String(dateMatch[2]).padStart(2, "0");
+      let y = dateMatch[3];
+      if (y.length === 2) y = "20" + y;
+      if (parseInt(m, 10) >= 1 && parseInt(m, 10) <= 12 && parseInt(d, 10) >= 1 && parseInt(d, 10) <= 31) {
+        detectedDate = `${y}-${m}-${d}`;
+      }
+    }
+
+    return {
+      amount: detectedAmount,
+      vendor: detectedVendor,
+      date: detectedDate
+    };
+  }
+
+  handleLiveTextScanInput(rawText) {
+    if (!rawText || !rawText.trim()) return;
+    const parsed = this.parseReceiptOCRText(rawText);
+    const amountField = document.getElementById("formAmount");
+    const vendorField = document.getElementById("formVendor");
+    const dateField = document.getElementById("formDate");
+
+    if (parsed.amount !== null && amountField) {
+      amountField.value = parsed.amount.toFixed(2).replace(".", ",");
+    } else {
+      // Jos skannattiin pelkkä luku (esim. "14,90")
+      const directNum = this.parseAmount(rawText);
+      if (directNum > 0 && directNum < 50000 && amountField && /\d/.test(rawText)) {
+        amountField.value = directNum.toFixed(2).replace(".", ",");
+      }
+    }
+    if (parsed.vendor && vendorField && !vendorField.value) {
+      vendorField.value = parsed.vendor;
+    }
+    if (parsed.date && dateField) {
+      dateField.value = parsed.date;
+    }
+  }
+
+  async runReceiptOCR(dataUrlOverride = null) {
+    const ocrBox = document.getElementById("ocrStatusBox");
+    const statusLabel = document.getElementById("ocrStatusLabel");
+    const progressEl = document.getElementById("ocrProgressPct");
+    const suggestionsEl = document.getElementById("ocrDetectedSuggestions");
+
+    let imgSource = dataUrlOverride || this.tempReceiptData;
+    if (!imgSource && this.currentReceiptId) {
+      imgSource = await this.storage.getReceipt(this.currentReceiptId);
+    }
+    if (!imgSource) return;
+
+    if (ocrBox) ocrBox.style.display = "flex";
+    if (suggestionsEl) {
+      suggestionsEl.style.display = "none";
+      suggestionsEl.innerHTML = "";
+    }
+
+    if (typeof window === "undefined" || !window.Tesseract) {
+      if (statusLabel) statusLabel.innerText = "Käytä iPhonen 'Skannaa teksti' -kenttää alla poimiaksesi tiedot.";
+      return;
+    }
+
+    try {
+      if (statusLabel) statusLabel.innerText = "Tunnistetaan tekstiä kuitista (OCR)...";
+      if (progressEl) progressEl.innerText = "0 %";
+
+      const result = await window.Tesseract.recognize(imgSource, "fin+eng", {
+        logger: (m) => {
+          if (m && m.status === "recognizing text" && typeof m.progress === "number" && progressEl) {
+            progressEl.innerText = Math.round(m.progress * 100) + " %";
+          }
+        }
+      });
+
+      const rawText = result?.data?.text || "";
+      const parsed = this.parseReceiptOCRText(rawText);
+      if (progressEl) progressEl.innerText = "Valmis";
+
+      const amountField = document.getElementById("formAmount");
+      const vendorField = document.getElementById("formVendor");
+      const dateField = document.getElementById("formDate");
+
+      const appliedParts = [];
+      if (parsed.amount !== null && amountField && (!amountField.value || amountField.value === "0,00")) {
+        amountField.value = parsed.amount.toFixed(2).replace(".", ",");
+        appliedParts.push(`Summa: ${this.formatEuro(parsed.amount)}`);
+      }
+      if (parsed.vendor && vendorField && !vendorField.value) {
+        vendorField.value = parsed.vendor;
+        appliedParts.push(`Kauppa: ${parsed.vendor}`);
+      }
+      if (parsed.date && dateField) {
+        dateField.value = parsed.date;
+        appliedParts.push(`Pvm: ${FinanceCalculator.formatDateFi(parsed.date)}`);
+      }
+
+      if (appliedParts.length > 0) {
+        if (statusLabel) statusLabel.innerText = `✓ Tunnistettu kuitista: ${appliedParts.join(" · ")}`;
+      } else if (parsed.amount !== null || parsed.vendor) {
+        if (statusLabel) statusLabel.innerText = "Löydetyt tiedot (napauta käyttääksesi):";
+        if (suggestionsEl) {
+          suggestionsEl.style.display = "flex";
+          if (parsed.amount !== null) {
+            const btnAmt = document.createElement("button");
+            btnAmt.type = "button";
+            btnAmt.className = "tag-badge olive";
+            btnAmt.style.cursor = "pointer";
+            btnAmt.style.border = "none";
+            btnAmt.innerText = `Käytä summaa ${this.formatEuro(parsed.amount)}`;
+            btnAmt.onclick = () => {
+              if (amountField) amountField.value = parsed.amount.toFixed(2).replace(".", ",");
+            };
+            suggestionsEl.appendChild(btnAmt);
+          }
+          if (parsed.vendor) {
+            const btnVen = document.createElement("button");
+            btnVen.type = "button";
+            btnVen.className = "tag-badge stone";
+            btnVen.style.cursor = "pointer";
+            btnVen.style.border = "none";
+            btnVen.innerText = `Kauppa: ${parsed.vendor}`;
+            btnVen.onclick = () => {
+              if (vendorField) vendorField.value = parsed.vendor;
+            };
+            suggestionsEl.appendChild(btnVen);
+          }
+        }
+      } else {
+        if (statusLabel) statusLabel.innerText = "Summaa ei erottunut automaattisesti — voit käyttää iPhonen 'Skannaa teksti' -kenttää.";
+      }
+    } catch (err) {
+      console.warn("OCR-virhe:", err);
+      if (statusLabel) statusLabel.innerText = "OCR-analyysi keskeytyi — voit käyttää iPhonen 'Skannaa teksti' -toimintoa.";
     }
   }
 
@@ -3571,8 +4143,12 @@ class BudjettiApp {
       if (removeBtn) removeBtn.style.display = "inline";
       const viewBtn = document.getElementById("btnViewFormReceipt");
       if (viewBtn) viewBtn.style.display = "inline-block";
-      // Avataan kuitin esikatselu heti ruudulle kelluvana ikkunana lomakkeen yläpuolelle!
+      const ocrBtn = document.getElementById("btnRunReceiptOCR");
+      if (ocrBtn) ocrBtn.style.display = "inline-block";
+
+      // Avataan kuitin esikatselu heti ruudulle kelluvana ikkunana ja käynnistetään automaattinen OCR-tekstintunnistus!
       this.openReceiptOverlay(compressedDataUrl, file.name || "Liitetty kuitti");
+      this.runReceiptOCR(compressedDataUrl);
     } catch (e) {
       console.error("Kuvan tiivistys epäonnistui:", e);
       this.showDialog({
@@ -3621,6 +4197,60 @@ class BudjettiApp {
     // Jos olemassa oleva kirjaus ja sillä oli splitInfo, säilytetään se
     if (existing && existing.splitInfo) {
       tx.splitInfo = existing.splitInfo;
+    }
+
+    // Käsitellään uudet jäännösosuuksien allokoinnit (Saatavat muille TAI eri kategoriat)
+    const validAllocations = (this.pendingSplitAllocations || []).filter(a => (this.parseAmount(a.amount) || 0) > 0);
+    if (validAllocations.length > 0) {
+      const p2pNames = [];
+      let p2pSum = 0;
+
+      for (let i = 0; i < validAllocations.length; i++) {
+        const alloc = validAllocations[i];
+        const allocAmt = this.parseAmount(alloc.amount);
+        if (alloc.targetType === "category") {
+          // Luodaan erillinen tapahtuma valittuun toiseen kategoriaan
+          const subTx = {
+            id: "tx_" + (Date.now() + i + 1),
+            date,
+            type: this.formType,
+            category: alloc.categoryId || this.selectedCatId,
+            amount: allocAmt,
+            vendor,
+            desc: desc ? `${desc} (Jaettu osuus)` : "Jaettu osuus kuitista",
+            receiptId,
+            accountId,
+            createdAt: new Date(Date.now() + i + 1).toISOString(),
+            updatedAt: new Date(Date.now() + i + 1).toISOString()
+          };
+          await this.storage.saveTransaction(subTx);
+        } else {
+          // Luodaan saatava (P2P Loan) henkilölle vaikuttamatta omaan ruokabudjettiin
+          const personName = (alloc.person || "").trim() || "Jaettu osuus";
+          p2pNames.push(personName);
+          p2pSum += allocAmt;
+          const p2pEntry = {
+            id: "p2p_" + (Date.now() + i + 1),
+            person: personName,
+            type: "lent",
+            amount: allocAmt,
+            date: date || new Date().toISOString().split("T")[0],
+            notes: `Jaettu kulu: ${vendor || this.categories.getById(this.selectedCatId)?.name || "Ostos"}`,
+            settled: false,
+            transactionId: tx.id
+          };
+          this.p2pLoans.push(p2pEntry);
+        }
+      }
+
+      if (p2pNames.length > 0) {
+        tx.splitInfo = {
+          person: p2pNames.join(", "),
+          amount: Math.round(p2pSum * 100) / 100
+        };
+        await this.storage.saveP2pLoans(this.p2pLoans);
+      }
+      this.pendingSplitAllocations = [];
     }
 
     await this.storage.saveTransaction(tx);
@@ -3674,7 +4304,48 @@ class BudjettiApp {
     }
   }
 
-  // --- KATEGORIAN MUOKKAUS & LISÄYS ---
+  // --- KATEGORIOIDEN & PÄÄRYHMIEN TYYLIKKÄÄT PERUSVÄRIT (Vaalea & Tumma) ---
+  getStandardColorPalette() {
+    return [
+      "#2563EB", // Sähkönsininen (Arki & Ruoka)
+      "#6366F1", // Indigo (Kiinteät & Asuminen)
+      "#F59E0B", // Meripihka (Ravintolat & Vapaa-aika)
+      "#0EA5E9", // Taivaansininen (Liikkuminen & Matkat)
+      "#10B981", // Smaragdinvihreä (Tulot & Säästöt)
+      "#EC4899", // Roosa (Viihde & Hyvinvointi)
+      "#8B5CF6", // Violetti (Kulttuuri & Tilaukset)
+      "#14B8A6", // Turkoosi (Koti & Hankinnat)
+      "#EF4444", // Korallinpunainen (Velat & Tärkeät)
+      "#64748B"  // Liuskekivenharmaa (Muut)
+    ];
+  }
+
+  selectCategoryColor(colorHex) {
+    if (!colorHex) return;
+    const clean = colorHex.trim();
+    const colorInput = document.getElementById("catFormColor");
+    const pickerInput = document.getElementById("catFormColorPicker");
+    const swatchesContainer = document.getElementById("catColorSwatches");
+    if (colorInput) colorInput.value = clean;
+    if (pickerInput && /^#[0-9A-Fa-f]{6}$/.test(clean)) pickerInput.value = clean;
+    if (swatchesContainer) {
+      swatchesContainer.querySelectorAll(".color-swatch-chip").forEach(el => {
+        el.classList.toggle("active", (el.dataset.color || "").toLowerCase() === clean.toLowerCase());
+      });
+    }
+  }
+
+  handleCatFormGroupChange(groupId) {
+    const idInput = document.getElementById("catFormId");
+    // Jos luodaan uutta kategoriaa, peritään oletusväri valitulta pääryhmältä
+    if (!idInput || !idInput.value) {
+      const grp = this.categories.getGroupById(groupId);
+      if (grp && grp.color) {
+        this.selectCategoryColor(grp.color);
+      }
+    }
+  }
+
   openCategoryModal(catId = null, prefillGroupId = null) {
     const groupSelect = document.getElementById("catFormGroup");
     groupSelect.innerHTML = "";
@@ -3692,6 +4363,10 @@ class BudjettiApp {
     const quickCheck = document.getElementById("catFormQuickAction");
     const quickAmountInput = document.getElementById("catFormQuickAmount");
     const quickRow = document.getElementById("catQuickAmountRow");
+    const swatchesContainer = document.getElementById("catColorSwatches");
+
+    const palette = this.getStandardColorPalette();
+    let activeColor = palette[0];
 
     if (catId) {
       const cat = this.categories.getById(catId);
@@ -3703,13 +4378,17 @@ class BudjettiApp {
       if (quickCheck) quickCheck.checked = !!cat.quickAction;
       if (quickAmountInput) quickAmountInput.value = cat.quickAmount > 0 ? cat.quickAmount : "";
       if (quickRow) quickRow.style.display = cat.quickAction ? "block" : "none";
+      activeColor = cat.color || palette[0];
       const delCatBtn = document.getElementById("btnDeleteCurrentCat");
       if (delCatBtn) delCatBtn.style.display = "block";
     } else {
+      const targetGrpId = prefillGroupId || "arki";
+      const grp = this.categories.getGroupById(targetGrpId);
+      activeColor = (grp && grp.color) ? grp.color : palette[0];
       if (titleEl) titleEl.innerText = "Uusi kategoria";
       if (idInput) idInput.value = "";
       if (nameInput) nameInput.value = "";
-      if (groupSelect) groupSelect.value = prefillGroupId || "arki";
+      if (groupSelect) groupSelect.value = targetGrpId;
       if (budgetInput) budgetInput.value = "";
       if (quickCheck) quickCheck.checked = false;
       if (quickAmountInput) quickAmountInput.value = "";
@@ -3717,6 +4396,20 @@ class BudjettiApp {
       const delCatBtn = document.getElementById("btnDeleteCurrentCat");
       if (delCatBtn) delCatBtn.style.display = "none";
     }
+
+    if (swatchesContainer) {
+      swatchesContainer.innerHTML = "";
+      palette.forEach(c => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.dataset.color = c;
+        chip.className = `color-swatch-chip ${c.toLowerCase() === activeColor.toLowerCase() ? "active" : ""}`;
+        chip.style.backgroundColor = c;
+        chip.onclick = () => this.selectCategoryColor(c);
+        swatchesContainer.appendChild(chip);
+      });
+    }
+    this.selectCategoryColor(activeColor);
 
     const modal = document.getElementById("modalCategory");
     if (modal) modal.classList.add("active");
@@ -3727,6 +4420,7 @@ class BudjettiApp {
     const id = document.getElementById("catFormId")?.value;
     const name = document.getElementById("catFormName").value.trim();
     const groupId = document.getElementById("catFormGroup").value;
+    const color = document.getElementById("catFormColor")?.value || "#2563EB";
     const budget = this.parseAmount(document.getElementById("catFormBudget").value);
     const quickAction = document.getElementById("catFormQuickAction")?.checked || false;
     const quickAmount = this.parseAmount(document.getElementById("catFormQuickAmount")?.value);
@@ -3735,6 +4429,7 @@ class BudjettiApp {
       await this.categories.updateCategory(id, {
         name,
         groupId,
+        color,
         budgetMonthly: budget,
         quickAction,
         quickAmount
@@ -3743,6 +4438,7 @@ class BudjettiApp {
       await this.categories.addCategory({
         name,
         groupId,
+        color,
         budgetMonthly: budget,
         quickAction,
         quickAmount
@@ -3777,15 +4473,29 @@ class BudjettiApp {
   }
 
   // --- KATEGORIARYHMIEN HALLINTA (PÄÄRYHMÄT) ---
+  selectGroupColor(colorHex) {
+    if (!colorHex) return;
+    const clean = colorHex.trim();
+    const colorInput = document.getElementById("groupFormColor");
+    const pickerInput = document.getElementById("groupFormColorPicker");
+    const swatchesContainer = document.getElementById("groupColorSwatches");
+    if (colorInput) colorInput.value = clean;
+    if (pickerInput && /^#[0-9A-Fa-f]{6}$/.test(clean)) pickerInput.value = clean;
+    if (swatchesContainer) {
+      swatchesContainer.querySelectorAll(".color-swatch-chip").forEach(el => {
+        el.classList.toggle("active", (el.dataset.color || "").toLowerCase() === clean.toLowerCase());
+      });
+    }
+  }
+
   openGroupModal(groupId = null) {
     const swatchesContainer = document.getElementById("groupColorSwatches");
     const nameInput = document.getElementById("groupFormName");
     const idInput = document.getElementById("groupFormId");
-    const colorInput = document.getElementById("groupFormColor");
     const titleEl = document.getElementById("modalGroupTitle");
     const deleteBtn = document.getElementById("btnDeleteCategoryGroup");
 
-    const palette = ["#2563EB", "#6366F1", "#10B981", "#F59E0B", "#0EA5E9", "#EC4899", "#8B5CF6", "#14B8A6", "#64748B"];
+    const palette = this.getStandardColorPalette();
     let activeColor = palette[0];
 
     if (groupId) {
@@ -3795,14 +4505,12 @@ class BudjettiApp {
         if (idInput) idInput.value = grp.id;
         if (nameInput) nameInput.value = grp.name;
         activeColor = grp.color || palette[0];
-        if (colorInput) colorInput.value = activeColor;
         if (deleteBtn) deleteBtn.style.display = "block";
       }
     } else {
       if (titleEl) titleEl.innerText = "Uusi pääryhmä";
       if (idInput) idInput.value = "";
       if (nameInput) nameInput.value = "";
-      if (colorInput) colorInput.value = activeColor;
       if (deleteBtn) deleteBtn.style.display = "none";
     }
 
@@ -3811,16 +4519,14 @@ class BudjettiApp {
       palette.forEach(c => {
         const chip = document.createElement("button");
         chip.type = "button";
+        chip.dataset.color = c;
         chip.className = `color-swatch-chip ${c.toLowerCase() === activeColor.toLowerCase() ? "active" : ""}`;
         chip.style.backgroundColor = c;
-        chip.onclick = () => {
-          if (colorInput) colorInput.value = c;
-          swatchesContainer.querySelectorAll(".color-swatch-chip").forEach(el => el.classList.remove("active"));
-          chip.classList.add("active");
-        };
+        chip.onclick = () => this.selectGroupColor(c);
         swatchesContainer.appendChild(chip);
       });
     }
+    this.selectGroupColor(activeColor);
 
     this.openModal("modalCategoryGroup");
   }
@@ -3829,7 +4535,7 @@ class BudjettiApp {
     event.preventDefault();
     const id = document.getElementById("groupFormId")?.value;
     const name = document.getElementById("groupFormName")?.value.trim();
-    const color = document.getElementById("groupFormColor")?.value || "#5C6A51";
+    const color = document.getElementById("groupFormColor")?.value || "#2563EB";
 
     if (!name) return;
 

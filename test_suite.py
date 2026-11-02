@@ -797,5 +797,78 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("#2563EB", cat_js)
         self.assertIn("#6366F1", cat_js)
 
+    def test_20_revision_16_stepper_split_ocr_wizard_tabs_responsive_grid(self):
+        """Varmistaa Revisio 16:n: Ryhmien/kategorioiden värivalinta, numerovalitsin + 1% pikajako & jäännösosuuksien monikohdistus, aito 3-vaiheinen Wizard, OCR + iPhonen Live Text, Velat-alavälilehtien ja alanavigaation järjestys, selkeät kategoriapalkit ja responsiivinen vaaka/iPad/desktop-asettelu."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/categories.js"), "r", encoding="utf-8") as f:
+            cat_js = f.read()
+
+        # 1. Ryhmien ja kategorioiden värivalinta (10 pikaväriä + color input)
+        self.assertIn('id="catColorSwatches"', html)
+        self.assertIn('id="groupColorSwatches"', html)
+        self.assertIn(".color-swatch-chip", css)
+        self.assertIn("forced-color-adjust: none;", css)
+        self.assertIn("selectCategoryColor(", app_js)
+        self.assertIn("selectGroupColor(", app_js)
+        self.assertIn("const oldColor = this.groups[idx].color;", cat_js)
+
+        # 2. Pikajako numerovalitsimella (- / +) ja yhdellä %-kentällä + jäännösosuuksien kohdistus
+        self.assertIn('id="btnCalcPartsMinus"', html)
+        self.assertIn('id="calcSplitPartsValue"', html)
+        self.assertIn('id="btnCalcPartsPlus"', html)
+        self.assertIn('id="calcCustomPercentInput"', html)
+        self.assertIn('id="formSplitAllocatorSection"', html)
+        self.assertIn('id="splitAllocationRowsContainer"', html)
+        self.assertIn("adjustCalcSplitParts(", app_js)
+        self.assertIn("handleCalcPercentInput(", app_js)
+        self.assertIn("renderSplitAllocationRows(", app_js)
+        self.assertIn("addSplitAllocationRow(", app_js)
+
+        # 3. Aito 3-vaiheinen Uusi kirjaus Wizard (vain aktiivinen paneeli näkyvissä)
+        self.assertIn('id="wizardStepPane1"', html)
+        self.assertIn('id="wizardStepPane2"', html)
+        self.assertIn('id="wizardStepPane3"', html)
+        self.assertIn('id="btnWizardPrev"', html)
+        self.assertIn('id="btnWizardNext"', html)
+        self.assertIn("nextWizardStep(", app_js)
+        self.assertIn("prevWizardStep(", app_js)
+
+        # 4. Kuittikuvauksen OCR (Tesseract.js + suomalainen kuittijäsennin) & iPhonen Live Text
+        self.assertIn("tesseract.min.js", html)
+        self.assertIn('id="formLiveTextScan"', html)
+        self.assertIn('id="ocrStatusBox"', html)
+        self.assertIn("parseReceiptOCRText(", app_js)
+        self.assertIn("runReceiptOCR(", app_js)
+        self.assertIn("handleLiveTextScanInput(", app_js)
+
+        # 5. Alanavigaation järjestys: Yhteenveto, Tapahtumat, Budjetit, Velat, Asetukset
+        idx_koti = html.find('id="navKoti"')
+        idx_inbox = html.find('id="navInbox"')
+        idx_budjetit = html.find('id="navBudjetit"')
+        idx_velat = html.find('id="navVelat"')
+        idx_asetukset = html.find('id="navAsetukset"')
+        self.assertTrue(
+            0 < idx_koti < idx_inbox < idx_budjetit < idx_velat < idx_asetukset,
+            "Alanavigaation järjestys ei ole Yhteenveto -> Tapahtumat -> Budjetit -> Velat -> Asetukset!"
+        )
+
+        # 6. Velat ja saatavat: Lainat muille & Saatavat ensimmäisenä ja oletuksena aktiivisena
+        idx_p2p_btn = html.find('id="btnDebtTabP2P"')
+        idx_debts_btn = html.find('id="btnDebtTabDebts"')
+        self.assertTrue(0 < idx_p2p_btn < idx_debts_btn, "Lainat muille & Saatavat ei ole ensimmäisenä välilehtenä Velat-näkymässä!")
+
+        # 7. Yhteenvedon selkeä kategoriapalkkirakenne ja responsiivinen Vaaka / iPad / Tietokone -asettelu
+        self.assertIn(".meter-row-header", css)
+        self.assertIn(".meter-row-title", css)
+        self.assertIn(".meter-row-meta", css)
+        self.assertIn(".dashboard-bento-grid", css)
+        self.assertIn("container-type: inline-size;", css)
+        self.assertIn("receipt-split-active", css)
+
 if __name__ == "__main__":
     unittest.main()

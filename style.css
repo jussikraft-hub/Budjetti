@@ -121,10 +121,10 @@ html, body {
   font-feature-settings: "tnum" 1, "cv01" 1;
 }
 
-/* --- APP CONTAINER --- */
+/* --- APP CONTAINER (Responsiivinen Mobiili, Vaaka, iPad & Tietokone) --- */
 .app-container {
   width: 100%;
-  max-width: 500px;
+  max-width: 540px;
   margin: 0 auto;
   min-height: 100vh;
   min-height: 100dvh;
@@ -136,11 +136,20 @@ html, body {
   overflow-x: hidden !important;
   touch-action: pan-y !important;
   position: relative;
+  container-type: inline-size;
 }
 
-@media (min-width: 768px) {
+/* Vaakanäkymä (iPhone Landscape) & Tabletti (iPad) */
+@media (min-width: 680px), (orientation: landscape) and (min-width: 560px) {
   .app-container {
-    max-width: 560px;
+    max-width: 960px;
+  }
+}
+
+/* Tietokone / Laaja selainnäkymä (Desktop) */
+@media (min-width: 1100px) {
+  .app-container {
+    max-width: 1280px;
   }
 }
 
@@ -1090,4 +1099,283 @@ html, body {
   background: var(--c-border-active);
   border-radius: 999px;
   margin: 0 auto 14px auto;
+}
+
+/* ================================================================ */
+/* REVISIO 16: VÄRIVALITSIMET, PIKAJAON ALLOKAATTORI, OCR &         */
+/* RESPONSIIVINEN VAAKANÄKYMÄ / IPAD / DESKTOP GRID                 */
+/* ================================================================ */
+
+/* --- Värivalitsimen pyöreät väripillerit (forced-color-adjust: none) --- */
+.color-swatch-chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+  position: relative;
+  forced-color-adjust: none;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
+}
+
+.color-swatch-chip:hover {
+  transform: scale(1.08);
+}
+
+.color-swatch-chip.active {
+  border-color: var(--c-text-primary);
+  box-shadow: 0 0 0 2px var(--c-card), 0 0 0 4px var(--c-text-primary);
+  transform: scale(1.08);
+}
+
+/* --- Laskimen numerovalitsin (Stepper) & %-kenttä --- */
+.calc-split-panel {
+  background-color: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-split-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.stepper-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 11px;
+  padding: 3px;
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--c-card-sub);
+  color: var(--c-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-btn:active {
+  transform: scale(0.92);
+}
+
+.stepper-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  min-width: 28px;
+  text-align: center;
+}
+
+/* --- Jäännösosuuksien allokointikortti (Vaihe 3) --- */
+.split-allocations-box {
+  background-color: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.split-alloc-row {
+  background-color: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* --- OCR & iPhone Live Text -palkki --- */
+.ocr-status-box {
+  background-color: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- Yhteenvedon selkeä kategoriapalkki (Koko nimi + selkeä selite) --- */
+.meter-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.meter-row-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  line-height: 1.3;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meter-row-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.meter-row-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--c-stone);
+  gap: 8px;
+}
+
+/* --- RESPONSIIVINEN DASHBOARD GRID (Vaaka, iPad & Tietokone) --- */
+.dashboard-bento-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.budgets-grid-layout,
+.debts-grid-layout,
+.ledger-grid-layout,
+.settings-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+/* Vaakanäkymä (iPhone Landscape) & iPad (Tablet): 2-palstainen rinnakkaisasettelu */
+@media (min-width: 680px), (orientation: landscape) and (min-width: 560px) {
+  .bottom-nav {
+    padding-left: max(16px, calc(50vw - 460px));
+    padding-right: max(16px, calc(50vw - 460px));
+  }
+
+  .fab-add {
+    right: max(24px, calc(50vw - 450px));
+  }
+
+  .dashboard-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+  }
+
+  .dashboard-bento-grid > .kpi-hero-card {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-bento-grid > .inbox-action-banner {
+    grid-column: 1 / -1;
+  }
+
+  #categoryGroupsContainer {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px !important;
+    align-items: start;
+  }
+
+  .settings-hierarchy {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+
+  .settings-section-title {
+    display: none;
+  }
+
+  /* iPad & Vaaka: Kuitti-ikkuna ja kirjaaminen rinnakkain (Split-View) */
+  .receipt-overlay-viewer {
+    top: max(20px, env(safe-area-inset-top));
+    left: max(20px, calc(50vw - 460px));
+    transform: none;
+    width: calc(46% - 16px);
+    max-width: 440px;
+    height: calc(84dvh - 40px);
+    max-height: 760px;
+  }
+
+  body.receipt-split-active #modalQuickAdd .modal-content {
+    margin-left: auto;
+    margin-right: max(20px, calc(50vw - 460px));
+    max-width: 480px;
+    border-radius: 24px;
+    margin-bottom: 20px;
+  }
+}
+
+/* Tietokoneen selain (Desktop >= 1100px): Laaja monipalstainen näkymä */
+@media (min-width: 1100px) {
+  .bottom-nav {
+    padding-left: max(24px, calc(50vw - 600px));
+    padding-right: max(24px, calc(50vw - 600px));
+  }
+
+  .fab-add {
+    right: max(32px, calc(50vw - 600px));
+  }
+
+  .dashboard-bento-grid {
+    grid-template-columns: 1.15fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  .dashboard-bento-grid > .kpi-hero-card {
+    grid-column: 1 / 2;
+    height: 100%;
+  }
+
+  #categoryGroupsContainer {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .modal-overlay {
+    align-items: center;
+  }
+
+  .modal-content {
+    max-width: 560px;
+    border-radius: 24px;
+    border: 1px solid var(--c-border);
+  }
+}
+
+/* Container query tuki komponenteille */
+@container (min-width: 640px) {
+  .kpi-hero-card {
+    padding: 26px 28px;
+  }
 }

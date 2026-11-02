@@ -14,12 +14,13 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css?v=20261102_1200">
+  <link rel="stylesheet" href="style.css?v=20261102_1300">
 
-  <!-- External Parsers & Visualizers (CDN) -->
+  <!-- External Parsers, Visualizers & OCR (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -57,6 +58,9 @@
             </button>
           </div>
         </div>
+
+        <!-- RESPONSIVE BENTO GRID FOR IPAD, LANDSCAPE & DESKTOP -->
+        <div class="dashboard-bento-grid">
 
         <!-- CARD 1: AIRY PRIMARY KPI HERO CARD -->
         <div class="kpi-hero-card">
@@ -201,6 +205,7 @@
           </div>
         </div>
 
+        </div><!-- /.dashboard-bento-grid -->
       </section>
 
       <!-- ============================================== -->
@@ -370,28 +375,56 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- VIEW 4: VELAT & LAINAT (SITOUMUKSET & P2P)     -->
+      <!-- VIEW 4: VELAT & SAATAVAT (P2P ENSIN, SITTEN VELAT) -->
       <!-- ============================================== -->
       <section id="viewVelat" class="app-view" style="display: none;">
         
         <div class="page-title-bar">
           <div>
             <h1>Velat & Saatavat</h1>
-            <p class="page-subtitle">Sitoumukset ja P2P-lainat</p>
+            <p class="page-subtitle">Lainat muille, saatavat ja sitoumukset</p>
           </div>
         </div>
 
         <div class="segmented-control">
-          <button type="button" class="segmented-btn active" id="btnDebtTabDebts" onclick="app.switchDebtTab('debts')">
-            Velat & Sitoumukset
-          </button>
-          <button type="button" class="segmented-btn" id="btnDebtTabP2P" onclick="app.switchDebtTab('p2p')">
+          <button type="button" class="segmented-btn active" id="btnDebtTabP2P" onclick="app.switchDebtTab('p2p')">
             Lainat muille & Saatavat
+          </button>
+          <button type="button" class="segmented-btn" id="btnDebtTabDebts" onclick="app.switchDebtTab('debts')">
+            Velat & Sitoumukset
           </button>
         </div>
 
-        <!-- SUBVIEW: VELAT & SITOUMUKSET -->
-        <div id="subviewDebts">
+        <!-- SUBVIEW 1 (OLETUS): LAINAT MUILLE & SAATAVAT (P2P) -->
+        <div id="subviewP2P">
+          <div class="luxury-card" style="margin-bottom: 14px;">
+            <span class="card-label">P2P Saatavat & Lainat</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+              <div>
+                <span style="font-size: 11px; color: var(--c-stone);">Saatavat muilta</span>
+                <p style="font-size: 22px; font-weight: 700; color: var(--c-income);" class="font-num" id="p2pTotalReceivable">+0,00 €</p>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 11px; color: var(--c-stone);">Velkaa muille</span>
+                <p style="font-size: 22px; font-weight: 700; color: var(--c-expense);" class="font-num" id="p2pTotalPayable">-0,00 €</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span class="card-label" style="margin: 0;">Lainat & Kulujen jaot</span>
+            <button class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 12px;" onclick="app.openP2PModal()">
+              + Uusi laina / saatava
+            </button>
+          </div>
+
+          <div id="p2pList" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- P2P list injected here -->
+          </div>
+        </div>
+
+        <!-- SUBVIEW 2: VELAT & SITOUMUKSET (Ulosotto & isot lainat) -->
+        <div id="subviewDebts" style="display: none;">
           <div class="luxury-card" style="margin-bottom: 14px;">
             <span class="card-label">Velkasaldo & Lyhennykset</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
@@ -419,34 +452,6 @@
 
           <div id="debtsList" style="display: flex; flex-direction: column; gap: 10px;">
             <!-- Debts injected here -->
-          </div>
-        </div>
-
-        <!-- SUBVIEW: LAINAT & SAATAVAT (P2P) -->
-        <div id="subviewP2P" style="display: none;">
-          <div class="luxury-card" style="margin-bottom: 14px;">
-            <span class="card-label">P2P Saatavat & Lainat</span>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
-              <div>
-                <span style="font-size: 11px; color: var(--c-stone);">Saatavat muilta</span>
-                <p style="font-size: 22px; font-weight: 700; color: var(--c-income);" class="font-num" id="p2pTotalReceivable">+0,00 €</p>
-              </div>
-              <div style="text-align: right;">
-                <span style="font-size: 11px; color: var(--c-stone);">Velkaa muille</span>
-                <p style="font-size: 22px; font-weight: 700; color: var(--c-expense);" class="font-num" id="p2pTotalPayable">-0,00 €</p>
-              </div>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span class="card-label" style="margin: 0;">Lainat & Kulujen jaot</span>
-            <button class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 12px;" onclick="app.openP2PModal()">
-              + Uusi laina / saatava
-            </button>
-          </div>
-
-          <div id="p2pList" style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- P2P list injected here -->
           </div>
         </div>
 
@@ -775,13 +780,23 @@
       </svg>
     </button>
 
-    <!-- BOTTOM NAVIGATION BAR (5 CORE TABS: REVOLUT / APPLE WALLET STYLE) -->
+    <!-- BOTTOM NAVIGATION BAR (5 CORE TABS: YHTEENVETO, TAPAHTUMAT, BUDJETIT, VELAT, ASETUKSET) -->
     <nav class="bottom-nav">
       <button class="nav-btn active" id="navKoti" onclick="app.switchView('viewKoti')">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
           <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
         </svg>
         <span>Yhteenveto</span>
+      </button>
+
+      <button class="nav-btn" id="navInbox" onclick="app.switchView('viewTapahtumat')">
+        <div style="position: relative; display: inline-flex;">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+          <span id="navInboxBadge" style="display: none; position: absolute; top: -5px; right: -8px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: var(--c-crimson); color: #fff; font-size: 9px; font-weight: 700; line-height: 14px; text-align: center;">0</span>
+        </div>
+        <span>Tapahtumat</span>
       </button>
 
       <button class="nav-btn" id="navBudjetit" onclick="app.switchView('viewBudjetit')">
@@ -797,16 +812,6 @@
           <path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
         <span>Velat</span>
-      </button>
-
-      <button class="nav-btn" id="navInbox" onclick="app.switchView('viewInbox')">
-        <div style="position: relative; display: inline-flex;">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
-            <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-5.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 006.586 13H4"/>
-          </svg>
-          <span id="navInboxBadge" style="display: none; position: absolute; top: -5px; right: -8px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: var(--c-crimson); color: #fff; font-size: 9px; font-weight: 700; line-height: 14px; text-align: center;">0</span>
-        </div>
-        <span>Kuitit</span>
       </button>
 
       <button class="nav-btn" id="navAsetukset" onclick="app.switchView('viewAsetukset')">
@@ -912,20 +917,36 @@
       <!-- Calculator Display -->
       <div style="background: var(--c-input-bg); border: 1px solid var(--c-border); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; text-align: right;">
         <div id="calcExpr" class="font-num" style="font-size: 13px; color: var(--c-stone); min-height: 18px; word-break: break-all;"></div>
-        <div id="calcResult" class="font-num" style="font-size: 28px; font-weight: 400; color: var(--c-text-primary); margin-top: 2px;">0,00 €</div>
-        <div id="calcSplitInfo" style="font-size: 11px; color: var(--c-olive); margin-top: 4px; display: none;"></div>
+        <div id="calcResult" class="font-num" style="font-size: 28px; font-weight: 600; color: var(--c-text-primary); margin-top: 2px;">0,00 €</div>
+        <div id="calcSplitInfo" style="font-size: 11px; color: var(--c-primary); font-weight: 500; margin-top: 4px; display: none;"></div>
       </div>
 
-      <!-- Quick Split Controls -->
-      <div style="margin-bottom: 12px;">
-        <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Pikajako (Oma osuus)</span>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-          <button type="button" class="btn-primary" style="flex: 1; min-width: 65px; padding: 6px 4px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.calcSplitParts(2)">½ (2:lle)</button>
-          <button type="button" class="btn-primary" style="flex: 1; min-width: 65px; padding: 6px 4px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.calcSplitParts(3)">⅓ (3:lle)</button>
-          <button type="button" class="btn-primary" style="flex: 1; min-width: 65px; padding: 6px 4px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.calcSplitParts(4)">¼ (4:lle)</button>
-          <button type="button" class="btn-primary" style="flex: 1; min-width: 55px; padding: 6px 4px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.calcSplitPercent(50)">50 %</button>
-          <button type="button" class="btn-primary" style="flex: 1; min-width: 55px; padding: 6px 4px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.calcSplitPercent(60)">60 %</button>
-          <button type="button" class="btn-primary" style="flex: 1; min-width: 55px; padding: 6px 4px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.calcSplitCustom()">Muu %</button>
+      <!-- Quick Split Controls: Number Stepper + Single Numeric Percentage Input -->
+      <div class="calc-split-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; font-weight: 600; color: var(--c-text-primary);">Pikajako (Oma osuus & jäännösten jako)</span>
+          <button type="button" style="background: none; border: none; font-size: 11px; color: var(--c-primary); font-weight: 600; cursor: pointer;" onclick="app.calcResetSplit()">Nollaa jako</button>
+        </div>
+
+        <div class="calc-split-row">
+          <!-- Numerovalitsin (Stepper) osien lukumäärälle -->
+          <div>
+            <label style="font-size: 10px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Jaa osiin (kpl)</label>
+            <div class="stepper-control">
+              <button type="button" class="stepper-btn" id="btnCalcPartsMinus" onclick="app.adjustCalcSplitParts(-1)" title="Vähennä osia">−</button>
+              <span class="stepper-val font-num" id="calcSplitPartsValue">1</span>
+              <button type="button" class="stepper-btn" id="btnCalcPartsPlus" onclick="app.adjustCalcSplitParts(1)" title="Lisää osia">+</button>
+            </div>
+          </div>
+
+          <!-- Yksi numeerinen prosenttiosuuden syöttö -->
+          <div>
+            <label style="font-size: 10px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Oma osuus (%)</label>
+            <div style="position: relative;">
+              <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="calcCustomPercentInput" value="100" class="form-input font-num" style="padding: 7px 26px 7px 10px; font-size: 15px; font-weight: 700; text-align: right;" oninput="app.handleCalcPercentInput(this.value)">
+              <span style="position: absolute; right: 10px; top: 8px; font-size: 13px; color: var(--c-stone); font-weight: 600; pointer-events: none;">%</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -957,43 +978,48 @@
         <button type="button" class="calc-btn calc-equals" onclick="app.calcEvaluate()">=</button>
       </div>
 
-      <!-- Apply Amount Button -->
-      <button type="button" class="btn-primary" style="padding: 12px; font-weight: 600;" onclick="app.applyCalculatorAmount()">
-        ✓ Käytä summaa
-      </button>
+      <!-- Apply Amount / Continue to Split Allocation Buttons -->
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn-primary" style="flex: 1; padding: 12px; font-weight: 600;" onclick="app.applyCalculatorAmount(false)">
+          ✓ Käytä summaa
+        </button>
+        <button type="button" id="btnCalcContinueToSplit" class="btn-primary" style="flex: 1.2; padding: 12px; font-weight: 600; background: var(--c-olive); display: none;" onclick="app.applyCalculatorAmount(true)">
+          Kohdista jäännös &rarr;
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- ============================================== -->
-  <!-- MODAL: UUSI KIRJAUS (TASK-DRIVEN STEP WIZARD)  -->
+  <!-- MODAL: UUSI KIRJAUS (AITO 3-VAIHEINEN WIZARD)  -->
   <!-- ============================================== -->
   <div class="modal-overlay" id="modalQuickAdd" onclick="if(event.target === this) app.closeModal('modalQuickAdd')">
     <div class="modal-content">
       
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--c-divider); margin-bottom: 12px; width: 100%; min-width: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; width: 100%; min-width: 0;">
         <div style="min-width: 0;">
-          <span class="card-label" style="margin: 0;">Task-Driven Wizard</span>
-          <h3 style="font-size: 16px; font-weight: 600;" id="modalFormTitle">Uusi kirjaus</h3>
+          <span class="card-label" style="margin: 0;" id="wizardStepSubtitle">Vaihe 1 / 3 · Perustiedot & Kuitti</span>
+          <h3 style="font-size: 17px; font-weight: 700;" id="modalFormTitle">Uusi kirjaus</h3>
         </div>
-        <button onclick="app.closeModal('modalQuickAdd')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px; flex-shrink: 0;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <button type="button" onclick="app.closeModal('modalQuickAdd')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px; flex-shrink: 0;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
 
-      <!-- Step-by-Step Wizard Navigation Bar -->
+      <!-- Step-by-Step Wizard Navigation Bar (Switches active pane) -->
       <div class="wizard-steps-bar" id="wizardStepsBar">
         <button type="button" class="wizard-step-pill active" id="wizardStepBtn1" onclick="app.setWizardStep(1)">
-          <span class="step-num">1</span>
-          <span>Summa & Kuitti</span>
+          <span class="wizard-step-num">1</span>
+          <span>Perustiedot</span>
         </button>
         <button type="button" class="wizard-step-pill" id="wizardStepBtn2" onclick="app.setWizardStep(2)">
-          <span class="step-num">2</span>
+          <span class="wizard-step-num">2</span>
           <span>Kategoria</span>
         </button>
         <button type="button" class="wizard-step-pill" id="wizardStepBtn3" onclick="app.setWizardStep(3)">
-          <span class="step-num">3</span>
+          <span class="wizard-step-num">3</span>
           <span>Tili & Jako</span>
         </button>
       </div>
@@ -1001,7 +1027,9 @@
       <form id="txForm" onsubmit="app.handleFormSubmit(event)" style="display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 100%; overflow-x: hidden !important; touch-action: pan-y !important;">
         <input type="hidden" id="formTxId">
 
-        <!-- STEP 1: SUMMA, TYYPPI & KUITTI -->
+        <!-- ======================================================= -->
+        <!-- VAIHE 1: SUMMA, PERUSTIEDOT & KUITTI (OCR + LIVE TEXT)  -->
+        <!-- ======================================================= -->
         <div id="wizardStepPane1" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
           
           <!-- Quick Action Chips & Pikakuitti inside the + Modal -->
@@ -1019,10 +1047,10 @@
 
           <!-- Type Selector (Expense vs Income) -->
           <div style="display: flex; gap: 8px; width: 100%;">
-            <button type="button" id="btnTypeExpense" class="btn-primary" style="flex: 1; min-width: 0; padding: 10px; font-size: 12px; background-color: var(--c-primary);" onclick="app.setFormType('expense')">
+            <button type="button" id="btnTypeExpense" class="btn-primary" style="flex: 1; min-width: 0; padding: 10px; font-size: 13px; background-color: var(--c-primary);" onclick="app.setFormType('expense')">
               Meno
             </button>
-            <button type="button" id="btnTypeIncome" class="btn-primary" style="flex: 1; min-width: 0; padding: 10px; font-size: 12px; background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-stone);" onclick="app.setFormType('income')">
+            <button type="button" id="btnTypeIncome" class="btn-primary" style="flex: 1; min-width: 0; padding: 10px; font-size: 13px; background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-stone);" onclick="app.setFormType('income')">
               Tulo
             </button>
           </div>
@@ -1030,42 +1058,59 @@
           <!-- Big Hero Amount Field -->
           <div style="width: 100%;">
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; width: 100%; min-width: 0;">
-              <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone);">Määrä (€)</label>
-              <button type="button" class="btn-primary" style="width: auto; padding: 5px 10px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;" onclick="app.openCalculatorModal()" title="Avaa laskin ja kulujen jakaja">
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+              <label style="font-size: 11px; font-weight: 600; color: var(--c-stone);">Summa (€) — oma osuus</label>
+              <button type="button" class="btn-primary" style="width: auto; padding: 6px 11px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-primary); display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;" onclick="app.openCalculatorModal()" title="Avaa laskin ja kulujen pikajako">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
                   <rect x="4" y="2" width="16" height="20" rx="2"/>
                   <line x1="8" y1="6" x2="16" y2="6"/>
                   <line x1="8" y1="10" x2="10" y2="10"/>
                   <line x1="14" y1="10" x2="16" y2="10"/>
                   <line x1="8" y1="14" x2="10" y2="14"/>
                   <line x1="14" y1="14" x2="16" y2="14"/>
-                  <line x1="8" y1="18" x2="10" y2="18"/>
-                  <line x1="14" y1="18" x2="16" y2="18"/>
                 </svg>
-                <span>Laskin / Jaa</span>
+                <span>Laskin & Pikajako</span>
               </button>
             </div>
             <div style="position: relative; width: 100%;">
-              <input type="text" readonly inputmode="none" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 32px; font-weight: 600; padding: 12px 40px 12px 16px; cursor: pointer; caret-color: transparent; width: 100%; max-width: 100%;" onclick="app.openCalculatorModal()" title="Napauta syöttääksesi summan laskinnäppäimistöllä">
-              <span style="position: absolute; right: 16px; top: 14px; font-size: 24px; color: var(--c-stone); font-weight: 400; pointer-events: none;">€</span>
+              <input type="text" readonly inputmode="none" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 32px; font-weight: 700; padding: 12px 40px 12px 16px; cursor: pointer; caret-color: transparent; width: 100%; max-width: 100%;" onclick="app.openCalculatorModal()" title="Napauta syöttääksesi summan tai jakaaksesi kulun">
+              <span style="position: absolute; right: 16px; top: 14px; font-size: 24px; color: var(--c-stone); font-weight: 500; pointer-events: none;">€</span>
+            </div>
+            <div id="formSplitSummaryBanner" style="display: none; margin-top: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(16, 185, 129, 0.10); border: 1px solid rgba(16, 185, 129, 0.25); font-size: 12px; color: var(--c-income); font-weight: 600; justify-content: space-between; align-items: center;">
+              <span id="formSplitSummaryText">Jaettu kulu</span>
+              <button type="button" style="background: none; border: none; color: var(--c-primary); font-weight: 700; font-size: 11px; cursor: pointer; text-decoration: underline;" onclick="app.setWizardStep(3)">Muokkaa jakoa &rarr;</button>
             </div>
           </div>
 
-          <!-- Receipt Camera / Image Attachment -->
-          <div style="background: var(--c-card); border: 1px solid var(--c-border); border-radius: 14px; padding: 12px; width: 100%; max-width: 100%; overflow: hidden;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; width: 100%; min-width: 0;">
+          <!-- Perustiedot: Kauppa / Saaja & Päivämäärä heti Vaiheessa 1 -->
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%;">
+            <div style="min-width: 0;">
+              <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Kauppa / Saaja</label>
+              <input type="text" id="formVendor" placeholder="esim. Alepa" class="form-input" style="width: 100%; min-width: 0;">
+            </div>
+            <div style="min-width: 0;">
+              <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Päivämäärä</label>
+              <input type="date" id="formDate" required class="form-input font-num" style="width: 100%; min-width: 0; -webkit-appearance: none; appearance: none;">
+            </div>
+          </div>
+
+          <!-- Receipt Camera / Image Attachment + OCR Tekstintunnistus -->
+          <div style="background: var(--c-card-sub); border: 1px solid var(--c-border); border-radius: 14px; padding: 12px; width: 100%; max-width: 100%; overflow: hidden; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; min-width: 0;">
               <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; overflow: hidden;">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--c-stone); flex-shrink: 0;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="color: var(--c-primary); flex-shrink: 0;">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                 </svg>
-                <span style="font-size: 11px; color: var(--c-stone); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="receiptFileName">Liitä kuitti (valinnainen)</span>
+                <span style="font-size: 12px; font-weight: 600; color: var(--c-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="receiptFileName">Kuitti & Älykäs tekstintunnistus (OCR)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                <button type="button" id="btnViewFormReceipt" onclick="app.openReceiptOverlay(app.currentReceiptId || app.tempReceiptData, 'Liitetty kuitti')" style="display: none; background: none; border: none; color: var(--c-sand); font-size: 11px; cursor: pointer; text-decoration: underline; white-space: nowrap;">
-                  Avaa kuitti ⤢
+                <button type="button" id="btnRunReceiptOCR" onclick="app.runReceiptOCR()" style="display: none; background: var(--c-primary); border: none; color: #FFFFFF; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                  Lue teksti (OCR)
                 </button>
-                <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-crimson); font-size: 11px; cursor: pointer; white-space: nowrap;">
+                <button type="button" id="btnViewFormReceipt" onclick="app.openReceiptOverlay(app.currentReceiptId || app.tempReceiptData, 'Liitetty kuitti')" style="display: none; background: none; border: none; color: var(--c-primary); font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline; white-space: nowrap;">
+                  Avaa ⤢
+                </button>
+                <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-expense); font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap;">
                   Poista
                 </button>
               </div>
@@ -1073,66 +1118,94 @@
 
             <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%;">
               <!-- Ota kuva kameralla -->
-              <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptCamera').click()">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="flex-shrink: 0;">
+              <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 11px; background: var(--c-card); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptCamera').click()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="flex-shrink: 0;">
                   <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
                   <circle cx="12" cy="13" r="4"/>
                 </svg>
-                <span style="overflow: hidden; text-overflow: ellipsis;">Ota kuva</span>
+                <span style="overflow: hidden; text-overflow: ellipsis;">Kuvasta + OCR</span>
               </button>
               <input type="file" id="formReceiptCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handleReceiptSelect(event)">
 
               <!-- Valitse tiedosto / Galleria -->
-              <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptFile').click()">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="flex-shrink: 0;">
+              <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 11px; background: var(--c-card); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptFile').click()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" style="flex-shrink: 0;">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                   <polyline points="17 8 12 3 7 8"/>
                   <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
-                <span style="overflow: hidden; text-overflow: ellipsis;">Valitse tiedosto</span>
+                <span style="overflow: hidden; text-overflow: ellipsis;">Tiedosto + OCR</span>
               </button>
               <input type="file" id="formReceiptFile" accept="image/*,application/pdf" style="display: none;" onchange="app.handleReceiptSelect(event)">
             </div>
+
+            <!-- OCR Status & iPhone Live Text Scanner Box -->
+            <div id="ocrStatusBox" class="ocr-status-box" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="ocrStatusLabel" style="font-size: 11px; font-weight: 600; color: var(--c-primary);">Luetaan kuittia (OCR)...</span>
+                <span id="ocrProgressPct" class="font-num" style="font-size: 11px; color: var(--c-stone);"></span>
+              </div>
+              <div id="ocrDetectedSuggestions" style="display: none; flex-wrap: wrap; gap: 6px; margin-top: 2px;"></div>
+            </div>
+
+            <!-- iPhone Natiivi Live Text (Skannaa teksti kameralla) -->
+            <div style="padding-top: 4px; border-top: 1px dashed var(--c-border);">
+              <label style="font-size: 10px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">
+                📱 iPhone Live Text / Liitä kuitin teksti (napauta kenttää &rarr; "Skannaa teksti"):
+              </label>
+              <input type="text" id="formLiveTextScan" placeholder="Napauta tästä iPhonella & valitse 'Skannaa teksti'..." class="form-input" style="padding: 8px 11px; font-size: 12px; background: var(--c-card);" oninput="app.handleLiveTextScanInput(this.value)">
+            </div>
           </div>
         </div>
 
-        <!-- STEP 2: KATEGORIA, KAUPPA & PÄIVÄMÄÄRÄ -->
-        <div id="wizardStepPane2" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-          <!-- Category Selector -->
+        <!-- ======================================================= -->
+        <!-- VAIHE 2: KATEGORIAN VALINTA                             -->
+        <!-- ======================================================= -->
+        <div id="wizardStepPane2" style="display: none; flex-direction: column; gap: 12px; width: 100%;">
           <div style="width: 100%;">
-            <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Kategoria</label>
-            <div id="modalCategoryPills" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; max-height: 145px; overflow-y: auto; overflow-x: hidden !important; width: 100%; max-width: 100%; touch-action: pan-y !important; overscroll-behavior-x: none !important;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--c-text-primary);">Valitse kategoria omalle osuudelle</label>
+              <button type="button" style="background: none; border: none; font-size: 11px; font-weight: 600; color: var(--c-primary); cursor: pointer;" onclick="app.openCategoryModal()">+ Uusi kategoria</button>
+            </div>
+            <div id="modalCategoryPills" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; max-height: 290px; overflow-y: auto; overflow-x: hidden !important; width: 100%; max-width: 100%; touch-action: pan-y !important; overscroll-behavior-x: none !important; padding: 2px;">
               <!-- Category Radio Chips Injected Here -->
             </div>
           </div>
-
-          <!-- Vendor & Date -->
-          <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%;">
-            <div style="min-width: 0;">
-              <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kauppa / Saaja</label>
-              <input type="text" id="formVendor" placeholder="esim. Alepa" class="form-input" style="width: 100%; min-width: 0;">
-            </div>
-            <div style="min-width: 0;">
-              <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Päivämäärä</label>
-              <input type="date" id="formDate" required class="form-input font-num" style="width: 100%; min-width: 0; -webkit-appearance: none; appearance: none;">
-            </div>
-          </div>
         </div>
 
-        <!-- STEP 3: TILI, KUVAUS & KULUJEN JAKO -->
-        <div id="wizardStepPane3" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <!-- ======================================================= -->
+        <!-- VAIHE 3: TILI, KUVAUS & JÄÄNNÖSOSUUKSIEN ALLOKOINTI      -->
+        <!-- ======================================================= -->
+        <div id="wizardStepPane3" style="display: none; flex-direction: column; gap: 12px; width: 100%;">
           <!-- Account / Payment Method Selector -->
           <div style="width: 100%;">
-            <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Maksutapa / Tili</label>
-            <select id="formAccount" class="form-input font-num" style="font-size: 12px; width: 100%; max-width: 100%;">
+            <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Maksutapa / Tili</label>
+            <select id="formAccount" class="form-input font-num" style="font-size: 14px; width: 100%; max-width: 100%;">
               <!-- Accounts Injected Here -->
             </select>
           </div>
 
           <!-- Description -->
           <div style="width: 100%;">
-            <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuvaus & Jakotiedot (Valinnainen)</label>
+            <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuvaus & Muistiinpanot (Valinnainen)</label>
             <input type="text" id="formDesc" placeholder="Lisätiedot ostoksesta..." class="form-input" style="width: 100%; max-width: 100%;">
+          </div>
+
+          <!-- MONIKOHTEINEN KULUJEN JAKO & JÄÄNNÖSOSUUKSIEN ALLOKAATTORI -->
+          <div class="split-allocations-box" id="formSplitAllocatorSection">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 12px; font-weight: 700; color: var(--c-text-primary); display: block;">Jäännösosuuksien kohdistus (Saatavat / Eri ryhmät)</span>
+                <span style="font-size: 11px; color: var(--c-stone);" id="splitAllocSubtitle">Jaa ostoksen muut osuudet henkilöille (Saatavat) tai toisiin kategorioihin</span>
+              </div>
+              <button type="button" class="btn-primary" style="width: auto; padding: 6px 10px; font-size: 11px;" onclick="app.addSplitAllocationRow()">
+                + Lisää osuus
+              </button>
+            </div>
+
+            <div id="splitAllocationRowsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamic Allocation Rows Injected Here -->
+            </div>
           </div>
 
           <!-- Split & Delete Action Buttons (Visible when editing an existing transaction) -->
@@ -1146,12 +1219,18 @@
           </div>
         </div>
 
-        <!-- Sticky Bottom CTA Bar (Always Pinned at Bottom of Wizard) -->
+        <!-- Sticky Bottom CTA Bar (Vaiheittainen navigointi + suora tallennus) -->
         <div class="sticky-bottom-cta">
-          <button type="button" class="btn-secondary" style="flex: 1; padding: 12px 10px; font-size: 12px;" onclick="app.openCalculatorModal()">
-            Jaa kulu / Laskin
+          <button type="button" id="btnWizardPrev" class="btn-primary btn-secondary-surface" style="flex: 0.8; padding: 12px 10px; font-size: 12px; display: none;" onclick="app.prevWizardStep()">
+            &larr; Edellinen
           </button>
-          <button type="submit" class="btn-primary" style="flex: 2; padding: 12px 14px; font-size: 13px;">
+          <button type="button" id="btnWizardCalc" class="btn-primary btn-secondary-surface" style="flex: 1; padding: 12px 10px; font-size: 12px;" onclick="app.openCalculatorModal()">
+            Laskin / Jaa
+          </button>
+          <button type="button" id="btnWizardNext" class="btn-primary" style="flex: 1.4; padding: 12px 14px; font-size: 13px;" onclick="app.nextWizardStep()">
+            Seuraava: Kategoria &rarr;
+          </button>
+          <button type="submit" id="btnWizardSubmit" class="btn-primary" style="flex: 1.6; padding: 12px 14px; font-size: 13px; background-color: var(--c-olive);">
             Tallenna kirjaus
           </button>
         </div>
@@ -1287,13 +1366,23 @@
           <input type="text" id="catFormName" required placeholder="esim. Kahvilat" class="form-input">
         </div>
         <div>
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Pääryhmä</label>
-          <select id="catFormGroup" class="form-input">
+          <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Pääryhmä</label>
+          <select id="catFormGroup" class="form-input" onchange="app.handleCatFormGroupChange(this.value)">
             <!-- Groups injected -->
           </select>
         </div>
         <div>
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuukausitavoite (€) / Katto (0 = ei kattoa)</label>
+          <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 6px;">Kategorian teemaväri</label>
+          <div id="catColorSwatches" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+            <!-- Swatches generated here -->
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="color" id="catFormColorPicker" value="#2563EB" style="width: 42px; height: 36px; border: 1px solid var(--c-border); background: none; border-radius: 8px; cursor: pointer;" onchange="app.selectCategoryColor(this.value)">
+            <input type="text" id="catFormColor" value="#2563EB" class="form-input font-num" style="flex: 1; padding: 8px 12px; font-size: 13px;" onchange="app.selectCategoryColor(this.value)">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuukausitavoite (€) / Katto (0 = ei kattoa)</label>
           <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="catFormBudget" placeholder="0,00" class="form-input font-num">
         </div>
         <div style="display: flex; align-items: center; gap: 10px; padding: 4px 0;">
@@ -1334,11 +1423,14 @@
         </div>
 
         <div>
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Ryhmän teemaväri</label>
+          <label style="font-size: 11px; font-weight: 600; color: var(--c-stone); display: block; margin-bottom: 6px;">Ryhmän teemaväri</label>
           <div id="groupColorSwatches" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
             <!-- Swatches generated here -->
           </div>
-          <input type="hidden" id="groupFormColor" value="#2563EB">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="color" id="groupFormColorPicker" value="#2563EB" style="width: 42px; height: 36px; border: 1px solid var(--c-border); background: none; border-radius: 8px; cursor: pointer;" onchange="app.selectGroupColor(this.value)">
+            <input type="text" id="groupFormColor" value="#2563EB" class="form-input font-num" style="flex: 1; padding: 8px 12px; font-size: 13px;" onchange="app.selectGroupColor(this.value)">
+          </div>
         </div>
 
         <div style="display: flex; gap: 8px; margin-top: 6px;">
@@ -1641,10 +1733,10 @@
   </div>
 
   <!-- Application Logic Modules -->
-  <script src="js/storage.js?v=20261102_1200"></script>
-  <script src="js/categories.js?v=20261102_1200"></script>
-  <script src="js/calculator.js?v=20261102_1200"></script>
-  <script src="js/exportImport.js?v=20261102_1200"></script>
-  <script src="app.js?v=20261102_1200"></script>
+  <script src="js/storage.js?v=20261102_1300"></script>
+  <script src="js/categories.js?v=20261102_1300"></script>
+  <script src="js/calculator.js?v=20261102_1300"></script>
+  <script src="js/exportImport.js?v=20261102_1300"></script>
+  <script src="app.js?v=20261102_1300"></script>
 </body>
 </html>
