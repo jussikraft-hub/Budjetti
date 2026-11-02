@@ -40,10 +40,10 @@ class BudjettiApp {
     this.paydayDay = 20;
     this.freeBalanceManual = null;
 
-    // Teemat & Ulkoasu
+    // Teemat & Ulkoasu (Copilot / Apple Clean Light & Dark)
     this.activeTheme = "original";
     this.customThemes = [];
-    this.themeMode = "dark"; // "dark" | "light" | "auto"
+    this.themeMode = "light"; // "light" | "dark" | "auto"
 
     // Master-Detail Bottom Sheet & Task Wizard
     this.activeBottomSheetCategoryId = null;
@@ -55,343 +55,98 @@ class BudjettiApp {
   }
 
   static get DEFAULT_THEMES() {
+    const cleanLight = {
+      bg: "#F6F8FA",
+      surface: "#F6F8FA",
+      surfaceLow: "#F1F5F9",
+      card: "#FFFFFF",
+      cardSub: "#F1F5F9",
+      cardElevated: "#FFFFFF",
+      border: "#E2E8F0",
+      borderActive: "#2563EB",
+      primary: "#2563EB",
+      primaryHover: "#1D4ED8",
+      text: "#0F172A",
+      muted: "#64748B",
+      olive: "#10B981",
+      income: "#10B981",
+      expense: "#EF4444",
+      inputBg: "#F8FAFC"
+    };
+    const cleanDark = {
+      bg: "#0F1115",
+      surface: "#0F1115",
+      surfaceLow: "#13161C",
+      card: "#181B22",
+      cardSub: "#212631",
+      cardElevated: "#252B37",
+      border: "#262B36",
+      borderActive: "#3B82F6",
+      primary: "#3B82F6",
+      primaryHover: "#60A5FA",
+      text: "#F8FAFC",
+      muted: "#94A3B8",
+      olive: "#34D399",
+      income: "#34D399",
+      expense: "#F87171",
+      inputBg: "#1D212A"
+    };
+    const sysFont = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif";
     return [
       {
         id: "original",
         name: "Original Kraft",
-        tag: "Sveitsiläinen Minimalismi · Suojattu",
+        tag: "Copilot / Apple Clean",
         isOriginal: true,
-        font: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif",
-        dark: {
-          bg: "#0F0F10",
-          surface: "#171718",
-          surfaceLow: "#131315",
-          card: "#1C1C1E",
-          cardSub: "#242427",
-          cardElevated: "#2C2C30",
-          border: "#2C2C2E",
-          borderActive: "#3E3E42",
-          primary: "#A6243C",
-          primaryHover: "#C9324E",
-          text: "#F2F2F7",
-          muted: "#98989F",
-          olive: "#4E8C6A",
-          income: "#34C759",
-          expense: "#E14B64",
-          inputBg: "#1C1C1E"
-        },
-        light: {
-          bg: "#F2F2F7",
-          surface: "#FFFFFF",
-          surfaceLow: "#F8F8FA",
-          card: "#FFFFFF",
-          cardSub: "#EFEFF4",
-          cardElevated: "#FFFFFF",
-          border: "#E5E5EA",
-          borderActive: "#C7C7CC",
-          primary: "#991B32",
-          primaryHover: "#7F1427",
-          text: "#1C1C1E",
-          muted: "#636366",
-          olive: "#2D6A4F",
-          income: "#1F8A4C",
-          expense: "#C81E3A",
-          inputBg: "#F2F2F7"
-        },
-        colors: {
-          bg: "#0F0F10",
-          surface: "#171718",
-          card: "#1C1C1E",
-          cardSub: "#242427",
-          border: "#2C2C2E",
-          borderActive: "#3E3E42",
-          primary: "#A6243C",
-          text: "#F2F2F7",
-          muted: "#98989F",
-          olive: "#4E8C6A",
-          income: "#34C759",
-          inputBg: "#1C1C1E"
-        }
+        font: sysFont,
+        dark: { ...cleanDark },
+        light: { ...cleanLight },
+        colors: { ...cleanLight }
       },
       {
         id: "midnight_executive",
         name: "Midnight Executive",
-        tag: "Apple HIG iOS 18 · Revolut Dark",
-        font: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif",
-        dark: {
-          bg: "#06090F",
-          surface: "#0C121D",
-          surfaceLow: "#090E17",
-          card: "#131C2E",
-          cardSub: "#1A263D",
-          cardElevated: "#22304C",
-          border: "#23324D",
-          borderActive: "#364C73",
-          primary: "#D4AF37",
-          primaryHover: "#E5C354",
-          text: "#F8FAFC",
-          muted: "#94A3B8",
-          olive: "#10B981",
-          income: "#34D399",
-          expense: "#FB7185",
-          inputBg: "#131C2E"
-        },
-        light: {
-          bg: "#F1F5F9",
-          surface: "#FFFFFF",
-          surfaceLow: "#F8FAFC",
-          card: "#FFFFFF",
-          cardSub: "#E2E8F0",
-          cardElevated: "#FFFFFF",
-          border: "#CBD5E1",
-          borderActive: "#94A3B8",
-          primary: "#0F172A",
-          primaryHover: "#1E293B",
-          text: "#0F172A",
-          muted: "#475569",
-          olive: "#059669",
-          income: "#059669",
-          expense: "#E11D48",
-          inputBg: "#F8FAFC"
-        },
-        colors: {
-          bg: "#06090F",
-          surface: "#0C121D",
-          card: "#131C2E",
-          cardSub: "#1A263D",
-          border: "#23324D",
-          borderActive: "#364C73",
-          primary: "#D4AF37",
-          text: "#F8FAFC",
-          muted: "#94A3B8",
-          olive: "#10B981",
-          income: "#34D399",
-          inputBg: "#131C2E"
-        }
+        tag: "Copilot Dark",
+        font: sysFont,
+        dark: { ...cleanDark },
+        light: { ...cleanLight },
+        colors: { ...cleanDark }
       },
       {
         id: "studio_white",
         name: "Studio Minimal White",
-        tag: "Material Design 3 · Copilot Tonal",
-        font: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif",
-        dark: {
-          bg: "#0E1116",
-          surface: "#151921",
-          surfaceLow: "#11151C",
-          card: "#1C212B",
-          cardSub: "#252B38",
-          cardElevated: "#2E3646",
-          border: "#2E3646",
-          borderActive: "#434E65",
-          primary: "#3B82F6",
-          primaryHover: "#60A5FA",
-          text: "#F3F4F6",
-          muted: "#9CA3AF",
-          olive: "#10B981",
-          income: "#34D399",
-          expense: "#F87171",
-          inputBg: "#1C212B"
-        },
-        light: {
-          bg: "#F6F8FA",
-          surface: "#FFFFFF",
-          surfaceLow: "#F9FAFB",
-          card: "#FFFFFF",
-          cardSub: "#EEF2F6",
-          cardElevated: "#FFFFFF",
-          border: "#E2E8F0",
-          borderActive: "#CBD5E1",
-          primary: "#2563EB",
-          primaryHover: "#1D4ED8",
-          text: "#0F172A",
-          muted: "#475569",
-          olive: "#059669",
-          income: "#059669",
-          expense: "#DC2626",
-          inputBg: "#F1F5F9"
-        },
-        colors: {
-          bg: "#F6F8FA",
-          surface: "#FFFFFF",
-          card: "#FFFFFF",
-          cardSub: "#EEF2F6",
-          border: "#E2E8F0",
-          borderActive: "#CBD5E1",
-          primary: "#2563EB",
-          text: "#0F172A",
-          muted: "#475569",
-          olive: "#059669",
-          income: "#059669",
-          inputBg: "#F1F5F9"
-        }
+        tag: "Copilot Light",
+        font: sysFont,
+        dark: { ...cleanDark },
+        light: { ...cleanLight },
+        colors: { ...cleanLight }
       },
       {
         id: "emerald_wealth",
         name: "Emerald Wealth",
-        tag: "Oura Wellness & Private Banking",
-        font: "'Newsreader', 'Playfair Display', Georgia, serif",
-        dark: {
-          bg: "#07100C",
-          surface: "#0C1A14",
-          surfaceLow: "#091510",
-          card: "#12261D",
-          cardSub: "#193327",
-          cardElevated: "#214233",
-          border: "#234535",
-          borderActive: "#34634D",
-          primary: "#D4A373",
-          primaryHover: "#E2B68B",
-          text: "#ECFDF5",
-          muted: "#86A899",
-          olive: "#34D399",
-          income: "#34D399",
-          expense: "#FB7185",
-          inputBg: "#12261D"
-        },
-        light: {
-          bg: "#F2F7F4",
-          surface: "#FFFFFF",
-          surfaceLow: "#F7FAF8",
-          card: "#FFFFFF",
-          cardSub: "#E4EFE9",
-          cardElevated: "#FFFFFF",
-          border: "#C9DFD3",
-          borderActive: "#9EC5B0",
-          primary: "#1B4D3E",
-          primaryHover: "#133A2E",
-          text: "#0D261E",
-          muted: "#4A6B5D",
-          olive: "#15803D",
-          income: "#15803D",
-          expense: "#BE123C",
-          inputBg: "#EDF5F0"
-        },
-        colors: {
-          bg: "#07100C",
-          surface: "#0C1A14",
-          card: "#12261D",
-          cardSub: "#193327",
-          border: "#234535",
-          borderActive: "#34634D",
-          primary: "#D4A373",
-          text: "#ECFDF5",
-          muted: "#86A899",
-          olive: "#34D399",
-          income: "#34D399",
-          inputBg: "#12261D"
-        }
+        tag: "Copilot Clean",
+        font: sysFont,
+        dark: { ...cleanDark },
+        light: { ...cleanLight },
+        colors: { ...cleanLight }
       },
       {
         id: "monochrome_pure",
         name: "Monochrome Pure",
-        tag: "Apple Wallet OLED · WCAG AAA",
-        font: "ui-monospace, 'SF Mono', Monaco, 'Cascadia Mono', monospace",
-        dark: {
-          bg: "#000000",
-          surface: "#0A0A0C",
-          surfaceLow: "#050507",
-          card: "#141416",
-          cardSub: "#1F1F22",
-          cardElevated: "#2A2A2E",
-          border: "#2C2C30",
-          borderActive: "#52525B",
-          primary: "#FFFFFF",
-          primaryHover: "#E4E4E7",
-          text: "#FFFFFF",
-          muted: "#A1A1AA",
-          olive: "#34D399",
-          income: "#34D399",
-          expense: "#F87171",
-          inputBg: "#141416"
-        },
-        light: {
-          bg: "#F4F4F5",
-          surface: "#FFFFFF",
-          surfaceLow: "#FAFAFA",
-          card: "#FFFFFF",
-          cardSub: "#E4E4E7",
-          cardElevated: "#FFFFFF",
-          border: "#D4D4D8",
-          borderActive: "#A1A1AA",
-          primary: "#09090B",
-          primaryHover: "#27272A",
-          text: "#09090B",
-          muted: "#52525B",
-          olive: "#15803D",
-          income: "#15803D",
-          expense: "#DC2626",
-          inputBg: "#F4F4F5"
-        },
-        colors: {
-          bg: "#000000",
-          surface: "#0A0A0C",
-          card: "#141416",
-          cardSub: "#1F1F22",
-          border: "#2C2C30",
-          borderActive: "#52525B",
-          primary: "#FFFFFF",
-          text: "#FFFFFF",
-          muted: "#A1A1AA",
-          olive: "#34D399",
-          income: "#34D399",
-          inputBg: "#141416"
-        }
+        tag: "Apple Wallet Clean",
+        font: sysFont,
+        dark: { ...cleanDark },
+        light: { ...cleanLight },
+        colors: { ...cleanLight }
       },
       {
         id: "warm_cashmere",
         name: "Warm Cashmere",
-        tag: "Nordic Editorial & Pehmeys",
-        font: "'Newsreader', 'Playfair Display', Georgia, serif",
-        dark: {
-          bg: "#141210",
-          surface: "#1C1917",
-          surfaceLow: "#181513",
-          card: "#26221F",
-          cardSub: "#312C28",
-          cardElevated: "#3D3631",
-          border: "#3D3631",
-          borderActive: "#574D46",
-          primary: "#E07A5F",
-          primaryHover: "#EC9178",
-          text: "#F5F2EB",
-          muted: "#A89F96",
-          olive: "#6CA378",
-          income: "#6CA378",
-          expense: "#E07A5F",
-          inputBg: "#26221F"
-        },
-        light: {
-          bg: "#F6F3EC",
-          surface: "#FFFFFF",
-          surfaceLow: "#FAF8F5",
-          card: "#FFFFFF",
-          cardSub: "#EDE7DC",
-          cardElevated: "#FFFFFF",
-          border: "#DDD4C6",
-          borderActive: "#C2B5A3",
-          primary: "#9C4132",
-          primaryHover: "#7F3226",
-          text: "#29231E",
-          muted: "#6E6359",
-          olive: "#3F6A4E",
-          income: "#3F6A4E",
-          expense: "#B93829",
-          inputBg: "#F4EFE6"
-        },
-        colors: {
-          bg: "#F6F3EC",
-          surface: "#FFFFFF",
-          card: "#FFFFFF",
-          cardSub: "#EDE7DC",
-          border: "#DDD4C6",
-          borderActive: "#C2B5A3",
-          primary: "#9C4132",
-          text: "#29231E",
-          muted: "#6E6359",
-          olive: "#3F6A4E",
-          income: "#3F6A4E",
-          inputBg: "#F4EFE6"
-        }
+        tag: "Copilot Clean",
+        font: sysFont,
+        dark: { ...cleanDark },
+        light: { ...cleanLight },
+        colors: { ...cleanLight }
       }
     ];
   }
@@ -658,20 +413,36 @@ class BudjettiApp {
     if (statusBadge) {
       if (freeBalance < 0) {
         statusBadge.innerText = "Ylitetty";
-        statusBadge.style.color = "var(--c-crimson)";
-        statusBadge.style.borderColor = "var(--c-crimson)";
-        statusBadge.style.background = "rgba(166,36,60,0.15)";
+        statusBadge.style.color = "var(--c-expense)";
+        statusBadge.style.borderColor = "rgba(239, 68, 68, 0.3)";
+        statusBadge.style.background = "rgba(239, 68, 68, 0.12)";
       } else if (dailyAllowance < 15) {
         statusBadge.innerText = "Tiukka";
-        statusBadge.style.color = "#d4a373";
-        statusBadge.style.borderColor = "#d4a373";
-        statusBadge.style.background = "rgba(212,163,115,0.15)";
+        statusBadge.style.color = "#D97706";
+        statusBadge.style.borderColor = "rgba(245, 158, 11, 0.35)";
+        statusBadge.style.background = "rgba(245, 158, 11, 0.12)";
       } else {
         statusBadge.innerText = "Puskuri OK";
-        statusBadge.style.color = "#9fbe8e";
-        statusBadge.style.borderColor = "rgba(92,106,81,0.4)";
-        statusBadge.style.background = "rgba(92,106,81,0.2)";
+        statusBadge.style.color = "var(--c-income)";
+        statusBadge.style.borderColor = "rgba(16, 185, 129, 0.25)";
+        statusBadge.style.background = "rgba(16, 185, 129, 0.12)";
       }
+    }
+
+    // Päivitetään Hero KPI -etenemispalkki
+    const periodMeterFill = document.getElementById("kpiPeriodMeterFill");
+    if (periodMeterFill) {
+      const totalAvail = (this.freeBalanceManual !== null && !isNaN(this.freeBalanceManual))
+        ? parseFloat(this.freeBalanceManual)
+        : stats.totalIncome;
+      let usedPct = 0;
+      if (totalAvail > 0) {
+        usedPct = Math.min(100, Math.max(0, Math.round((stats.totalExpense / totalAvail) * 100)));
+      } else if (stats.totalExpense > 0) {
+        usedPct = 100;
+      }
+      periodMeterFill.style.width = `${usedPct}%`;
+      periodMeterFill.style.backgroundColor = usedPct > 90 ? "var(--c-expense)" : "var(--c-primary)";
     }
 
     this.renderQuickChips();
@@ -1085,9 +856,9 @@ class BudjettiApp {
     container.innerHTML = "";
 
     const sorted = [...this.transactions].sort((a, b) => this.sortTransactionsDesc(a, b));
-    const recent = sorted.slice(0, 5);
+    const recent = sorted.slice(0, 4);
     if (recent.length === 0) {
-      container.innerHTML = `<p style="font-size: 11px; color: var(--c-stone); padding: 10px 0;">Ei kirjattuja tapahtumia.</p>`;
+      container.innerHTML = `<p style="font-size: 13px; color: var(--c-stone); padding: 14px 0;">Ei kirjattuja tapahtumia.</p>`;
       return;
     }
 
@@ -1096,31 +867,29 @@ class BudjettiApp {
       const isIncome = t.type === "income";
       const isCredit = t.amount < 0;
       const sign = (isIncome || isCredit) ? "+" : "-";
-      const color = (isIncome || isCredit) ? "#9fbe8e" : "#d4566e";
+      const color = (isIncome || isCredit) ? "var(--c-income)" : "var(--c-text-primary)";
       const displayAmt = Math.abs(t.amount);
+      const catColor = cat.color || "#2563EB";
+      const dParts = (t.date || "").split("-");
+      const shortDate = dParts.length === 3 ? `${parseInt(dParts[2], 10)}.${parseInt(dParts[1], 10)}.` : (t.date || "");
 
       const item = document.createElement("div");
-      item.className = "ledger-item";
-      item.style.cursor = "pointer";
-      item.title = "Klikkaa muokataksesi kirjausta";
-      item.onclick = (e) => {
-        if (!e.target.closest("button")) this.editTransaction(t.id);
-      };
+      item.className = "wallet-row";
+      item.title = "Napauta muokataksesi kirjausta";
+      item.onclick = () => this.editTransaction(t.id);
       item.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: #252527; color: var(--c-stone); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(165,160,136,0.15);">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <div class="wallet-row-left">
+          <div class="wallet-row-avatar" style="background-color: ${this.hexToRgba(catColor, 0.14)}; color: ${catColor};">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/>
             </svg>
           </div>
-          <div>
-            <p style="font-size: 12px; font-weight: 500; color: var(--c-text-primary);">${t.vendor || cat.name}</p>
-            <p style="font-size: 10px; color: var(--c-stone);">
-              ${FinanceCalculator.formatDateFi(t.date)} · ${cat.name} ${t.receiptId ? '· 📎' : ''} ${t.splitInfo ? '· <span style="color:#9fbe8e;">Jaettu</span>' : ''}
-            </p>
+          <div class="wallet-row-text">
+            <span class="wallet-row-title">${t.vendor || cat.name}</span>
+            <span class="wallet-row-sub">${shortDate} · ${cat.name}${t.receiptId ? ' · Kuitti' : ''}${t.splitInfo ? ' · Jaettu' : ''}</span>
           </div>
         </div>
-        <span class="font-num" style="font-size: 12px; font-weight: 500; color: ${color};">
+        <span class="wallet-row-amount font-num" style="color: ${color};">
           ${sign}${FinanceCalculator.formatCurrency(displayAmt)}
         </span>
       `;
@@ -1239,49 +1008,36 @@ class BudjettiApp {
       const isIncome = t.type === "income";
       const isCredit = t.amount < 0;
       const sign = (isIncome || isCredit) ? "+" : "-";
-      const color = (isIncome || isCredit) ? "#9fbe8e" : "#d4566e";
+      const color = (isIncome || isCredit) ? "var(--c-income)" : "var(--c-text-primary)";
       const displayAmt = Math.abs(t.amount);
-      const acc = this.accounts.find(a => a.id === t.accountId);
+      const catColor = cat.color || "#2563EB";
+      const dParts = (t.date || "").split("-");
+      const shortDate = dParts.length === 3 ? `${parseInt(dParts[2], 10)}.${parseInt(dParts[1], 10)}.` : (t.date || "");
 
       const row = document.createElement("div");
-      row.className = "ledger-item";
-      row.style.cursor = "pointer";
-      row.title = "Klikkaa muokataksesi kirjausta";
-      row.onclick = (e) => {
-        if (!e.target.closest("button")) this.editTransaction(t.id);
-      };
+      row.className = "wallet-row";
+      row.title = "Napauta muokataksesi tai poistaaksesi kirjausta";
+      row.onclick = () => this.editTransaction(t.id);
 
-      let splitHtml = "";
-      if (t.splitInfo) {
-        splitHtml = `<span class="tag-badge olive" style="margin-left: 6px;">Jaettu: ${t.splitInfo.person} ${(t.splitInfo.amount || 0).toFixed(2).replace(".", ",")} €</span>`;
-      }
+      const subtitleParts = [shortDate, t.desc || cat.name];
+      if (t.receiptId) subtitleParts.push("Kuitti");
+      if (t.splitInfo) subtitleParts.push(`Jaettu (${t.splitInfo.person})`);
 
       row.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-          <div style="min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-              <p style="font-size: 13px; font-weight: 500; color: var(--c-text-primary);">${t.vendor || cat.name}</p>
-              ${acc ? `<span class="tag-badge stone" style="font-size: 8px;">${acc.name}</span>` : ''}
-              ${splitHtml}
-            </div>
-            <p style="font-size: 11px; color: var(--c-stone);">
-              ${FinanceCalculator.formatDateFi(t.date)} · ${cat.name} ${t.desc ? '· ' + t.desc : ''} ${t.receiptId ? '· 📎' : ''}
-            </p>
+        <div class="wallet-row-left">
+          <div class="wallet-row-avatar" style="background-color: ${this.hexToRgba(catColor, 0.14)}; color: ${catColor};">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/>
+            </svg>
+          </div>
+          <div class="wallet-row-text">
+            <span class="wallet-row-title">${t.vendor || cat.name}</span>
+            <span class="wallet-row-sub">${subtitleParts.join(" · ")}</span>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-          <span class="font-num" style="font-size: 13px; font-weight: 500; color: ${color};">
-            ${sign}${FinanceCalculator.formatCurrency(displayAmt)}
-          </span>
-          <button onclick="app.editTransaction('${t.id}')" title="Muokkaa kirjausta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px;">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-          </button>
-          <button onclick="app.deleteTransaction('${t.id}')" title="Poista kirjaus" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px; font-size: 15px;">
-            &times;
-          </button>
-        </div>
+        <span class="wallet-row-amount font-num" style="color: ${color};">
+          ${sign}${FinanceCalculator.formatCurrency(displayAmt)}
+        </span>
       `;
       listContainer.appendChild(row);
     });
@@ -1736,39 +1492,29 @@ class BudjettiApp {
         const budget = c.budgetMonthly || 0;
         const hasBudget = budget > 0;
         const pct = hasBudget ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
-        let barColor = c.color || "var(--c-olive)";
-        if (pct > 90) barColor = "var(--c-crimson)";
+        let barColor = c.color || "var(--c-primary)";
+        if (pct > 90) barColor = "var(--c-expense)";
 
         catsHtml += `
           <div class="master-detail-row" onclick="app.openCategoryDetailBottomSheet('${c.id}')">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                <span style="width: 9px; height: 9px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
-                <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
-                ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.18); color: var(--c-crimson); font-family: ui-monospace, monospace; font-weight: 600;">PIKA</span>' : ''}
+              <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
+                <span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
+                ${c.quickAction ? '<span class="tag-badge" style="font-size: 9px;">PIKA</span>' : ''}
               </div>
               <div style="display: flex; align-items: center; gap: 8px;" class="font-num">
-                <span style="font-size: 12px; font-weight: 500; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'};">
-                  ${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-size: 11px; font-weight: 400;">/ ' + budget.toFixed(0) + ' €</span>' : '<span style="color: var(--c-stone); opacity: 0.65; font-size: 10px; font-weight: 400;">(ei tavoitetta)</span>'}
+                <span style="font-size: 14px; font-weight: 700; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'};">
+                  ${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-size: 12px; font-weight: 500;">/ ' + budget.toFixed(0) + ' €</span>' : ''}
                 </span>
-                <button type="button" onclick="event.stopPropagation(); app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
-                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                  </svg>
-                </button>
-                <button type="button" onclick="event.stopPropagation(); app.deleteCategory('${c.id}')" title="Poista kategoria" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px; font-size: 15px; line-height: 1;">&times;</button>
-                <svg class="master-detail-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <svg class="master-detail-chevron" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               </div>
             </div>
             ${hasBudget ? `
-              <div class="meter-track" style="margin-top: 6px; height: 5px; background: var(--c-card-sub); border-radius: 3px;">
-                <div class="meter-fill" style="width: ${pct}%; height: 100%; border-radius: 3px; background-color: ${barColor};"></div>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--c-stone); margin-top: 4px; font-family: ui-monospace, monospace;">
-                <span>${pct} % käytetty</span>
-                <span>${Math.max(0, budget - spent).toFixed(2).replace(".", ",")} € jäljellä</span>
+              <div class="meter-track" style="margin-top: 8px; height: 6px;">
+                <div class="meter-fill" style="width: ${pct}%; background-color: ${barColor};"></div>
               </div>
             ` : ''}
           </div>
@@ -2816,11 +2562,19 @@ class BudjettiApp {
     }
   }
 
-  // --- TEEMOJEN HALLINTA & KUSTOMOINTI (DAY / NIGHT & PRESETS) ---
+  // --- TEEMOJEN HALLINTA & KUSTOMOINTI (LIGHT / DARK / AUTO COPILOT CLEAN) ---
   async initTheme() {
     this.customThemes = await this.storage.getSetting("custom_themes", []);
     this.activeTheme = await this.storage.getSetting("active_theme", "original");
-    this.themeMode = await this.storage.getSetting("theme_mode", "dark");
+    const savedMode = await this.storage.getSetting("theme_mode", null);
+    const migratedV15 = await this.storage.getSetting("theme_v15_migrated", false);
+    if (!migratedV15) {
+      this.themeMode = "light";
+      await this.storage.setSetting("theme_mode", "light");
+      await this.storage.setSetting("theme_v15_migrated", true);
+    } else {
+      this.themeMode = savedMode || "light";
+    }
 
     this.updateThemeModeButtons();
 
@@ -2839,6 +2593,11 @@ class BudjettiApp {
     let current = all.find(t => t.id === this.activeTheme) || BudjettiApp.DEFAULT_THEMES[0];
     this.applyTheme(current, false);
     this.renderThemePresets();
+  }
+
+  toggleLightDarkQuick() {
+    const nextMode = this.isDarkModeActive() ? "light" : "dark";
+    this.setThemeMode(nextMode);
   }
 
   isDarkModeActive() {
@@ -3597,7 +3356,7 @@ class BudjettiApp {
   }
 
   openFabChoice() {
-    this.openModal("modalFabChoice");
+    this.openQuickAddModal();
   }
 
   chooseFabAction(action) {
@@ -3893,6 +3652,13 @@ class BudjettiApp {
     await this.refreshData();
   }
 
+  async deleteCurrentEditingTransaction() {
+    const id = document.getElementById("formTxId")?.value;
+    if (!id) return;
+    this.closeModal("modalQuickAdd");
+    await this.deleteTransaction(id);
+  }
+
   async deleteTransaction(id) {
     const ok = await this.showDialog({
       title: "Poista kirjaus",
@@ -3937,6 +3703,8 @@ class BudjettiApp {
       if (quickCheck) quickCheck.checked = !!cat.quickAction;
       if (quickAmountInput) quickAmountInput.value = cat.quickAmount > 0 ? cat.quickAmount : "";
       if (quickRow) quickRow.style.display = cat.quickAction ? "block" : "none";
+      const delCatBtn = document.getElementById("btnDeleteCurrentCat");
+      if (delCatBtn) delCatBtn.style.display = "block";
     } else {
       if (titleEl) titleEl.innerText = "Uusi kategoria";
       if (idInput) idInput.value = "";
@@ -3946,6 +3714,8 @@ class BudjettiApp {
       if (quickCheck) quickCheck.checked = false;
       if (quickAmountInput) quickAmountInput.value = "";
       if (quickRow) quickRow.style.display = "none";
+      const delCatBtn = document.getElementById("btnDeleteCurrentCat");
+      if (delCatBtn) delCatBtn.style.display = "none";
     }
 
     const modal = document.getElementById("modalCategory");
@@ -3984,6 +3754,13 @@ class BudjettiApp {
     this.storage.triggerBackgroundSync();
   }
 
+  async deleteCurrentEditingCategory() {
+    const id = document.getElementById("catFormId")?.value;
+    if (!id) return;
+    this.closeModal("modalCategory");
+    await this.deleteCategory(id);
+  }
+
   async deleteCategory(id) {
     const ok = await this.showDialog({
       title: "Poista kategoria",
@@ -4008,7 +3785,7 @@ class BudjettiApp {
     const titleEl = document.getElementById("modalGroupTitle");
     const deleteBtn = document.getElementById("btnDeleteCategoryGroup");
 
-    const palette = ["#5C6A51", "#A6243C", "#683F26", "#A5A088", "#7A8288", "#4A6B82", "#826B4A", "#4B5320", "#3E424B"];
+    const palette = ["#2563EB", "#6366F1", "#10B981", "#F59E0B", "#0EA5E9", "#EC4899", "#8B5CF6", "#14B8A6", "#64748B"];
     let activeColor = palette[0];
 
     if (groupId) {

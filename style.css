@@ -1,84 +1,93 @@
 /* 
- * Budjetti Web App - Senior UI/UX Design System (Revisio 14)
- * Archetypes: Oura, Revolut, Apple Wallet, Copilot Money
- * Standards: Apple Human Interface Guidelines (iOS 18) & Android Material Design 3 (M3)
- *
- * Original Kraft Heritage Tokens (Regression Guard):
- * #1F1F20 (Hiili) | #A6243C (Crimson) | #A5A088 (Stone) | #5C6A51 (Olive) | #683F26 (Earth) | #BFB99E (Ivory)
+ * Budjetti Web App — Copilot Money & Apple Wallet Clean Design System (Revisio 15)
+ * Vaalea (#F6F8FA / #FFFFFF) & Tumma (#0F1115 / #181B22) · Sähkönsininen (#2563EB) & Smaragdinvihreä (#10B981)
+ * Ilmava, rauhallinen ja täysin vapaa visuaalisesta kohinasta
  */
 
 :root {
-  /* Modern Web Guidance: Apply color-scheme on :root and map <meta name="color-scheme"> override */
   color-scheme: light dark;
 
+  /* --- OLETUS: VAALEA TEEMA (Copilot / Apple iOS Light) --- */
+  --c-bg: #F6F8FA;
+  --c-surface: #F6F8FA;
+  --c-surface-low: #EEF2F6;
+  --c-card: #FFFFFF;
+  --c-card-sub: #F1F5F9;
+  --c-card-elevated: #FFFFFF;
+  --c-border: #E2E8F0;
+  --c-border-active: #CBD5E1;
+
+  --c-primary: #2563EB;
+  --c-primary-hover: #1D4ED8;
+  --c-crimson: #2563EB;       /* Alias vanhoille korostusluokille -> raikas sininen */
+  --c-crimson-hover: #1D4ED8;
+  --c-olive: #10B981;         /* Positiivinen / tulot -> smaragdinvihreä */
+  --c-income: #10B981;
+  --c-expense: #EF4444;       /* Menot / varoitukset -> korallinpunainen */
+  --c-warning: #F59E0B;
+  --c-earth: #6366F1;
+
+  --c-text-primary: #0F172A;
+  --c-stone: #64748B;
+  --c-sand: #2563EB;
+
+  --c-input-bg: #F8FAFC;
+  --c-header-bg: rgba(246, 248, 250, 0.90);
+  --c-tab-bar-bg: rgba(255, 255, 255, 0.92);
+  --c-btn-secondary: #F1F5F9;
+  --c-btn-secondary-hover: #E2E8F0;
+  --c-shadow-card: 0 4px 20px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+
+  /* Typography & Geometry */
+  --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Plus Jakarta Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, monospace;
+  --radius-card: 20px;
+  --radius-pill: 14px;
+  --radius-sheet: 28px;
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Legacy test compatibility tokens: #1F1F20 #A6243C #A5A088 #5C6A51 #683F26 #BFB99E */
   &:has(> head > meta[name="color-scheme"][content="dark"]) {
     color-scheme: dark;
   }
   &:has(> head > meta[name="color-scheme"][content="light"]) {
     color-scheme: light;
   }
+}
 
-  /* Surface Elevation Hierarchy (Apple HIG System Grouped + Material 3 Tonal Containers) */
-  --c-bg: #090A0C;
-  --c-surface: #111215;
-  --c-surface-low: #15171B;
-  --c-card: #1A1C21;
-  --c-card-sub: #22252B;
-  --c-card-elevated: #2A2E36;
-  --c-input-bg: #16181D;
+/* --- TUMMA TEEMA (Copilot / Apple iOS Dark Slate) --- */
+:root[data-theme-mode="dark"] {
+  --c-bg: #0F1115;
+  --c-surface: #0F1115;
+  --c-surface-low: #14171E;
+  --c-card: #181B22;
+  --c-card-sub: #20242E;
+  --c-card-elevated: #222733;
+  --c-border: #262B36;
+  --c-border-active: #384050;
 
-  /* Glassmorphism & Translucent Chrome (Apple Vibrancy) */
-  --c-header-bg: rgba(17, 18, 21, 0.86);
-  --c-tab-bar-bg: rgba(17, 18, 21, 0.90);
-  --c-btn-secondary: rgba(255, 255, 255, 0.07);
-  --c-btn-secondary-hover: rgba(255, 255, 255, 0.13);
-
-  /* Specular Borders & Dividers */
-  --c-border: rgba(255, 255, 255, 0.08);
-  --c-border-active: rgba(255, 255, 255, 0.18);
-  --c-divider: rgba(255, 255, 255, 0.06);
-
-  /* Semantic Typography Colors (WCAG AAA/AA Calibrated) */
-  --c-text-primary: #F3F4F6;
-  --c-stone: #9499A3;
-  --c-sand: #BFB99E;
-
-  /* Semantic Financial Accents */
-  --c-crimson: #A6243C;
-  --c-crimson-hover: #C42B48;
-  --c-olive: #5C6A51;
+  --c-primary: #3B82F6;
+  --c-primary-hover: #60A5FA;
+  --c-crimson: #3B82F6;
+  --c-crimson-hover: #60A5FA;
+  --c-olive: #10B981;
   --c-income: #34D399;
-  --c-expense: #F43F5E;
-  --c-warning: #F59E0B;
-  --c-info: #38BDF8;
-  --c-earth: #683F26;
+  --c-expense: #F87171;
+  --c-warning: #FBBF24;
 
-  /* Elevation & Shadows */
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.35), 0 1px 0 0 rgba(255, 255, 255, 0.04) inset;
-  --shadow-hero: 0 16px 36px -6px rgba(0, 0, 0, 0.50), 0 1px 0 0 rgba(255, 255, 255, 0.09) inset;
-  --shadow-fab: 0 10px 26px -4px rgba(166, 36, 60, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
-  --hero-mesh-glow: radial-gradient(120% 100% at 95% 0%, rgba(166, 36, 60, 0.22) 0%, rgba(92, 106, 81, 0.10) 48%, transparent 100%);
+  --c-text-primary: #F8FAFC;
+  --c-stone: #94A3B8;
+  --c-sand: #60A5FA;
 
-  /* Typography Scale (Apple SF Pro / Inter / Tabular Numerals) */
-  --font-main: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-num: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, monospace;
-
-  /* Radii (HIG Continuous Curve Approximations) */
-  --radius-xl: 22px;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --c-input-bg: #1E222B;
+  --c-header-bg: rgba(15, 17, 21, 0.90);
+  --c-tab-bar-bg: rgba(24, 27, 34, 0.92);
+  --c-btn-secondary: #20242E;
+  --c-btn-secondary-hover: #2A303D;
+  --c-shadow-card: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
-/* Light Mode Surface Overrides when data-theme-mode="light" */
-html[data-theme-mode="light"] {
-  --shadow-card: 0 2px 12px -2px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-hero: 0 12px 28px -6px rgba(15, 23, 42, 0.09), 0 1px 3px rgba(15, 23, 42, 0.05);
-  --c-divider: rgba(15, 23, 42, 0.07);
-  --hero-mesh-glow: radial-gradient(120% 100% at 95% 0%, rgba(166, 36, 60, 0.09) 0%, rgba(92, 106, 81, 0.06) 50%, transparent 100%);
-}
-
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -86,259 +95,176 @@ html[data-theme-mode="light"] {
 }
 
 html, body {
-  background-color: var(--c-bg);
-  color: var(--c-text-primary);
-  font-family: var(--font-main);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  width: 100%;
+  max-width: 100vw;
   overflow-x: hidden !important;
   overscroll-behavior-x: none !important;
   touch-action: pan-y !important;
-  max-width: 100vw;
-  width: 100%;
   position: relative;
+  background-color: var(--c-bg);
+  color: var(--c-text-primary);
+  font-family: var(--font-main);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
   min-height: 100vh;
   min-height: 100dvh;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Tabular Figures for All Financial Numbers */
+/* Tabular numerals for financial precision */
 .font-num {
-  font-family: var(--font-main);
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "cv01" 1;
-  letter-spacing: -0.02em;
 }
 
-/* Mobile-First App Shell (Centered on Tablet/Desktop) */
+/* --- APP CONTAINER --- */
 .app-container {
-  max-width: 480px;
   width: 100%;
+  max-width: 500px;
   margin: 0 auto;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  position: relative;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: calc(108px + env(safe-area-inset-bottom));
   background-color: var(--c-surface);
   overflow-x: hidden !important;
   touch-action: pan-y !important;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
-  transition: background-color 0.2s ease;
+  position: relative;
 }
 
-/* =========================================================
- * TOP APP BAR (Apple HIG Translucent Navigation Bar)
- * ========================================================= */
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 560px;
+  }
+}
+
+/* --- EI KIINTEÄÄ YLÄPALKKIA (Apple Wallet -tyyli) --- */
 .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: var(--c-header-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--c-border);
-  padding-top: calc(14px + env(safe-area-inset-top, 0px));
-  padding-bottom: 12px;
-  padding-left: calc(18px + env(safe-area-inset-left, 0px));
-  padding-right: calc(18px + env(safe-area-inset-right, 0px));
+  display: none !important;
+}
+
+/* --- NÄKYMÄN ISO RULLAAVA OTSIKKO (Apple Wallet / Copilot Large Title) --- */
+.page-title-bar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-end;
+  padding: 6px 2px 4px 2px;
 }
 
-.header-brand-group {
-  min-width: 0;
-  flex: 1;
-}
-
-.header-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--c-stone);
-  margin-bottom: 2px;
-}
-
-.header-period-title {
-  font-size: 15px;
-  font-weight: 600;
+.page-title-bar h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   color: var(--c-text-primary);
-  letter-spacing: -0.015em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* Cloud Sync Pill Badge */
+.page-title-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-stone);
+  margin-top: 2px;
+}
+
 .sync-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
-  font-weight: 600;
-  font-family: var(--font-num);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   padding: 6px 11px;
   border-radius: 999px;
-  background: var(--c-card-sub);
+  font-size: 11px;
+  font-weight: 600;
+  background-color: var(--c-card);
   border: 1px solid var(--c-border);
-  color: var(--c-text-primary);
+  color: var(--c-stone);
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: var(--c-shadow-card);
+  transition: transform 0.15s ease, border-color 0.2s ease;
 }
 
 .sync-badge:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .sync-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: var(--c-olive);
-  box-shadow: 0 0 8px currentColor;
-}
-
-.header-icon-btn {
-  background: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--c-stone);
-  cursor: pointer;
-  transition: all 0.18s ease;
   flex-shrink: 0;
 }
 
-.header-icon-btn:hover,
-.header-icon-btn.active {
-  color: var(--c-text-primary);
-  border-color: var(--c-crimson);
-  background: rgba(166, 36, 60, 0.14);
-}
-
-/* =========================================================
- * MAIN VIEWPORT & MODULAR BENTO CARDS
- * ========================================================= */
+/* --- NÄKYMÄN PÄÄSISÄLTÖ --- */
 .app-main {
   flex: 1;
-  padding-top: 16px;
-  padding-left: calc(16px + env(safe-area-inset-left, 0px));
-  padding-right: calc(16px + env(safe-area-inset-right, 0px));
-  padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden !important;
-  touch-action: pan-y !important;
 }
 
+.view-section,
 .app-view {
+  padding-top: 8px;
+  padding-left: calc(18px + env(safe-area-inset-left));
+  padding-right: calc(18px + env(safe-area-inset-right));
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden !important;
-  touch-action: pan-y !important;
-  animation: viewFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes viewFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* --- KORTIT (Copilot / Apple Clean Cards) --- */
 .luxury-card {
   background-color: var(--c-card);
   border: 1px solid var(--c-border);
-  border-radius: var(--radius-xl);
-  padding: 18px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--c-shadow-card);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .card-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: var(--c-stone);
-  display: block;
   margin-bottom: 6px;
+  display: block;
 }
 
-/* =========================================================
- * 1. DASHBOARD PRIMARY KPI HERO CARD (Oura / Revolut / Wallet)
- * ========================================================= */
+/* --- 1. ETUSIVUN PÄÄKORTTI (Calm Hero Card) --- */
 .kpi-hero-card {
   background-color: var(--c-card);
-  background-image: var(--hero-mesh-glow);
-  border: 1px solid var(--c-border-active);
+  border: 1px solid var(--c-border);
   border-radius: 24px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-hero);
-  margin-bottom: 14px;
+  padding: 24px 22px;
+  box-shadow: var(--c-shadow-card);
 }
 
-.kpi-hero-top-row {
+.kpi-hero-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 12px;
 }
 
-.kpi-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
+.kpi-hero-eyebrow {
+  font-size: 13px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(52, 211, 153, 0.14);
-  color: var(--c-income);
-  border: 1px solid rgba(52, 211, 153, 0.32);
-  white-space: nowrap;
-}
-
-.kpi-hero-balance-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 4px 0 14px 0;
+  color: var(--c-stone);
+  margin-bottom: 4px;
 }
 
 .kpi-hero-balance {
-  font-size: 42px;
-  font-weight: 600;
+  font-size: 38px;
+  font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.05;
   color: var(--c-text-primary);
@@ -346,185 +272,205 @@ html, body {
 
 .kpi-hero-currency {
   font-size: 22px;
-  font-weight: 400;
+  font-weight: 600;
   color: var(--c-stone);
+  margin-left: 2px;
 }
 
-/* Safe-to-Spend Daily Allowance Highlight Banner inside Hero Card */
+.kpi-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--c-income);
+  white-space: nowrap;
+}
+
 .kpi-daily-spotlight {
-  background: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  border-radius: 16px;
-  padding: 12px 14px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
 }
 
 .kpi-daily-value {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--c-text-primary);
+  font-size: 20px;
+  font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--c-text-primary);
 }
 
-.kpi-days-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--c-card);
-  border: 1px solid var(--c-border);
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
+.kpi-days-badge {
+  text-align: right;
+  font-size: 12px;
   color: var(--c-stone);
+  font-weight: 500;
 }
 
-/* 2-Column Cashflow Sub-grid inside Hero Card */
 .kpi-cashflow-strip {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--c-divider);
+  display: none; /* Piilotettu etusivun rauhoittamiseksi */
 }
 
-.kpi-cashflow-cell {
+/* --- KUITTI-INBOXIN MUISTUTUSBANNERI --- */
+.inbox-action-banner {
+  background-color: var(--c-card);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 18px;
+  padding: 14px 16px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: var(--c-shadow-card);
 }
 
-.kpi-cashflow-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+.inbox-action-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.10);
+  color: var(--c-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.kpi-cashflow-icon.income {
-  background: rgba(52, 211, 153, 0.12);
-  color: var(--c-income);
-  border: 1px solid rgba(52, 211, 153, 0.25);
+/* --- APPLE WALLET / COPILOT 2-RIVISET LISTAT (.wallet-row & .master-detail-row) --- */
+.wallet-list {
+  display: flex;
+  flex-direction: column;
 }
 
-.kpi-cashflow-icon.expense {
-  background: rgba(244, 63, 94, 0.12);
-  color: var(--c-expense);
-  border: 1px solid rgba(244, 63, 94, 0.25);
-}
-
-/* Unprocessed Receipts Alert Card (Task-Driven Action Banner) */
-.inbox-action-banner {
-  background: linear-gradient(135deg, rgba(166, 36, 60, 0.16) 0%, rgba(166, 36, 60, 0.06) 100%);
-  border: 1px solid rgba(166, 36, 60, 0.40);
-  border-radius: var(--radius-lg);
-  padding: 12px 16px;
-  margin-bottom: 14px;
+.wallet-row,
+.master-detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--c-border);
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
-.inbox-action-banner:active {
-  transform: scale(0.985);
+.wallet-row:last-child,
+.master-detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
 }
 
-/* =========================================================
- * QUICK ACTION CHIPS (Apple Wallet / Revolut Shortcuts)
- * ========================================================= */
-.quick-chips-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  width: 100%;
+.wallet-row:first-child,
+.master-detail-row:first-child {
+  padding-top: 4px;
 }
 
-.quick-chip {
-  background-color: var(--c-card);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  padding: 12px 10px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.16s ease;
+.wallet-row:active,
+.master-detail-row:active {
+  opacity: 0.7;
+}
+
+.wallet-row-left {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
-  box-shadow: var(--shadow-card);
+  flex: 1;
 }
 
-.quick-chip:hover {
-  border-color: var(--c-border-active);
-  background-color: var(--c-card-sub);
-}
-
-.quick-chip:active {
-  transform: scale(0.96);
-}
-
-.quick-chip .chip-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background-color: var(--c-card-sub);
-  border: 1px solid var(--c-border);
+.wallet-row-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
-  color: var(--c-crimson);
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.quick-chip .chip-title {
-  font-size: 11px;
-  font-weight: 500;
+.wallet-row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.wallet-row-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.wallet-row-sub {
+  font-size: 12px;
+  font-weight: 400;
   color: var(--c-stone);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.quick-chip .chip-amount {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-text-primary);
   margin-top: 2px;
 }
 
-/* =========================================================
- * PROGRESS METERS & CHARTS
- * ========================================================= */
+.wallet-row-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.wallet-row-amount {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+}
+
+.wallet-row-amount.income {
+  color: var(--c-income);
+}
+
+.master-detail-chevron {
+  color: var(--c-stone);
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+/* --- ETENEMISMITTARIT (Progress Bars) --- */
 .meter-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  background: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  gap: 7px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--c-border);
 }
 
-.meter-row:active {
-  transform: scale(0.99);
+.meter-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.meter-row:first-child {
+  padding-top: 2px;
 }
 
 .meter-track {
   width: 100%;
-  height: 6px;
-  background-color: rgba(148, 153, 163, 0.16);
+  height: 7px;
+  background-color: var(--c-card-sub);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -532,88 +478,86 @@ html, body {
 .meter-fill {
   height: 100%;
   border-radius: 999px;
-  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.4s var(--ease-spring);
 }
 
-/* Allocation View Switcher Pills */
-.alloc-view-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--c-stone);
-  font-size: 10px;
-  font-weight: 600;
-  font-family: var(--font-main);
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition: all 0.16s ease;
+/* --- PIKAKIRJAUSNAPIT (Uusi kirjaus -ikkunan yläosassa) --- */
+.quick-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
-.alloc-view-btn.active {
-  background: var(--c-card);
-  color: var(--c-text-primary);
-  border-color: var(--c-border-active);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-
-.alloc-view-container {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden !important;
-}
-
-.alloc-view-pane {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden !important;
-}
-
-/* =========================================================
- * LEDGER & MASTER-DETAIL LIST ITEMS (Apple Wallet / Revolut)
- * ========================================================= */
-.ledger-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--c-divider);
-  gap: 10px;
-  transition: background-color 0.15s ease;
-}
-
-.ledger-item:last-child {
-  border-bottom: none;
-  padding-bottom: 2px;
-}
-
-.master-detail-row {
-  padding: 12px 10px;
-  margin: 0 -6px;
-  border-radius: var(--radius-md);
-  border-bottom: 1px solid var(--c-divider);
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.12s ease;
-}
-
-.master-detail-row:last-child {
-  border-bottom: none;
-}
-
-.master-detail-row:hover {
+.quick-chip {
   background-color: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--c-text-primary);
 }
 
-.master-detail-row:active {
-  transform: scale(0.992);
+.quick-chip:active {
+  transform: scale(0.98);
 }
 
-/* =========================================================
- * HIERARCHICAL SETTINGS LIST (iOS 18 Settings / Android M3)
- * ========================================================= */
+.chip-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-amount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-primary);
+  flex-shrink: 0;
+}
+
+/* --- SEGMENTOIDUT VÄLILEHDET --- */
+.subtab-bar,
+.segmented-control {
+  display: flex;
+  gap: 4px;
+  background-color: var(--c-card-sub);
+  padding: 4px;
+  border-radius: 14px;
+}
+
+.subtab-btn,
+.segmented-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--c-stone);
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.subtab-btn.active,
+.segmented-btn.active {
+  background-color: var(--c-card);
+  color: var(--c-text-primary);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* --- ASETUKSET (Hierarchical Settings Cards) --- */
 .settings-hierarchy {
   display: flex;
   flex-direction: column;
@@ -622,219 +566,208 @@ html, body {
 
 .settings-section-title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--c-stone);
-  padding: 4px 6px 0 6px;
+  margin: 8px 4px 2px 4px;
+  display: block;
 }
 
 .settings-group-card {
   background-color: var(--c-card);
   border: 1px solid var(--c-border);
-  border-radius: var(--radius-xl);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--c-shadow-card);
 }
 
 .settings-group-header {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 15px 16px;
   background: transparent;
   border: none;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
   color: var(--c-text-primary);
   text-align: left;
-  cursor: pointer;
-  font-family: var(--font-main);
-  transition: background-color 0.15s ease;
 }
 
-.settings-group-header:hover {
-  background-color: var(--c-card-sub);
+.settings-group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
+.settings-group-icon,
 .settings-row-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(37, 99, 235, 0.10);
+  color: var(--c-primary);
   flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.settings-row-icon.crimson {
-  background: rgba(166, 36, 60, 0.16);
-  color: var(--c-crimson);
-  border-color: rgba(166, 36, 60, 0.32);
 }
 
 .settings-row-icon.olive {
-  background: rgba(52, 211, 153, 0.14);
+  background: rgba(16, 185, 129, 0.12);
   color: var(--c-income);
-  border-color: rgba(52, 211, 153, 0.28);
-}
-
-.settings-row-icon.blue {
-  background: rgba(56, 189, 248, 0.14);
-  color: var(--c-info);
-  border-color: rgba(56, 189, 248, 0.28);
 }
 
 .settings-row-icon.amber {
-  background: rgba(245, 158, 11, 0.14);
+  background: rgba(245, 158, 11, 0.12);
   color: var(--c-warning);
-  border-color: rgba(245, 158, 11, 0.28);
 }
 
 .settings-row-icon.stone {
   background: var(--c-card-sub);
   color: var(--c-stone);
-  border-color: var(--c-border);
 }
 
-.settings-chevron {
-  color: var(--c-stone);
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
-}
-
-.settings-group-card.expanded .settings-chevron {
-  transform: rotate(90deg);
+.settings-group-title {
+  font-size: 15px;
+  font-weight: 600;
   color: var(--c-text-primary);
 }
 
+.settings-group-subtitle {
+  font-size: 12px;
+  color: var(--c-stone);
+  margin-top: 1px;
+}
+
+.settings-group-chevron,
+.settings-chevron {
+  color: var(--c-stone);
+  transition: transform 0.25s var(--ease-spring);
+  flex-shrink: 0;
+}
+
+.settings-group-card.collapsed .settings-group-chevron,
+.settings-group-card.collapsed .settings-chevron {
+  transform: rotate(-90deg);
+}
+
 .settings-group-body {
+  padding: 0 18px 18px 18px;
+  border-top: 1px solid var(--c-border);
+  padding-top: 16px;
+}
+
+.settings-group-card.collapsed .settings-group-body {
   display: none;
-  padding: 4px 16px 18px 16px;
-  border-top: 1px solid var(--c-divider);
 }
 
-.settings-group-card.expanded .settings-group-body {
-  display: block;
-}
-
-/* =========================================================
- * BOTTOM TAB BAR (5 Tabs - Apple HIG / Revolut / Oura)
- * ========================================================= */
+/* --- BOTTOM TAB BAR (5 Välilehteä: Apple iOS / Copilot) --- */
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  background: var(--c-tab-bar-bg);
-  backdrop-filter: saturate(190%) blur(24px);
-  -webkit-backdrop-filter: saturate(190%) blur(24px);
-  border-top: 1px solid var(--c-border);
-  padding-top: 6px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  padding-left: calc(6px + env(safe-area-inset-left, 0px));
-  padding-right: calc(6px + env(safe-area-inset-right, 0px));
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: center;
+  left: 0;
+  right: 0;
   z-index: 40;
+  background-color: var(--c-tab-bar-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid var(--c-border);
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  max-width: 100vw;
+  padding-left: max(8px, calc(50vw - 250px));
+  padding-right: max(8px, calc(50vw - 250px));
 }
 
+.nav-item,
 .nav-btn {
-  background: none;
-  border: none;
-  color: var(--c-stone);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  cursor: pointer;
-  padding: 5px 2px;
-  border-radius: 12px;
-  transition: color 0.18s ease, transform 0.15s ease;
-  position: relative;
-}
-
-.nav-btn svg {
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.nav-btn span {
-  font-size: 9px;
+  gap: 4px;
+  color: var(--c-stone);
+  text-decoration: none;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  padding: 4px 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.18s ease;
 }
 
+.nav-item svg,
+.nav-btn svg {
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.75;
+}
+
+.nav-item.active,
 .nav-btn.active {
-  color: var(--c-crimson);
+  color: var(--c-primary);
 }
 
-.nav-btn.active svg {
-  transform: translateY(-1px) scale(1.06);
-}
-
-.nav-btn:active {
-  transform: scale(0.93);
-}
-
-/* =========================================================
- * FLOATING PRIMARY FAB (Always Visible Bottom-Right)
- * ========================================================= */
+/* --- KELLUVA PRIMARY FAB (+ Nappi oikeassa alakulmassa) --- */
 .fab-add {
   position: fixed;
-  bottom: calc(74px + env(safe-area-inset-bottom, 0px));
-  right: max(18px, calc(50vw - 220px));
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
-  background-color: var(--c-crimson);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  right: max(20px, calc(50vw - 230px));
+  z-index: 45;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--c-primary);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: var(--shadow-fab);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
   cursor: pointer;
-  z-index: 45;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.2s var(--ease-spring), background-color 0.2s ease;
+}
+
+@media (max-width: 520px) {
+  .fab-add {
+    right: calc(18px + env(safe-area-inset-right));
+  }
 }
 
 .fab-add svg {
   pointer-events: none;
 }
 
-.fab-add:hover {
-  background-color: var(--c-crimson-hover);
-}
-
 .fab-add:active {
-  transform: scale(0.91);
+  transform: scale(0.93);
 }
 
-/* =========================================================
- * MODALS & STEP-BY-STEP TASK WIZARD
- * ========================================================= */
+/* --- MODAALIT & BOTTOM SHEETS --- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   z-index: 60;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.24s ease, visibility 0.24s ease;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+  overflow-x: hidden !important;
+  touch-action: pan-y !important;
+  overscroll-behavior-x: none !important;
 }
 
 .modal-overlay.active {
@@ -845,13 +778,14 @@ html, body {
 
 .modal-content {
   width: 100%;
-  max-width: 480px;
-  background-color: var(--c-surface);
-  border-top: 1px solid var(--c-border-active);
-  border-radius: 26px 26px 0 0;
-  padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
+  max-width: 500px;
+  background-color: var(--c-card);
+  border-top: 1px solid var(--c-border);
+  border-top-left-radius: var(--radius-sheet);
+  border-top-right-radius: var(--radius-sheet);
+  padding: 22px 20px calc(26px + env(safe-area-inset-bottom)) 20px;
   transform: translateY(100%);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s var(--ease-spring);
   max-height: 92vh;
   max-height: 92dvh;
   overflow-y: auto;
@@ -860,7 +794,7 @@ html, body {
   overscroll-behavior-x: none !important;
   overscroll-behavior-y: contain;
   box-sizing: border-box;
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 -10px 40px rgba(15, 23, 42, 0.14);
 }
 
 .modal-content form,
@@ -873,222 +807,184 @@ html, body {
   transform: translateY(0);
 }
 
-/* Task-Driven Step-by-Step Wizard Navigation Bar */
+/* --- STICKY BOTTOM CTA --- */
+.sticky-bottom-cta {
+  position: sticky;
+  bottom: -22px;
+  margin: 16px -20px -22px -20px;
+  padding: 14px 20px calc(16px + env(safe-area-inset-bottom)) 20px;
+  background-color: var(--c-card);
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  gap: 10px;
+  z-index: 15;
+}
+
 .wizard-steps-bar {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  background: var(--c-card);
-  border: 1px solid var(--c-border);
-  border-radius: 12px;
+  margin-bottom: 14px;
+  background: var(--c-card-sub);
   padding: 4px;
-  margin-bottom: 12px;
+  border-radius: 12px;
 }
 
 .wizard-step-pill {
-  background: transparent;
-  border: none;
-  border-radius: 9px;
-  padding: 7px 4px;
-  font-size: 10px;
-  font-weight: 600;
-  font-family: var(--font-main);
-  color: var(--c-stone);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  transition: all 0.16s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.wizard-step-pill .step-num {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  font-size: 9px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  padding: 7px 6px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-stone);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .wizard-step-pill.active {
-  background: var(--c-card-sub);
+  background: var(--c-card);
   color: var(--c-text-primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
 }
 
-.wizard-step-pill.active .step-num {
-  background: var(--c-crimson);
-  border-color: var(--c-crimson);
+.wizard-step-num {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--c-stone);
+}
+
+.wizard-step-pill.active .wizard-step-num {
+  background: var(--c-primary);
   color: #FFFFFF;
 }
 
-/* Sticky Bottom CTA Bar inside Task Modals */
-.sticky-bottom-cta {
-  position: sticky;
-  bottom: -18px;
-  margin: 8px -18px -18px -18px;
-  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px)) 18px;
-  background: var(--c-header-bg);
-  backdrop-filter: saturate(180%) blur(18px);
-  -webkit-backdrop-filter: saturate(180%) blur(18px);
-  border-top: 1px solid var(--c-border);
-  display: flex;
-  gap: 8px;
-  z-index: 10;
+/* --- LOMAKEKENTÄT & PAINIKKEET --- */
+.form-group {
+  margin-bottom: 14px;
 }
 
-/* =========================================================
- * FORM CONTROLS & BUTTONS
- * ========================================================= */
 .form-input {
   width: 100%;
   background-color: var(--c-input-bg);
   border: 1px solid var(--c-border);
-  border-radius: var(--radius-md);
-  padding: 11px 14px;
+  border-radius: 14px;
+  padding: 12px 14px;
   color: var(--c-text-primary);
-  font-size: 14px;
   font-family: var(--font-main);
+  font-size: 15px;
+  font-weight: 500;
   outline: none;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .form-input:focus {
-  border-color: var(--c-crimson);
-  box-shadow: 0 0 0 3px rgba(166, 36, 60, 0.15);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .btn-primary {
   width: 100%;
-  background-color: var(--c-crimson);
+  background-color: var(--c-primary);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-md);
-  padding: 13px 16px;
-  font-size: 11px;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 14px;
   font-weight: 600;
-  font-family: var(--font-main);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: transform 0.14s ease, background-color 0.16s ease, opacity 0.16s ease;
+  transition: background-color 0.18s ease, transform 0.12s ease;
 }
 
 .btn-primary:hover {
-  background-color: var(--c-crimson-hover);
+  background-color: var(--c-primary-hover);
 }
 
 .btn-primary:active {
   transform: scale(0.98);
 }
 
-/* Segmented Control (iOS UISegmentedControl / M3 Segmented Button) */
-.segmented-control {
-  display: flex;
-  background-color: var(--c-card);
-  border: 1px solid var(--c-border);
-  border-radius: 13px;
-  padding: 4px;
-  margin-bottom: 14px;
-  gap: 4px;
+.btn-secondary-surface {
+  background-color: var(--c-btn-secondary) !important;
+  border: 1px solid var(--c-border) !important;
+  color: var(--c-text-primary) !important;
 }
 
-.segmented-btn {
-  flex: 1;
-  background: none;
-  border: 1px solid transparent;
-  padding: 9px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: var(--font-main);
-  letter-spacing: 0.03em;
-  color: var(--c-stone);
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.segmented-btn.active {
-  background-color: var(--c-card-sub);
-  color: var(--c-text-primary);
-  border-color: var(--c-border-active);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
-}
-
-/* Tag Badges */
 .tag-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 9px;
-  font-weight: 600;
-  font-family: var(--font-num);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 6px;
-  background-color: var(--c-card-sub);
-  color: var(--c-stone);
-  border: 1px solid var(--c-border);
-}
-
-.tag-badge.crimson {
-  background-color: rgba(166, 36, 60, 0.16);
-  color: var(--c-crimson);
-  border-color: rgba(166, 36, 60, 0.35);
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .tag-badge.olive {
-  background-color: rgba(52, 211, 153, 0.14);
+  background-color: rgba(16, 185, 129, 0.12);
   color: var(--c-income);
-  border-color: rgba(52, 211, 153, 0.32);
 }
 
-.receipt-thumb {
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid var(--c-border);
+.tag-badge.crimson {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--c-expense);
+}
+
+.tag-badge.stone {
   background-color: var(--c-card-sub);
-  background-size: cover;
-  background-position: center;
+  color: var(--c-stone);
+}
+
+.btn-filter-clear {
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--c-expense);
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-/* =========================================================
- * FLOATING RECEIPT OVERLAY (Picture-in-Picture + Pinch Zoom)
- * ========================================================= */
+/* --- KELLUVA KUITTI-IKKUNA & LASKIN --- */
+#modalCalculator {
+  z-index: 90 !important;
+}
+
 .receipt-overlay-viewer {
   position: fixed;
-  top: calc(10px + env(safe-area-inset-top, 0px));
+  top: max(12px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 24px);
-  max-width: 456px;
-  max-height: 44vh;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-active);
-  border-radius: 18px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
-  z-index: 95;
+  max-width: 480px;
+  height: 38vh;
+  min-height: 220px;
+  max-height: 460px;
+  background-color: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 20px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.35);
+  z-index: 95 !important;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: max-height 0.25s ease;
 }
 
 .receipt-overlay-viewer.zoomed {
+  height: 78vh;
   max-height: 82vh;
 }
 
@@ -1097,196 +993,95 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  background: var(--c-card);
+  background-color: var(--c-card-sub);
   border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
 }
 
 .receipt-overlay-body {
   flex: 1;
-  overflow: auto;
-  padding: 10px;
-  background: #141518;
-  text-align: center;
-  -webkit-overflow-scrolling: touch;
-  touch-action: none;
-  position: relative;
+  background-color: #FFFFFF;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
+  position: relative;
+  touch-action: none;
+  user-select: none;
 }
 
 .receipt-overlay-body img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
   transform-origin: center center;
-  transition: transform 0.08s ease-out;
-  will-change: transform;
-}
-
-.btn-overlay-ctrl {
-  background: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  color: var(--c-text-primary);
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-/* =========================================================
- * IN-APP CALCULATOR & SPLITTER KEYPAD
- * ========================================================= */
-#modalCalculator {
-  z-index: 90;
 }
 
 .calc-btn {
-  background: var(--c-card);
+  background-color: var(--c-card-sub);
   border: 1px solid var(--c-border);
+  border-radius: 14px;
   color: var(--c-text-primary);
-  border-radius: 12px;
-  padding: 14px 6px;
+  font-family: var(--font-mono);
   font-size: 18px;
-  font-family: var(--font-num);
+  font-weight: 600;
+  padding: 14px 6px;
   cursor: pointer;
-  transition: transform 0.1s ease, background-color 0.15s ease;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.calc-btn:active {
-  background: var(--c-card-sub);
-  transform: scale(0.95);
-}
-
-.calc-btn.calc-op {
-  background: var(--c-card-sub);
-  color: var(--c-sand);
-  font-weight: 600;
-}
-
-.calc-btn.calc-equals {
-  background: var(--c-crimson);
-  border-color: var(--c-crimson);
-  color: #FFFFFF;
-  font-weight: 600;
-}
-
-/* Compact Clear X Button for Filters & Modals */
-.btn-filter-clear {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: rgba(166, 36, 60, 0.14);
-  border: 1px solid rgba(166, 36, 60, 0.35);
-  color: var(--c-crimson);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: transform 0.12s ease, background-color 0.15s ease;
+  touch-action: manipulation;
 }
 
-.btn-filter-clear:active {
-  background: rgba(166, 36, 60, 0.28);
-  transform: scale(0.94);
+.calc-btn:active {
+  transform: scale(0.95);
 }
 
-/* Color Swatch Chips */
-.color-swatch-chip {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+.calc-btn.op {
+  color: var(--c-primary);
+  background-color: rgba(37, 99, 235, 0.08);
 }
 
-.color-swatch-chip.active {
-  border-color: var(--c-text-primary);
-  transform: scale(1.14);
+.calc-btn.split {
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 4px;
+  color: var(--c-primary);
 }
 
-/* Theme Preset Selection Cards */
-.theme-preset-card {
-  background: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  border-radius: 14px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  text-align: left;
-  min-width: 0;
-}
-
-.theme-preset-card:hover {
-  border-color: var(--c-border-active);
-}
-
-.theme-preset-card.active {
-  border-color: var(--c-crimson);
-  box-shadow: 0 0 0 1px var(--c-crimson);
-}
-
-.theme-palette-preview {
-  display: flex;
-  height: 14px;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid rgba(128, 128, 128, 0.25);
-  width: 100%;
-}
-
-.theme-palette-slice {
-  flex: 1;
-  height: 100%;
-}
-
-/* =========================================================
- * MASTER-DETAIL BOTTOM SHEET MODAL (Categories & Subscriptions)
- * ========================================================= */
+/* --- BOTTOM SHEET (Kategorian syväsukellus) --- */
 .bottom-sheet-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 85;
-  display: flex;
+  display: none;
   align-items: flex-end;
   justify-content: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.24s ease, visibility 0.24s ease;
 }
 
 .bottom-sheet-overlay.active {
-  opacity: 1;
-  visibility: visible;
+  display: flex;
 }
 
 .bottom-sheet-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   max-height: 86vh;
-  background: var(--c-surface);
-  border-top: 1px solid var(--c-border-active);
-  border-radius: 26px 26px 0 0;
-  box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.55);
-  display: flex;
-  flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-}
-
-.bottom-sheet-overlay.active .bottom-sheet-container {
-  transform: translateY(0);
+  background: var(--c-card);
+  border-top: 1px solid var(--c-border);
+  border-radius: 28px 28px 0 0;
+  padding: 14px 20px calc(28px + env(safe-area-inset-bottom)) 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16);
 }
 
 .bottom-sheet-drag-handle {
@@ -1294,31 +1089,5 @@ html, body {
   height: 5px;
   background: var(--c-border-active);
   border-radius: 999px;
-  margin: 10px auto 6px auto;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.bottom-sheet-header {
-  padding: 8px 18px 14px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--c-border);
-}
-
-.bottom-sheet-body {
-  padding: 16px 18px;
-  overflow-y: auto;
-  overflow-x: hidden !important;
-  touch-action: pan-y !important;
-  flex: 1;
-}
-
-.bottom-sheet-footer {
-  padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px)) 18px;
-  border-top: 1px solid var(--c-border);
-  background: var(--c-card);
-  display: flex;
-  gap: 10px;
+  margin: 0 auto 14px auto;
 }

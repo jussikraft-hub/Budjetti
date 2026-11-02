@@ -3,12 +3,25 @@
  * 2-tasoinen hierarkia (Pääryhmät ja muokattavat alikategoriat kuukausikatolla)
  */
 
+const LEGACY_COLOR_MAP = {
+  "#5C6A51": "#2563EB",
+  "#5c6a51": "#2563EB",
+  "#683F26": "#6366F1",
+  "#683f26": "#6366F1",
+  "#A6243C": "#F59E0B",
+  "#a6243c": "#F59E0B",
+  "#A5A088": "#0EA5E9",
+  "#a5a088": "#0EA5E9",
+  "#BFB99E": "#2563EB",
+  "#bfb99e": "#2563EB"
+};
+
 const DEFAULT_CATEGORY_GROUPS = [
-  { id: "arki", name: "Päivittäistalous & Arki", color: "#5C6A51" },
-  { id: "laskut", name: "Kiinteät kulut & Asuminen", color: "#683F26" },
-  { id: "vapaaaika", name: "Ravintolat & Vapaa-aika", color: "#A6243C" },
-  { id: "liikenne", name: "Liikkuminen & Matkat", color: "#A5A088" },
-  { id: "tulot", name: "Tulot & Saamiset", color: "#5C6A51" }
+  { id: "arki", name: "Päivittäistalous & Arki", color: "#2563EB" },
+  { id: "laskut", name: "Kiinteät kulut & Asuminen", color: "#6366F1" },
+  { id: "vapaaaika", name: "Ravintolat & Vapaa-aika", color: "#F59E0B" },
+  { id: "liikenne", name: "Liikkuminen & Matkat", color: "#0EA5E9" },
+  { id: "tulot", name: "Tulot & Saamiset", color: "#10B981" }
 ];
 
 const DEFAULT_CATEGORIES = [
@@ -17,7 +30,7 @@ const DEFAULT_CATEGORIES = [
     id: "ruokakauppa",
     name: "Ruokakauppa & Tarvikkeet",
     groupId: "arki",
-    color: "#5C6A51",
+    color: "#2563EB",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -26,7 +39,7 @@ const DEFAULT_CATEGORIES = [
     id: "apteekki",
     name: "Terveys & Apteekki",
     groupId: "arki",
-    color: "#5C6A51",
+    color: "#2563EB",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -35,7 +48,7 @@ const DEFAULT_CATEGORIES = [
     id: "lapset",
     name: "Lapset & Perhe",
     groupId: "arki",
-    color: "#5C6A51",
+    color: "#2563EB",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -46,7 +59,7 @@ const DEFAULT_CATEGORIES = [
     id: "asuminen",
     name: "Vuokra / Vastike & Sähkö",
     groupId: "laskut",
-    color: "#683F26",
+    color: "#6366F1",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -55,7 +68,7 @@ const DEFAULT_CATEGORIES = [
     id: "puhelin_netti",
     name: "Puhelin & Verkkoyhteydet",
     groupId: "laskut",
-    color: "#683F26",
+    color: "#6366F1",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -66,7 +79,7 @@ const DEFAULT_CATEGORIES = [
     id: "lounas",
     name: "Lounaat & Kahvilat",
     groupId: "vapaaaika",
-    color: "#683F26",
+    color: "#F59E0B",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -75,7 +88,7 @@ const DEFAULT_CATEGORIES = [
     id: "viihde",
     name: "Kulttuuri & Harrastukset",
     groupId: "vapaaaika",
-    color: "#A6243C",
+    color: "#EC4899",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -86,7 +99,7 @@ const DEFAULT_CATEGORIES = [
     id: "liikenne",
     name: "Joukkoliikenne & Taksi",
     groupId: "liikenne",
-    color: "#A5A088",
+    color: "#0EA5E9",
     budgetMonthly: 0,
     quickAction: false,
     quickAmount: 0
@@ -97,7 +110,7 @@ const DEFAULT_CATEGORIES = [
     id: "palkka",
     name: "Palkkatulot",
     groupId: "tulot",
-    color: "#5C6A51",
+    color: "#10B981",
     budgetMonthly: 0,
     type: "income",
     quickAction: false,
@@ -107,7 +120,7 @@ const DEFAULT_CATEGORIES = [
     id: "muu_tulo",
     name: "Muut tulot & Palautukset",
     groupId: "tulot",
-    color: "#5C6A51",
+    color: "#10B981",
     budgetMonthly: 0,
     type: "income",
     quickAction: false,
@@ -127,6 +140,30 @@ class CategoryManager {
     if (saved && Array.isArray(saved.categories)) {
       this.categories = saved.categories;
       this.groups = saved.groups || [...DEFAULT_CATEGORY_GROUPS];
+
+      // Päivitetään vanhat murretut värit automaattisesti raikkaaseen Copilot-palettiin
+      let migrated = false;
+      this.groups.forEach(g => {
+        if (g.id === "tulot" && (g.color === "#5C6A51" || g.color === "#2563EB")) {
+          g.color = "#10B981";
+          migrated = true;
+        } else if (LEGACY_COLOR_MAP[g.color]) {
+          g.color = LEGACY_COLOR_MAP[g.color];
+          migrated = true;
+        }
+      });
+      this.categories.forEach(c => {
+        if (c.type === "income" && (c.color === "#5C6A51" || c.color === "#2563EB")) {
+          c.color = "#10B981";
+          migrated = true;
+        } else if (LEGACY_COLOR_MAP[c.color]) {
+          c.color = LEGACY_COLOR_MAP[c.color];
+          migrated = true;
+        }
+      });
+      if (migrated) {
+        await this.save();
+      }
     } else {
       await this.save();
     }
@@ -152,7 +189,7 @@ class CategoryManager {
       id: "muut",
       name: "Muu meno",
       groupId: "arki",
-      color: "#A5A088",
+      color: "#64748B",
       budgetMonthly: 0
     };
   }
@@ -173,7 +210,7 @@ class CategoryManager {
     const newGroup = {
       id: grp.id || "grp_" + Date.now(),
       name: (grp.name || "Uusi pääryhmä").trim(),
-      color: grp.color || "#5C6A51"
+      color: grp.color || "#2563EB"
     };
     this.groups.push(newGroup);
     await this.save();
@@ -208,11 +245,12 @@ class CategoryManager {
   }
 
   async addCategory(cat) {
+    const grp = this.getGroupById(cat.groupId || "arki");
     const newCat = {
       id: cat.id || "cat_" + Date.now(),
       name: cat.name.trim(),
       groupId: cat.groupId || "arki",
-      color: cat.color || "#A5A088",
+      color: cat.color || (grp && grp.color) || "#2563EB",
       budgetMonthly: parseFloat(cat.budgetMonthly) || 0,
       quickAction: !!cat.quickAction,
       quickAmount: parseFloat(cat.quickAmount) || 0,

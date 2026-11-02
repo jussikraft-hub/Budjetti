@@ -764,5 +764,38 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn('.settings-group-card', css)
         self.assertIn('toggleSettingsSection(', app_js)
 
+    def test_19_revision_15_copilot_apple_wallet_clean_redesign(self):
+        """Varmistaa Revisio 15:n (/grill-me) Copilot / Apple Wallet Clean -uudistuksen: Vaalea/Tumma/Auto, 3-korttinen etusivu, 2-riviset .wallet-row -rivit ja vanhojen kategorioiden automaattisen värimigraation."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/categories.js"), "r", encoding="utf-8") as f:
+            cat_js = f.read()
+
+        # 1. Copilot / Apple Clean -värit: #F6F8FA (Vaalea), #0F1115 (Tumma), #2563EB (Sähkönsininen)
+        self.assertIn("#F6F8FA", css)
+        self.assertIn("#0F1115", css)
+        self.assertIn("#2563EB", css)
+        self.assertIn("#10B981", css)
+        self.assertIn("#F6F8FA", app_js)
+        self.assertIn("#0F1115", app_js)
+        self.assertIn("#2563EB", app_js)
+
+        # 2. Apple Wallet 2-riviset rivit (.wallet-row & .wallet-row-avatar) ja scrolling .page-title-bar
+        self.assertIn(".wallet-row", css)
+        self.assertIn(".wallet-row-avatar", css)
+        self.assertIn(".page-title-bar", css)
+        self.assertIn("wallet-row", app_js)
+        self.assertIn("page-title-bar", html)
+        self.assertIn('id="kpiPeriodMeterFill"', html)
+
+        # 3. Vanhojen tunkkaisten kategoriavärien automaattinen migraatio Copilot-väreihin
+        self.assertIn("LEGACY_COLOR_MAP", cat_js)
+        self.assertIn("#2563EB", cat_js)
+        self.assertIn("#6366F1", cat_js)
+
 if __name__ == "__main__":
     unittest.main()
