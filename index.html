@@ -1193,12 +1193,12 @@
 
           <!-- MONIKOHTEINEN KULUJEN JAKO & JÄÄNNÖSOSUUKSIEN ALLOKAATTORI -->
           <div class="split-allocations-box" id="formSplitAllocatorSection">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <span style="font-size: 12px; font-weight: 700; color: var(--c-text-primary); display: block;">Jäännösosuuksien kohdistus (Saatavat / Eri ryhmät)</span>
-                <span style="font-size: 11px; color: var(--c-stone);" id="splitAllocSubtitle">Jaa ostoksen muut osuudet henkilöille (Saatavat) tai toisiin kategorioihin</span>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+              <div style="flex: 1; min-width: 0;">
+                <span style="font-size: 13px; font-weight: 700; color: var(--c-text-primary); display: block; line-height: 1.3;">Jäännösosuuksien kohdistus (Saatavat / Eri ryhmät)</span>
+                <span style="font-size: 11px; color: var(--c-stone); display: block; margin-top: 2px; line-height: 1.3;" id="splitAllocSubtitle">Jaa ostoksen muut osuudet henkilöille (Saatavat) tai toisiin kategorioihin</span>
               </div>
-              <button type="button" class="btn-primary" style="width: auto; padding: 6px 10px; font-size: 11px;" onclick="app.addSplitAllocationRow()">
+              <button type="button" class="btn-primary" style="width: auto; padding: 7px 12px; font-size: 12px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;" onclick="app.addSplitAllocationRow()">
                 + Lisää osuus
               </button>
             </div>
