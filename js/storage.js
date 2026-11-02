@@ -881,20 +881,50 @@ class StorageProvider {
 
   // --- CLOUD SYNC ROUTING ---
   async syncToCloud(silent = false) {
+    if (typeof window !== "undefined" && window.app && window.app.setSyncState) {
+      window.app.setSyncState("syncing");
+    }
     const target = this.getSyncTarget();
-    if (target === "dropbox") {
-      return this.syncToDropbox(silent);
-    } else if (target === "gdrive") {
-      return this.syncToGoogleDrive(silent);
+    try {
+      let res;
+      if (target === "dropbox") {
+        res = await this.syncToDropbox(silent);
+      } else if (target === "gdrive") {
+        res = await this.syncToGoogleDrive(silent);
+      }
+      if (typeof window !== "undefined" && window.app && window.app.setSyncState) {
+        window.app.setSyncState("idle");
+      }
+      return res;
+    } catch (err) {
+      if (typeof window !== "undefined" && window.app && window.app.setSyncState) {
+        window.app.setSyncState("error");
+      }
+      throw err;
     }
   }
 
   async syncFromCloud(silent = false) {
+    if (typeof window !== "undefined" && window.app && window.app.setSyncState) {
+      window.app.setSyncState("syncing");
+    }
     const target = this.getSyncTarget();
-    if (target === "dropbox") {
-      return this.syncFromDropbox(silent);
-    } else if (target === "gdrive") {
-      return this.syncFromGoogleDrive(silent);
+    try {
+      let res;
+      if (target === "dropbox") {
+        res = await this.syncFromDropbox(silent);
+      } else if (target === "gdrive") {
+        res = await this.syncFromGoogleDrive(silent);
+      }
+      if (typeof window !== "undefined" && window.app && window.app.setSyncState) {
+        window.app.setSyncState("idle");
+      }
+      return res;
+    } catch (err) {
+      if (typeof window !== "undefined" && window.app && window.app.setSyncState) {
+        window.app.setSyncState("error");
+      }
+      throw err;
     }
   }
 

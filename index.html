@@ -50,8 +50,13 @@
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <div class="sync-badge" id="syncStatusBadge" onclick="app.switchView('viewAsetukset')" title="Synkronoinnin tila">
+              <span class="sync-badge-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                  <path d="M19.35 10.04A7.49 7.49 0 0012 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 000 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                </svg>
+              </span>
               <span class="sync-dot" id="syncDot"></span>
-              <span id="syncStatusText">LOKAALI</span>
+              <span id="syncStatusText" style="display: none;">PAIKALLINEN</span>
             </div>
             <button type="button" class="header-icon-btn" onclick="app.toggleLightDarkQuick()" title="Vaihda Vaalea / Tumma tila">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
@@ -221,9 +226,17 @@
             <h1>Tapahtumat & Kuitit</h1>
             <p class="page-subtitle">Pääkirja ja Kuitti-Inbox</p>
           </div>
-          <button type="button" class="btn-secondary" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="app.openQuickReceiptModal()">
-            + Pikakuitti
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-secondary" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="app.openQuickReceiptModal()">
+              + Pikakuitti
+            </button>
+            <button type="button" class="header-icon-btn" onclick="app.toggleLightDarkQuick()" title="Vaihda Vaalea / Tumma tila">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Segmented Tab: Pääkirja vs Kuitti-Inbox -->
@@ -310,9 +323,17 @@
             <h1>Budjetit & Kulut</h1>
             <p class="page-subtitle">Kategoriat ja kiinteät tilaukset</p>
           </div>
-          <button type="button" class="btn-secondary" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="app.openCategoryModal()">
-            + Uusi kategoria
-          </button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-secondary" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="app.openCategoryModal()">
+              + Uusi kategoria
+            </button>
+            <button type="button" class="header-icon-btn" onclick="app.toggleLightDarkQuick()" title="Vaihda Vaalea / Tumma tila">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="segmented-control">
@@ -386,6 +407,14 @@
           <div>
             <h1>Velat & Saatavat</h1>
             <p class="page-subtitle">Lainat muille, saatavat ja sitoumukset</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="header-icon-btn" onclick="app.toggleLightDarkQuick()" title="Vaihda Vaalea / Tumma tila">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -878,7 +907,7 @@
     <div class="receipt-overlay-body" id="receiptOverlayBody">
       <img id="receiptOverlayImg" src="" alt="Kuitti" style="width: 100%; height: auto; display: block; border-radius: 8px; background: #FFFFFF;">
     </div>
-    <div class="receipt-overlay-footer" id="receiptOverlayFooter" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--c-border); background: #1a1a1c;">
+    <div class="receipt-overlay-footer" id="receiptOverlayFooter" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--c-border); background: var(--c-card);">
       <span style="font-size: 10px; color: var(--c-stone);" id="receiptOverlayMeta">Kuitin tiedot</span>
       <button type="button" class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 11px;" id="btnReceiptOverlayAction" onclick="app.recordFromReceiptOverlay()">
         💳 Kirjaa tapahtuma

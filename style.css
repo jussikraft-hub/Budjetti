@@ -181,32 +181,80 @@ html, body {
   margin-top: 2px;
 }
 
+.header-icon-btn {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  color: var(--c-stone);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+  box-shadow: var(--c-shadow-card);
+}
+
+.header-icon-btn:hover {
+  color: var(--c-text-primary);
+  border-color: var(--c-border-active);
+  background-color: var(--c-card-sub);
+}
+
+.header-icon-btn:active {
+  transform: scale(0.94);
+}
+
 .sync-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 11px;
+  gap: 7px;
+  padding: 6px 12px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
   background-color: var(--c-card);
   border: 1px solid var(--c-border);
-  color: var(--c-stone);
+  color: var(--c-text-primary);
   cursor: pointer;
   box-shadow: var(--c-shadow-card);
-  transition: transform 0.15s ease, border-color 0.2s ease;
+  transition: transform 0.15s ease, border-color 0.2s ease, background-color 0.15s ease;
+}
+
+.sync-badge:hover {
+  border-color: var(--c-border-active);
+  background-color: var(--c-card-sub);
 }
 
 .sync-badge:active {
   transform: scale(0.97);
 }
 
+.sync-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-stone);
+}
+
 .sync-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background-color: var(--c-olive);
   flex-shrink: 0;
+  transition: background-color 0.25s ease;
+}
+
+.sync-dot.syncing {
+  background-color: #F59E0B !important; /* Oranssi synkkauksen aikana */
+  animation: pulse-sync 1s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-sync {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.15); opacity: 1; }
 }
 
 /* --- NÄKYMÄN PÄÄSISÄLTÖ --- */
@@ -219,7 +267,7 @@ html, body {
 
 .view-section,
 .app-view {
-  padding-top: 8px;
+  padding-top: 14px;
   padding-left: calc(18px + env(safe-area-inset-left));
   padding-right: calc(18px + env(safe-area-inset-right));
   display: flex;
@@ -922,6 +970,50 @@ html, body {
   transform: scale(0.98);
 }
 
+.btn-secondary {
+  width: 100%;
+  background-color: var(--c-btn-secondary);
+  color: var(--c-text-primary);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--c-btn-secondary-hover);
+  border-color: var(--c-border-active);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-action-sm {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: var(--c-btn-secondary);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-primary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-action-sm:hover {
+  background-color: var(--c-btn-secondary-hover);
+  border-color: var(--c-border-active);
+}
+
+.btn-action-sm:active {
+  transform: scale(0.96);
+}
+
 .btn-secondary-surface {
   background-color: var(--c-btn-secondary) !important;
   border: 1px solid var(--c-border) !important;
@@ -1360,14 +1452,17 @@ html, body {
   }
 
   .settings-hierarchy {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    align-items: start;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
   }
 
   .settings-section-title {
-    display: none;
+    display: block;
+    margin-top: 12px;
   }
 
   /* iPad & Vaaka: Kuitti-ikkuna ja kirjaaminen rinnakkain (Split-View) */
@@ -1402,8 +1497,9 @@ html, body {
   }
 
   .dashboard-bento-grid {
-    grid-template-columns: 1.15fr 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1.1fr 1.35fr 1.15fr;
+    gap: 22px;
+    align-items: stretch;
   }
 
   .dashboard-bento-grid > .kpi-hero-card {
@@ -1411,8 +1507,21 @@ html, body {
     height: 100%;
   }
 
+  /* Isompi ja ilmavampi visualisointikortti suurella näytöllä */
+  .dashboard-bento-grid .allocation-view-pane canvas {
+    max-height: 270px !important;
+  }
+
+  .dashboard-bento-grid .allocation-view-pane > div:first-child {
+    height: 270px !important;
+  }
+
   #categoryGroupsContainer {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .settings-hierarchy {
+    max-width: 760px;
   }
 
   .modal-overlay {

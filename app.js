@@ -312,8 +312,42 @@ class BudjettiApp {
         });
       }
 
+      // Ikkunan koon muutos -kuuntelija: päivittää tapahtumien määrän (4 vs 8) dynaamisesti
+      if (typeof window !== "undefined") {
+        window.addEventListener("resize", () => {
+          clearTimeout(this._resizeTimer);
+          this._resizeTimer = setTimeout(() => {
+            if (this.currentView === "viewKoti") {
+              this.renderRecentLedger();
+            }
+          }, 200);
+        });
+      }
+
     } catch (e) {
       console.error("Sovelluksen alustusvirhe:", e);
+    }
+  }
+
+  setSyncState(state) {
+    // state: 'idle' | 'syncing' | 'error'
+    this.syncState = state;
+    const dotEl = document.getElementById("syncDot");
+    const badge = document.getElementById("syncStatusBadge");
+    if (!dotEl) return;
+
+    if (state === "syncing") {
+      dotEl.classList.add("syncing");
+      dotEl.style.backgroundColor = "#F59E0B"; // Oranssi synkronoitaessa
+      if (badge) badge.title = "Synkronointi käynnissä...";
+    } else {
+      dotEl.classList.remove("syncing");
+      if (state === "error") {
+        dotEl.style.backgroundColor = "var(--c-expense)"; // Punainen jos ongelma
+        if (badge) badge.title = "Synkronoinnissa ongelma - napauta tarkistaaksesi";
+      } else {
+        this.updateSyncBadge(); // Palauttaa normaalin vihreän/harmaan
+      }
     }
   }
 
@@ -324,25 +358,54 @@ class BudjettiApp {
     const gdriveToken = this.storage.getGDriveToken();
     const textEl = document.getElementById("syncStatusText");
     const dotEl = document.getElementById("syncDot");
+    const badge = document.getElementById("syncStatusBadge");
 
-    if (textEl && dotEl) {
+    if (dotEl) {
+      if (this.syncState === "syncing") {
+        dotEl.style.backgroundColor = "#F59E0B";
+        dotEl.classList.add("syncing");
+        if (badge) badge.title = "Synkronoidaan...";
+      } else {
+        dotEl.classList.remove("syncing");
+        if (target === "dropbox") {
+          if (dropRefreshToken) {
+            dotEl.style.backgroundColor = "var(--c-olive)"; // Vihreä = synkattu & pysyvä
+            if (badge) badge.title = "Dropbox: Yhteys aktiivinen (Synkattu)";
+          } else if (dropToken) {
+            dotEl.style.backgroundColor = "#D97706";
+            if (badge) badge.title = "Dropbox: Varatoken käytössä";
+          } else {
+            dotEl.style.backgroundColor = "var(--c-stone)"; // Harmaa = ei asetettu
+            if (badge) badge.title = "Dropbox: Ei asetettu";
+          }
+        } else if (target === "gdrive") {
+          if (gdriveToken) {
+            dotEl.style.backgroundColor = "var(--c-olive)";
+            if (badge) badge.title = "Google Drive: Yhteys aktiivinen";
+          } else {
+            dotEl.style.backgroundColor = "var(--c-stone)";
+            if (badge) badge.title = "Google Drive: Ei asetettu";
+          }
+        } else {
+          dotEl.style.backgroundColor = "var(--c-stone)"; // Harmaa = vain paikallinen muisti
+          if (badge) badge.title = "Vain paikallinen laitemuisti";
+        }
+      }
+    }
+
+    if (textEl) {
       if (target === "dropbox") {
         if (dropRefreshToken) {
           textEl.innerText = "DROPBOX";
-          dotEl.style.backgroundColor = "var(--c-olive)";
         } else if (dropToken) {
           textEl.innerText = "DROPBOX (VARATOKEN)";
-          dotEl.style.backgroundColor = "#D97706"; // oranssi varoitus vanhenemisesta
         } else {
           textEl.innerText = "DROPBOX (EI YHTEYTTÄ)";
-          dotEl.style.backgroundColor = "var(--c-crimson)";
         }
       } else if (target === "gdrive") {
         textEl.innerText = gdriveToken ? "GOOGLE DRIVE" : "G-DRIVE (EI YHTEYTTÄ)";
-        dotEl.style.backgroundColor = gdriveToken ? "var(--c-olive)" : "var(--c-crimson)";
       } else {
         textEl.innerText = "PAIKALLINEN";
-        dotEl.style.backgroundColor = "var(--c-stone)";
       }
     }
 
@@ -793,6 +856,13 @@ class BudjettiApp {
       const values = pieItems.map(i => metric === "budget" ? i.budget : i.spent);
       const colors = pieItems.map(i => i.color);
 
+      const isDarkTheme = this.isDarkModeActive();
+      const chartBorderColor = isDarkTheme ? "#181B22" : "#FFFFFF";
+      const tooltipBg = isDarkTheme ? "#1E222B" : "#FFFFFF";
+      const tooltipTitle = isDarkTheme ? "#F1F5F9" : "#0F172A";
+      const tooltipBody = isDarkTheme ? "#CBD5E1" : "#334155";
+      const tooltipBorder = isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)";
+
       const ctx = pieCanvas.getContext("2d");
       this.donutChartInstance = new Chart(ctx, {
         type: "doughnut",
@@ -801,7 +871,7 @@ class BudjettiApp {
           datasets: [{
             data: values,
             backgroundColor: colors,
-            borderColor: "#171718",
+            borderColor: chartBorderColor,
             borderWidth: 2,
             hoverOffset: 4
           }]
@@ -813,11 +883,12 @@ class BudjettiApp {
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: "#1F1F20",
-              titleColor: "#BFB99E",
-              bodyColor: "#FFFFFF",
-              borderColor: "rgba(165,160,136,0.2)",
+              backgroundColor: tooltipBg,
+              titleColor: tooltipTitle,
+              bodyColor: tooltipBody,
+              borderColor: tooltipBorder,
               borderWidth: 1,
+              cornerRadius: 10,
               padding: 10,
               displayColors: true,
               callbacks: {
@@ -893,6 +964,15 @@ class BudjettiApp {
         }];
       }
 
+      const isDarkTheme = this.isDarkModeActive();
+      const chartTextColor = isDarkTheme ? "#94A3B8" : "#475569";
+      const chartGridColor = isDarkTheme ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)";
+      const chartBorderColor = isDarkTheme ? "#181B22" : "#FFFFFF";
+      const tooltipBg = isDarkTheme ? "#1E222B" : "#FFFFFF";
+      const tooltipTitle = isDarkTheme ? "#F1F5F9" : "#0F172A";
+      const tooltipBody = isDarkTheme ? "#CBD5E1" : "#334155";
+      const tooltipBorder = isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)";
+
       const ctxBar = barCanvas.getContext("2d");
       this.barChartInstance = new Chart(ctxBar, {
         type: "bar",
@@ -907,17 +987,19 @@ class BudjettiApp {
             legend: {
               display: metric === "both",
               labels: {
-                color: "#A5A088",
+                color: chartTextColor,
                 boxWidth: 10,
-                font: { size: 10 }
+                font: { size: 11, family: "inherit" }
               }
             },
             tooltip: {
-              backgroundColor: "#1F1F20",
-              titleColor: "#BFB99E",
-              bodyColor: "#FFFFFF",
-              borderColor: "rgba(165,160,136,0.2)",
+              backgroundColor: tooltipBg,
+              titleColor: tooltipTitle,
+              bodyColor: tooltipBody,
+              borderColor: tooltipBorder,
               borderWidth: 1,
+              cornerRadius: 10,
+              padding: 10,
               callbacks: {
                 label: function(context) {
                   return " " + context.dataset.label + ": " + (context.raw || 0).toFixed(2).replace(".", ",") + " €";
@@ -928,13 +1010,13 @@ class BudjettiApp {
           scales: {
             x: {
               grid: { display: false },
-              ticks: { color: "#A5A088", font: { size: 9 } }
+              ticks: { color: chartTextColor, font: { size: 10, family: "inherit" } }
             },
             y: {
-              grid: { color: "rgba(255,255,255,0.06)" },
+              grid: { color: chartGridColor },
               ticks: {
-                color: "#A5A088",
-                font: { size: 9 },
+                color: chartTextColor,
+                font: { size: 10, family: "inherit" },
                 callback: function(v) { return v + " €"; }
               }
             }
@@ -950,7 +1032,9 @@ class BudjettiApp {
     container.innerHTML = "";
 
     const sorted = [...this.transactions].sort((a, b) => this.sortTransactionsDesc(a, b));
-    const recent = sorted.slice(0, 4);
+    const isLargeScreen = (typeof window !== "undefined" && window.innerWidth >= 680);
+    const limit = isLargeScreen ? 8 : 4;
+    const recent = sorted.slice(0, limit);
     if (recent.length === 0) {
       container.innerHTML = `<p style="font-size: 13px; color: var(--c-stone); padding: 14px 0;">Ei kirjattuja tapahtumia.</p>`;
       return;
@@ -1894,8 +1978,8 @@ class BudjettiApp {
 
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--c-stone);">
           <span>Lyhennys: <b class="font-num" style="color: var(--c-text-primary);">${FinanceCalculator.formatCurrency(d.monthlyPayment || 0)}/kk</b> (erä ${d.dueDay || 20}. pv)</span>
-          <button class="btn-primary" style="width: auto; padding: 5px 10px; font-size: 9px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.recordDebtPaymentPrompt('${d.id}')">
-            Kirjaa lyhennys &rarr;
+          <button class="btn-action-sm" onclick="app.recordDebtPaymentPrompt('${d.id}')">
+            Kirjaa lyhennys
           </button>
         </div>
       `;
@@ -2112,7 +2196,7 @@ class BudjettiApp {
           <span class="font-num" style="font-size: 13px; font-weight: 500; color: ${p.settled ? 'var(--c-stone)' : (isLent ? '#9fbe8e' : '#d4566e')};">
             ${isLent ? '+' : '-'}${FinanceCalculator.formatCurrency(p.amount || 0)}
           </span>
-          <button class="btn-primary" style="width: auto; padding: 5px 8px; font-size: 9px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.toggleP2PSettled('${p.id}')">
+          <button class="btn-action-sm" onclick="app.toggleP2PSettled('${p.id}')">
             ${p.settled ? 'Avaa' : 'Kuittaa'}
           </button>
           <button onclick="app.openP2PModal('${p.id}')" title="Muokkaa" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
@@ -2716,7 +2800,7 @@ class BudjettiApp {
         if (chipsEl) {
           if (quickChips && quickChips.length > 0) {
             chipsEl.innerHTML = quickChips.map(c => `
-              <button type="button" class="btn-primary" style="flex: 1; min-width: 48px; padding: 7px 10px; font-size: 11px; background: #252527; border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="document.getElementById('dialogPromptInput').value = '${c}'">
+              <button type="button" class="btn-action-sm" style="flex: 1; min-width: 48px; padding: 7px 10px; font-size: 11px;" onclick="document.getElementById('dialogPromptInput').value = '${c}'">
                 ${c}${suffix}
               </button>
             `).join("");
