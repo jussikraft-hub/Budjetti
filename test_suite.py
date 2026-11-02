@@ -722,5 +722,47 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn('id="kpiDailyAllowance"', html)
         self.assertIn('id="inboxAlertBanner"', html)
 
+    def test_18_revision_14_senior_ui_ux_hig_m3_wizard_settings(self):
+        """Varmistaa Revisio 14:n Senior UI/UX täysuudistuksen: Apple HIG & Material 3 tonaliteetti, color-scheme meta, KPI Hero Card, Step-by-Step Wizard, Sticky Bottom CTA ja Hierarchical Settings List."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+
+        # 1. Modern Web Guidance: <meta name="color-scheme" content="light dark"> & :has() tuki
+        self.assertIn('<meta name="color-scheme" content="light dark">', html)
+        self.assertIn('meta[name="color-scheme"]', css)
+        self.assertIn('meta[name="color-scheme"]', app_js)
+
+        # 2. Apple HIG & Material 3 Tonal Surface & KPI Hero Card
+        self.assertIn('--c-surface-low:', css)
+        self.assertIn('--c-card-elevated:', css)
+        self.assertIn('.kpi-hero-card', css)
+        self.assertIn('.kpi-daily-spotlight', css)
+        self.assertIn('.kpi-cashflow-strip', css)
+        self.assertIn('.master-detail-row', css)
+        self.assertIn('master-detail-row', app_js)
+
+        # 3. Task-driven Step-by-Step Wizard & Sticky Bottom CTA
+        self.assertIn('id="wizardStepsBar"', html)
+        self.assertIn('id="wizardStepBtn1"', html)
+        self.assertIn('id="wizardStepBtn2"', html)
+        self.assertIn('id="wizardStepBtn3"', html)
+        self.assertIn('sticky-bottom-cta', html)
+        self.assertIn('.sticky-bottom-cta', css)
+        self.assertIn('setWizardStep(', app_js)
+
+        # 4. Hierarchical Settings List (5 ryhmää)
+        self.assertIn('class="settings-hierarchy"', html)
+        self.assertIn('id="settingsGroupTheme"', html)
+        self.assertIn('id="settingsGroupSync"', html)
+        self.assertIn('id="settingsGroupAccounts"', html)
+        self.assertIn('id="settingsGroupCycle"', html)
+        self.assertIn('id="settingsGroupData"', html)
+        self.assertIn('.settings-group-card', css)
+        self.assertIn('toggleSettingsSection(', app_js)
+
 if __name__ == "__main__":
     unittest.main()

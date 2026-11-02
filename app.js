@@ -45,8 +45,9 @@ class BudjettiApp {
     this.customThemes = [];
     this.themeMode = "dark"; // "dark" | "light" | "auto"
 
-    // Master-Detail Bottom Sheet
+    // Master-Detail Bottom Sheet & Task Wizard
     this.activeBottomSheetCategoryId = null;
+    this.currentWizardStep = 1;
 
     // Järjestelmädialogit (In-App Modals)
     this.activeDialogType = null;
@@ -58,302 +59,338 @@ class BudjettiApp {
       {
         id: "original",
         name: "Original Kraft",
-        tag: "Sveitsiläinen Minimalismi",
+        tag: "Sveitsiläinen Minimalismi · Suojattu",
         isOriginal: true,
-        font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        font: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif",
         dark: {
           bg: "#0F0F10",
           surface: "#171718",
+          surfaceLow: "#131315",
           card: "#1C1C1E",
-          cardSub: "#242426",
+          cardSub: "#242427",
+          cardElevated: "#2C2C30",
           border: "#2C2C2E",
-          borderActive: "#3A3A3C",
+          borderActive: "#3E3E42",
           primary: "#A6243C",
           primaryHover: "#C9324E",
-          text: "#EDEDED",
-          muted: "#8E8E93",
+          text: "#F2F2F7",
+          muted: "#98989F",
           olive: "#4E8C6A",
-          income: "#4E8C6A",
+          income: "#34C759",
+          expense: "#E14B64",
           inputBg: "#1C1C1E"
         },
         light: {
-          bg: "#F4F4F6",
+          bg: "#F2F2F7",
           surface: "#FFFFFF",
+          surfaceLow: "#F8F8FA",
           card: "#FFFFFF",
-          cardSub: "#F0F0F2",
-          border: "#E2E2E6",
-          borderActive: "#C6C6CC",
+          cardSub: "#EFEFF4",
+          cardElevated: "#FFFFFF",
+          border: "#E5E5EA",
+          borderActive: "#C7C7CC",
           primary: "#991B32",
-          primaryHover: "#801427",
-          text: "#111827",
-          muted: "#52525B",
+          primaryHover: "#7F1427",
+          text: "#1C1C1E",
+          muted: "#636366",
           olive: "#2D6A4F",
-          income: "#2D6A4F",
-          inputBg: "#F4F4F6"
+          income: "#1F8A4C",
+          expense: "#C81E3A",
+          inputBg: "#F2F2F7"
         },
         colors: {
           bg: "#0F0F10",
           surface: "#171718",
-          card: "#171718",
-          cardSub: "#1D1D1F",
-          border: "#262629",
-          borderActive: "#38383C",
+          card: "#1C1C1E",
+          cardSub: "#242427",
+          border: "#2C2C2E",
+          borderActive: "#3E3E42",
           primary: "#A6243C",
-          text: "#EDEDED",
-          muted: "#8E8E93",
-          olive: "#3F4F38",
-          income: "#4E8C6A",
-          inputBg: "#171718"
+          text: "#F2F2F7",
+          muted: "#98989F",
+          olive: "#4E8C6A",
+          income: "#34C759",
+          inputBg: "#1C1C1E"
         }
       },
       {
         id: "midnight_executive",
         name: "Midnight Executive",
-        tag: "FinTech & Corporate",
-        font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        tag: "Apple HIG iOS 18 · Revolut Dark",
+        font: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif",
         dark: {
-          bg: "#06090E",
-          surface: "#0B1017",
-          card: "#111823",
-          cardSub: "#182232",
-          border: "#1E2D42",
-          borderActive: "#2C3E5A",
+          bg: "#06090F",
+          surface: "#0C121D",
+          surfaceLow: "#090E17",
+          card: "#131C2E",
+          cardSub: "#1A263D",
+          cardElevated: "#22304C",
+          border: "#23324D",
+          borderActive: "#364C73",
           primary: "#D4AF37",
-          primaryHover: "#E6C158",
-          text: "#F0F4FA",
-          muted: "#7E91A6",
-          olive: "#2E7D5E",
-          income: "#2E7D5E",
-          inputBg: "#111823"
+          primaryHover: "#E5C354",
+          text: "#F8FAFC",
+          muted: "#94A3B8",
+          olive: "#10B981",
+          income: "#34D399",
+          expense: "#FB7185",
+          inputBg: "#131C2E"
         },
         light: {
           bg: "#F1F5F9",
           surface: "#FFFFFF",
+          surfaceLow: "#F8FAFC",
           card: "#FFFFFF",
           cardSub: "#E2E8F0",
+          cardElevated: "#FFFFFF",
           border: "#CBD5E1",
           borderActive: "#94A3B8",
           primary: "#0F172A",
           primaryHover: "#1E293B",
           text: "#0F172A",
           muted: "#475569",
-          olive: "#15803D",
-          income: "#15803D",
+          olive: "#059669",
+          income: "#059669",
+          expense: "#E11D48",
           inputBg: "#F8FAFC"
         },
         colors: {
-          bg: "#070B12",
-          surface: "#0D1522",
-          card: "#0D1522",
-          cardSub: "#131E30",
-          border: "#1D2B40",
-          borderActive: "#2E4260",
+          bg: "#06090F",
+          surface: "#0C121D",
+          card: "#131C2E",
+          cardSub: "#1A263D",
+          border: "#23324D",
+          borderActive: "#364C73",
           primary: "#D4AF37",
-          text: "#F0F4FA",
-          muted: "#7A8B9E",
-          olive: "#2E7D5E",
-          income: "#2E7D5E",
-          inputBg: "#0D1522"
+          text: "#F8FAFC",
+          muted: "#94A3B8",
+          olive: "#10B981",
+          income: "#34D399",
+          inputBg: "#131C2E"
         }
       },
       {
         id: "studio_white",
         name: "Studio Minimal White",
-        tag: "Skandinaavinen Arkkitehtuuri",
-        font: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        tag: "Material Design 3 · Copilot Tonal",
+        font: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, sans-serif",
         dark: {
-          bg: "#121417",
-          surface: "#1A1D21",
-          card: "#22262B",
-          cardSub: "#2B3037",
-          border: "#353C45",
-          borderActive: "#464E59",
+          bg: "#0E1116",
+          surface: "#151921",
+          surfaceLow: "#11151C",
+          card: "#1C212B",
+          cardSub: "#252B38",
+          cardElevated: "#2E3646",
+          border: "#2E3646",
+          borderActive: "#434E65",
           primary: "#3B82F6",
           primaryHover: "#60A5FA",
           text: "#F3F4F6",
           muted: "#9CA3AF",
           olive: "#10B981",
-          income: "#10B981",
-          inputBg: "#22262B"
+          income: "#34D399",
+          expense: "#F87171",
+          inputBg: "#1C212B"
         },
         light: {
-          bg: "#F8F9FA",
+          bg: "#F6F8FA",
           surface: "#FFFFFF",
+          surfaceLow: "#F9FAFB",
           card: "#FFFFFF",
-          cardSub: "#F1F3F5",
-          border: "#E5E7EB",
-          borderActive: "#D1D5DB",
+          cardSub: "#EEF2F6",
+          cardElevated: "#FFFFFF",
+          border: "#E2E8F0",
+          borderActive: "#CBD5E1",
           primary: "#2563EB",
           primaryHover: "#1D4ED8",
-          text: "#111827",
-          muted: "#6B7280",
+          text: "#0F172A",
+          muted: "#475569",
           olive: "#059669",
           income: "#059669",
-          inputBg: "#F9FAFB"
+          expense: "#DC2626",
+          inputBg: "#F1F5F9"
         },
         colors: {
-          bg: "#F7F7F8",
+          bg: "#F6F8FA",
           surface: "#FFFFFF",
           card: "#FFFFFF",
-          cardSub: "#F0F0F2",
-          border: "#E2E2E6",
-          borderActive: "#CACACE",
-          primary: "#8B1E32",
-          text: "#1A1A1C",
-          muted: "#707076",
-          olive: "#2D6A4F",
-          income: "#2D6A4F",
-          inputBg: "#FFFFFF"
+          cardSub: "#EEF2F6",
+          border: "#E2E8F0",
+          borderActive: "#CBD5E1",
+          primary: "#2563EB",
+          text: "#0F172A",
+          muted: "#475569",
+          olive: "#059669",
+          income: "#059669",
+          inputBg: "#F1F5F9"
         }
       },
       {
         id: "emerald_wealth",
         name: "Emerald Wealth",
-        tag: "Private Banking & Heritage",
+        tag: "Oura Wellness & Private Banking",
         font: "'Newsreader', 'Playfair Display', Georgia, serif",
         dark: {
-          bg: "#07100B",
-          surface: "#0D1A13",
-          card: "#13251B",
-          cardSub: "#1A3225",
-          border: "#244533",
-          borderActive: "#335E47",
-          primary: "#D19F68",
-          primaryHover: "#E0B280",
-          text: "#EDF4F0",
-          muted: "#829B8E",
+          bg: "#07100C",
+          surface: "#0C1A14",
+          surfaceLow: "#091510",
+          card: "#12261D",
+          cardSub: "#193327",
+          cardElevated: "#214233",
+          border: "#234535",
+          borderActive: "#34634D",
+          primary: "#D4A373",
+          primaryHover: "#E2B68B",
+          text: "#ECFDF5",
+          muted: "#86A899",
           olive: "#34D399",
           income: "#34D399",
-          inputBg: "#13251B"
+          expense: "#FB7185",
+          inputBg: "#12261D"
         },
         light: {
           bg: "#F2F7F4",
           surface: "#FFFFFF",
+          surfaceLow: "#F7FAF8",
           card: "#FFFFFF",
-          cardSub: "#E4EFE8",
-          border: "#C8DED0",
-          borderActive: "#A8C9B4",
+          cardSub: "#E4EFE9",
+          cardElevated: "#FFFFFF",
+          border: "#C9DFD3",
+          borderActive: "#9EC5B0",
           primary: "#1B4D3E",
-          primaryHover: "#14382D",
-          text: "#0F261E",
-          muted: "#4D6D61",
-          olive: "#1B4D3E",
-          income: "#1B4D3E",
-          inputBg: "#F6FAF7"
+          primaryHover: "#133A2E",
+          text: "#0D261E",
+          muted: "#4A6B5D",
+          olive: "#15803D",
+          income: "#15803D",
+          expense: "#BE123C",
+          inputBg: "#EDF5F0"
         },
         colors: {
-          bg: "#0A110E",
-          surface: "#111C18",
-          card: "#111C18",
-          cardSub: "#172621",
-          border: "#223830",
-          borderActive: "#325246",
-          primary: "#C88A58",
-          text: "#E8F0EC",
-          muted: "#7E968D",
-          olive: "#388E67",
-          income: "#388E67",
-          inputBg: "#111C18"
+          bg: "#07100C",
+          surface: "#0C1A14",
+          card: "#12261D",
+          cardSub: "#193327",
+          border: "#234535",
+          borderActive: "#34634D",
+          primary: "#D4A373",
+          text: "#ECFDF5",
+          muted: "#86A899",
+          olive: "#34D399",
+          income: "#34D399",
+          inputBg: "#12261D"
         }
       },
       {
         id: "monochrome_pure",
         name: "Monochrome Pure",
-        tag: "Minimalisti Korkeakontrasti",
+        tag: "Apple Wallet OLED · WCAG AAA",
         font: "ui-monospace, 'SF Mono', Monaco, 'Cascadia Mono', monospace",
         dark: {
           bg: "#000000",
-          surface: "#0D0D0D",
-          card: "#161616",
-          cardSub: "#222222",
-          border: "#333333",
-          borderActive: "#555555",
+          surface: "#0A0A0C",
+          surfaceLow: "#050507",
+          card: "#141416",
+          cardSub: "#1F1F22",
+          cardElevated: "#2A2A2E",
+          border: "#2C2C30",
+          borderActive: "#52525B",
           primary: "#FFFFFF",
-          primaryHover: "#E0E0E0",
+          primaryHover: "#E4E4E7",
           text: "#FFFFFF",
-          muted: "#A0A0A0",
-          olive: "#DDDDDD",
-          income: "#DDDDDD",
-          inputBg: "#161616"
+          muted: "#A1A1AA",
+          olive: "#34D399",
+          income: "#34D399",
+          expense: "#F87171",
+          inputBg: "#141416"
         },
         light: {
-          bg: "#F5F5F5",
+          bg: "#F4F4F5",
           surface: "#FFFFFF",
+          surfaceLow: "#FAFAFA",
           card: "#FFFFFF",
-          cardSub: "#EEEEEE",
-          border: "#D4D4D4",
-          borderActive: "#A3A3A3",
-          primary: "#000000",
-          primaryHover: "#262626",
-          text: "#000000",
-          muted: "#525252",
-          olive: "#171717",
-          income: "#171717",
-          inputBg: "#F5F5F5"
+          cardSub: "#E4E4E7",
+          cardElevated: "#FFFFFF",
+          border: "#D4D4D8",
+          borderActive: "#A1A1AA",
+          primary: "#09090B",
+          primaryHover: "#27272A",
+          text: "#09090B",
+          muted: "#52525B",
+          olive: "#15803D",
+          income: "#15803D",
+          expense: "#DC2626",
+          inputBg: "#F4F4F5"
         },
         colors: {
           bg: "#000000",
-          surface: "#121212",
-          card: "#121212",
-          cardSub: "#1A1A1A",
-          border: "#333333",
-          borderActive: "#555555",
+          surface: "#0A0A0C",
+          card: "#141416",
+          cardSub: "#1F1F22",
+          border: "#2C2C30",
+          borderActive: "#52525B",
           primary: "#FFFFFF",
           text: "#FFFFFF",
-          muted: "#999999",
-          olive: "#CCCCCC",
-          income: "#CCCCCC",
-          inputBg: "#121212"
+          muted: "#A1A1AA",
+          olive: "#34D399",
+          income: "#34D399",
+          inputBg: "#141416"
         }
       },
       {
         id: "warm_cashmere",
         name: "Warm Cashmere",
-        tag: "Eleganssi & Pehmeys",
+        tag: "Nordic Editorial & Pehmeys",
         font: "'Newsreader', 'Playfair Display', Georgia, serif",
         dark: {
-          bg: "#171412",
-          surface: "#1F1B18",
-          card: "#2A2420",
-          cardSub: "#352E2A",
-          border: "#443B35",
-          borderActive: "#5B4F47",
+          bg: "#141210",
+          surface: "#1C1917",
+          surfaceLow: "#181513",
+          card: "#26221F",
+          cardSub: "#312C28",
+          cardElevated: "#3D3631",
+          border: "#3D3631",
+          borderActive: "#574D46",
           primary: "#E07A5F",
-          primaryHover: "#EB9077",
-          text: "#F4EFEA",
-          muted: "#9E938B",
+          primaryHover: "#EC9178",
+          text: "#F5F2EB",
+          muted: "#A89F96",
           olive: "#6CA378",
           income: "#6CA378",
-          inputBg: "#2A2420"
+          expense: "#E07A5F",
+          inputBg: "#26221F"
         },
         light: {
-          bg: "#F7F4EE",
+          bg: "#F6F3EC",
           surface: "#FFFFFF",
+          surfaceLow: "#FAF8F5",
           card: "#FFFFFF",
-          cardSub: "#EFE9DF",
-          border: "#DDD4C5",
-          borderActive: "#C4B7A4",
+          cardSub: "#EDE7DC",
+          cardElevated: "#FFFFFF",
+          border: "#DDD4C6",
+          borderActive: "#C2B5A3",
           primary: "#9C4132",
-          primaryHover: "#803326",
-          text: "#2B2521",
-          muted: "#786D64",
-          olive: "#4A6B53",
-          income: "#4A6B53",
-          inputBg: "#FAF7F2"
+          primaryHover: "#7F3226",
+          text: "#29231E",
+          muted: "#6E6359",
+          olive: "#3F6A4E",
+          income: "#3F6A4E",
+          expense: "#B93829",
+          inputBg: "#F4EFE6"
         },
         colors: {
-          bg: "#F4EFEA",
-          surface: "#FCFAF7",
-          card: "#FCFAF7",
-          cardSub: "#EBE5DE",
-          border: "#DCD4CA",
-          borderActive: "#C2B6A6",
+          bg: "#F6F3EC",
+          surface: "#FFFFFF",
+          card: "#FFFFFF",
+          cardSub: "#EDE7DC",
+          border: "#DDD4C6",
+          borderActive: "#C2B5A3",
           primary: "#9C4132",
-          text: "#2B2521",
-          muted: "#7A7067",
-          olive: "#4A6B53",
-          income: "#4A6B53",
-          inputBg: "#FCFAF7"
+          text: "#29231E",
+          muted: "#6E6359",
+          olive: "#3F6A4E",
+          income: "#3F6A4E",
+          inputBg: "#F4EFE6"
         }
       }
     ];
@@ -1649,7 +1686,7 @@ class BudjettiApp {
     }
   }
 
-  // --- KATEGORIAT & KUUKAUSIBUDJETIT ---
+  // --- KATEGORIAT & KUUKAUSIBUDJETIT (MASTER-DETAIL LIST-DETAIL PATTERN) ---
   renderBudgetsView() {
     const container = document.getElementById("categoryGroupsContainer");
     if (!container) return;
@@ -1703,30 +1740,33 @@ class BudjettiApp {
         if (pct > 90) barColor = "var(--c-crimson)";
 
         catsHtml += `
-          <div style="padding: 10px 0; border-bottom: 1px solid rgba(165,160,136,0.1);">
+          <div class="master-detail-row" onclick="app.openCategoryDetailBottomSheet('${c.id}')">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openCategoryDetailBottomSheet('${c.id}')">
-                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
-                <span style="font-size: 13px; font-weight: 500;">${c.name}</span>
-                ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson); font-family: ui-monospace, monospace;">PIKA</span>' : ''}
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <span style="width: 9px; height: 9px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
+                <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
+                ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.18); color: var(--c-crimson); font-family: ui-monospace, monospace; font-weight: 600;">PIKA</span>' : ''}
               </div>
               <div style="display: flex; align-items: center; gap: 8px;" class="font-num">
-                <span style="font-size: 12px; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'}; cursor: pointer;" onclick="app.openCategoryDetailBottomSheet('${c.id}')">
-                  ${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-size: 11px;">/ ' + budget.toFixed(0) + ' €</span>' : '<span style="color: rgba(165,160,136,0.5); font-size: 10px;">(ei tavoitetta)</span>'}
+                <span style="font-size: 12px; font-weight: 500; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'};">
+                  ${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-size: 11px; font-weight: 400;">/ ' + budget.toFixed(0) + ' €</span>' : '<span style="color: var(--c-stone); opacity: 0.65; font-size: 10px; font-weight: 400;">(ei tavoitetta)</span>'}
                 </span>
-                <button onclick="app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
+                <button type="button" onclick="event.stopPropagation(); app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
                   <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
                   </svg>
                 </button>
-                <button onclick="app.deleteCategory('${c.id}')" title="Poista kategoria" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px; font-size: 15px; line-height: 1;">&times;</button>
+                <button type="button" onclick="event.stopPropagation(); app.deleteCategory('${c.id}')" title="Poista kategoria" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px; font-size: 15px; line-height: 1;">&times;</button>
+                <svg class="master-detail-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
               </div>
             </div>
             ${hasBudget ? `
-              <div class="meter-track" style="margin-top: 6px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px;">
-                <div class="meter-fill" style="width: ${pct}%; height: 100%; border-radius: 2px; background-color: ${barColor};"></div>
+              <div class="meter-track" style="margin-top: 6px; height: 5px; background: var(--c-card-sub); border-radius: 3px;">
+                <div class="meter-fill" style="width: ${pct}%; height: 100%; border-radius: 3px; background-color: ${barColor};"></div>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--c-stone); margin-top: 3px; font-family: ui-monospace, monospace;">
+              <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--c-stone); margin-top: 4px; font-family: ui-monospace, monospace;">
                 <span>${pct} % käytetty</span>
                 <span>${Math.max(0, budget - spent).toFixed(2).replace(".", ",")} € jäljellä</span>
               </div>
@@ -1761,10 +1801,10 @@ class BudjettiApp {
   // --- MASTER-DETAIL BOTTOM SHEET (KATEGORIOIDEN SYVÄSUKELLUS) ---
   openCategoryDetailBottomSheet(categoryId) {
     this.activeBottomSheetCategoryId = categoryId;
-    const cat = this.categories.get(categoryId);
+    const cat = this.categories.getById ? this.categories.getById(categoryId) : (this.categories.get ? this.categories.get(categoryId) : null);
     if (!cat) return;
 
-    const group = this.categories.getGroup(cat.groupId);
+    const group = this.categories.getGroupById ? this.categories.getGroupById(cat.groupId) : (this.categories.getGroup ? this.categories.getGroup(cat.groupId) : null);
     const colorDot = document.getElementById("bsCatColorDot");
     const nameEl = document.getElementById("bsCatName");
     const groupLabel = document.getElementById("bsCatGroupLabel");
@@ -1812,13 +1852,15 @@ class BudjettiApp {
     }
 
     // Suodatetaan tämän kategorian kirjaukset kuluvalta kaudelta
+    const startBound = periodRange ? (periodRange.startStr || periodRange.startDate) : null;
+    const endBound = periodRange ? (periodRange.endStr || periodRange.endDate) : null;
     const catTxs = this.transactions.filter(t => {
-      if (t.categoryId !== categoryId) return false;
-      if (periodRange && t.date) {
-        return t.date >= periodRange.startDate && t.date <= periodRange.endDate;
+      if (t.category !== categoryId && t.categoryId !== categoryId) return false;
+      if (startBound && endBound && t.date) {
+        return t.date >= startBound && t.date <= endBound;
       }
       return true;
-    }).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0));
+    }).sort((a, b) => this.sortTransactionsDesc(a, b));
 
     if (txList) {
       txList.innerHTML = "";
@@ -1835,16 +1877,22 @@ class BudjettiApp {
           row.style.background = "var(--c-card)";
           row.style.border = "1px solid var(--c-border)";
           row.style.borderRadius = "10px";
+          row.style.cursor = "pointer";
+          row.onclick = () => {
+            this.closeCategoryDetailBottomSheet();
+            this.editTransaction(t.id);
+          };
 
           const dParts = (t.date || "").split("-");
           const dateStr = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.` : (t.date || "");
+          const labelStr = t.vendor || t.payee || t.title || t.desc || cat.name || "Kirjaus";
 
           row.innerHTML = `
             <div style="min-width: 0; display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 11px; color: var(--c-stone); font-family: ui-monospace, monospace; flex-shrink: 0;">${dateStr}</span>
-              <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.payee || t.title || 'Kirjaus'}</span>
-              ${t.receiptId ? '<span title="Kuitti liitetty" style="font-size: 11px;">📎</span>' : ''}
-              ${t.splitWith ? '<span style="font-size: 9px; padding: 1px 4px; border-radius: 4px; background: rgba(78,140,106,0.15); color: var(--c-income);">JAETTU</span>' : ''}
+              <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${labelStr}</span>
+              ${t.receiptId ? '<svg width="12" height="12" fill="none" stroke="var(--c-stone)" stroke-width="1.6" viewBox="0 0 24 24" style="flex-shrink: 0;"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>' : ''}
+              ${(t.splitInfo || t.splitWith) ? '<span style="font-size: 9px; padding: 1px 4px; border-radius: 4px; background: rgba(78,140,106,0.15); color: var(--c-income);">JAETTU</span>' : ''}
             </div>
             <span class="font-num" style="font-size: 13px; font-weight: 600; color: ${t.type === 'income' ? 'var(--c-income)' : 'var(--c-crimson)'}; flex-shrink: 0;">
               ${t.type === 'income' ? '+' : '-'}${Math.abs(t.amount).toFixed(2).replace('.', ',')} €
@@ -1867,17 +1915,21 @@ class BudjettiApp {
 
   async quickAdjustCategoryBudget(addAmount) {
     if (!this.activeBottomSheetCategoryId) return;
-    const cat = this.categories.get(this.activeBottomSheetCategoryId);
+    const cat = this.categories.getById ? this.categories.getById(this.activeBottomSheetCategoryId) : (this.categories.get ? this.categories.get(this.activeBottomSheetCategoryId) : null);
     if (!cat) return;
 
     const current = cat.budgetMonthly || 0;
     const updated = Math.max(0, current + addAmount);
-    await this.categories.update(cat.id, { budgetMonthly: updated });
-    await this.storage.saveCategories(this.categories.getAll());
+    if (this.categories.updateCategory) {
+      await this.categories.updateCategory(cat.id, { budgetMonthly: updated });
+    } else if (this.categories.update) {
+      await this.categories.update(cat.id, { budgetMonthly: updated });
+    }
 
-    this.renderCategoryGroups();
-    this.updateStats();
+    this.renderBudgetsView();
+    this.renderDashboard();
     this.openCategoryDetailBottomSheet(cat.id);
+    this.storage.triggerBackgroundSync();
   }
 
   openCategoryModalFromBottomSheet() {
@@ -2824,7 +2876,28 @@ class BudjettiApp {
     const autoBtn = document.getElementById("btnThemeModeAuto");
     if (darkBtn) darkBtn.classList.toggle("active", this.themeMode === "dark");
     if (lightBtn) lightBtn.classList.toggle("active", this.themeMode === "light");
-    if (autoBtn) autoBtn.classList.toggle("active", this.themeMode === "auto");
+    if (autoBtn) {
+      autoBtn.classList.toggle("active", this.themeMode === "auto");
+      const sysDark = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const svgIcon = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+      autoBtn.innerHTML = `${svgIcon} Auto (${sysDark ? "Tumma" : "Vaalea"})`;
+    }
+  }
+
+  toggleSettingsSection(sectionId) {
+    const group = document.getElementById(sectionId);
+    if (!group) return;
+    group.classList.toggle("collapsed");
+  }
+
+  hexToRgba(hex, alpha = 0.92) {
+    if (!hex || typeof hex !== "string" || !hex.startsWith("#") || hex.length !== 7) {
+      return `rgba(23, 23, 24, ${alpha})`;
+    }
+    const r = parseInt(hex.substring(1, 3), 16);
+    const g = parseInt(hex.substring(3, 5), 16);
+    const b = parseInt(hex.substring(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   applyTheme(theme, save = true) {
@@ -2834,34 +2907,47 @@ class BudjettiApp {
     if (!c) return;
 
     const root = document.documentElement;
-    document.documentElement.setAttribute("data-theme-mode", isDark ? "dark" : "light");
+    root.setAttribute("data-theme-mode", isDark ? "dark" : "light");
+
+    // Modern Web Guidance (dark-mode & dark-mode-toggle): synkronoidaan <meta name="color-scheme">
+    if (typeof document !== "undefined") {
+      const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+      if (metaColorScheme) {
+        metaColorScheme.setAttribute("content", isDark ? "dark" : "light");
+      }
+    }
 
     const surface = c.surface || (isDark ? (c.cardSub || "#171718") : "#FFFFFF");
-    const bg = c.bg || (isDark ? "#0F0F10" : "#F4F4F6");
+    const bg = c.bg || (isDark ? "#0F0F10" : "#F2F2F7");
+    const surfaceLow = c.surfaceLow || bg;
+    const cardElevated = c.cardElevated || this.adjustHexBrightness(c.card, isDark ? 8 : 0);
 
     root.style.setProperty("--c-bg", bg);
     root.style.setProperty("--c-surface", surface);
+    root.style.setProperty("--c-surface-low", surfaceLow);
     root.style.setProperty("--c-card", c.card);
     root.style.setProperty("--c-card-sub", c.cardSub || c.card);
+    root.style.setProperty("--c-card-elevated", cardElevated);
     root.style.setProperty("--c-border", c.border);
     root.style.setProperty("--c-border-active", c.borderActive || c.border);
     root.style.setProperty("--c-crimson", c.primary);
     root.style.setProperty("--c-crimson-hover", c.primaryHover || c.primary);
     root.style.setProperty("--c-text-primary", c.text);
     root.style.setProperty("--c-stone", c.muted);
-    root.style.setProperty("--c-olive", c.olive || "#3F4F38");
-    root.style.setProperty("--c-income", c.income || c.olive || "#4E8C6A");
+    root.style.setProperty("--c-olive", c.olive || "#4E8C6A");
+    root.style.setProperty("--c-income", c.income || c.olive || "#34C759");
+    root.style.setProperty("--c-expense", c.expense || c.primary || "#E14B64");
     root.style.setProperty("--c-input-bg", c.inputBg || c.card);
 
-    // Dynaamiset yläpalkin ja alapalkin sävyt
+    // Dynaamiset Apple HIG / Material 3 lasipinnat ylä- ja alapalkkiin
+    const glassSurface = this.hexToRgba(surface, 0.92);
+    root.style.setProperty("--c-header-bg", glassSurface);
+    root.style.setProperty("--c-tab-bar-bg", glassSurface);
+
     if (isDark) {
-      root.style.setProperty("--c-header-bg", "rgba(23, 23, 24, 0.94)");
-      root.style.setProperty("--c-tab-bar-bg", "rgba(23, 23, 24, 0.94)");
       root.style.setProperty("--c-btn-secondary", "rgba(255, 255, 255, 0.08)");
       root.style.setProperty("--c-btn-secondary-hover", "rgba(255, 255, 255, 0.14)");
     } else {
-      root.style.setProperty("--c-header-bg", "rgba(255, 255, 255, 0.94)");
-      root.style.setProperty("--c-tab-bar-bg", "rgba(255, 255, 255, 0.94)");
       root.style.setProperty("--c-btn-secondary", "rgba(0, 0, 0, 0.05)");
       root.style.setProperty("--c-btn-secondary-hover", "rgba(0, 0, 0, 0.09)");
     }
@@ -2890,8 +2976,8 @@ class BudjettiApp {
     setVal("themeColorTextHex", c.text);
     setVal("themeColorMuted", c.muted);
     setVal("themeColorMutedHex", c.muted);
-    setVal("themeColorOlive", c.olive || "#3F4F38");
-    setVal("themeColorOliveHex", c.olive || "#3F4F38");
+    setVal("themeColorOlive", c.olive || "#4E8C6A");
+    setVal("themeColorOliveHex", c.olive || "#4E8C6A");
 
     const fontEl = document.getElementById("themeFontSelect");
     if (fontEl && theme.font) {
@@ -2900,9 +2986,11 @@ class BudjettiApp {
 
     const badge = document.getElementById("activeThemeBadge");
     if (badge) {
-      const modeLabel = this.themeMode === "auto" ? (isDark ? "Auto / Tumma" : "Auto / Vaalea") : (isDark ? "Tumma" : "Vaalea");
+      const modeLabel = this.themeMode === "auto" ? (isDark ? "Auto · Tumma" : "Auto · Vaalea") : (isDark ? "Tumma" : "Vaalea");
       badge.innerText = `${theme.name || "Original Kraft"} (${modeLabel})`;
     }
+
+    this.updateThemeModeButtons();
 
     this.activeTheme = theme.id || "original";
     if (save) {
@@ -3521,6 +3609,37 @@ class BudjettiApp {
     }
   }
 
+  setWizardStep(step) {
+    this.currentWizardStep = step;
+    const btn1 = document.getElementById("wizardStepBtn1");
+    const btn2 = document.getElementById("wizardStepBtn2");
+    const btn3 = document.getElementById("wizardStepBtn3");
+    const pane1 = document.getElementById("wizardStepPane1");
+    const pane2 = document.getElementById("wizardStepPane2");
+    const pane3 = document.getElementById("wizardStepPane3");
+
+    if (btn1) {
+      btn1.classList.toggle("active", step === 1);
+      btn1.classList.toggle("completed", step > 1);
+    }
+    if (btn2) {
+      btn2.classList.toggle("active", step === 2);
+      btn2.classList.toggle("completed", step > 2);
+    }
+    if (btn3) {
+      btn3.classList.toggle("active", step === 3);
+      btn3.classList.toggle("completed", false);
+    }
+
+    // Vieritetään valittuun osioon pehmeästi lomakkeen sisällä
+    const targetPane = step === 1 ? pane1 : (step === 2 ? pane2 : pane3);
+    if (targetPane && typeof targetPane.scrollIntoView === "function") {
+      try {
+        targetPane.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch (_) {}
+    }
+  }
+
   openQuickAddModal(prefill = {}) {
     const modal = document.getElementById("modalQuickAdd");
     if (!modal) return;
@@ -3539,7 +3658,7 @@ class BudjettiApp {
     const removeBtn = document.getElementById("btnRemoveReceipt");
     const viewBtn = document.getElementById("btnViewFormReceipt");
     if (prefill.receiptId) {
-      if (nameEl) nameEl.innerText = "Kuitti tallennettu 📎";
+      if (nameEl) nameEl.innerText = "Kuitti tallennettu";
       if (removeBtn) removeBtn.style.display = "inline";
       if (viewBtn) viewBtn.style.display = "inline-block";
     } else {
@@ -3569,6 +3688,7 @@ class BudjettiApp {
 
     this.setFormType(prefill.type || "expense");
     this.renderCategoryPills(prefill.categoryId || this.selectedCatId);
+    this.setWizardStep(1);
 
     modal.classList.add("active");
     const content = modal.querySelector(".modal-content");
@@ -3657,12 +3777,14 @@ class BudjettiApp {
       const isSelected = c.id === activeCatId;
       if (isSelected) {
         btn.style.borderColor = c.color;
-        btn.style.backgroundColor = "#2d2d30";
+        btn.style.backgroundColor = "var(--c-card-sub)";
+        btn.style.fontWeight = "600";
       }
 
       btn.onclick = () => {
         this.selectedCatId = c.id;
         this.renderCategoryPills(c.id);
+        this.setWizardStep(2);
       };
 
       btn.innerHTML = `

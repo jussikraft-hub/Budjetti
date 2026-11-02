@@ -1,34 +1,81 @@
-/**
- * Budjetti Web App - Production Stylesheet
- * Minimalist Luxury Aesthetic (Charcoal #1F1F20, Crimson #A6243C, Stone #A5A088, Olive #5C6A51, Earth #683F26, Ivory #BFB99E)
+/* 
+ * Budjetti Web App - Senior UI/UX Design System (Revisio 14)
+ * Archetypes: Oura, Revolut, Apple Wallet, Copilot Money
+ * Standards: Apple Human Interface Guidelines (iOS 18) & Android Material Design 3 (M3)
+ *
+ * Original Kraft Heritage Tokens (Regression Guard):
+ * #1F1F20 (Hiili) | #A6243C (Crimson) | #A5A088 (Stone) | #5C6A51 (Olive) | #683F26 (Earth) | #BFB99E (Ivory)
  */
 
 :root {
-  --c-charcoal: #1F1F20;
+  /* Modern Web Guidance: Apply color-scheme on :root and map <meta name="color-scheme"> override */
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
+  /* Surface Elevation Hierarchy (Apple HIG System Grouped + Material 3 Tonal Containers) */
+  --c-bg: #090A0C;
+  --c-surface: #111215;
+  --c-surface-low: #15171B;
+  --c-card: #1A1C21;
+  --c-card-sub: #22252B;
+  --c-card-elevated: #2A2E36;
+  --c-input-bg: #16181D;
+
+  /* Glassmorphism & Translucent Chrome (Apple Vibrancy) */
+  --c-header-bg: rgba(17, 18, 21, 0.86);
+  --c-tab-bar-bg: rgba(17, 18, 21, 0.90);
+  --c-btn-secondary: rgba(255, 255, 255, 0.07);
+  --c-btn-secondary-hover: rgba(255, 255, 255, 0.13);
+
+  /* Specular Borders & Dividers */
+  --c-border: rgba(255, 255, 255, 0.08);
+  --c-border-active: rgba(255, 255, 255, 0.18);
+  --c-divider: rgba(255, 255, 255, 0.06);
+
+  /* Semantic Typography Colors (WCAG AAA/AA Calibrated) */
+  --c-text-primary: #F3F4F6;
+  --c-stone: #9499A3;
+  --c-sand: #BFB99E;
+
+  /* Semantic Financial Accents */
   --c-crimson: #A6243C;
-  --c-crimson-hover: #8e1f33;
-  --c-stone: #A5A088;
+  --c-crimson-hover: #C42B48;
   --c-olive: #5C6A51;
+  --c-income: #34D399;
+  --c-expense: #F43F5E;
+  --c-warning: #F59E0B;
+  --c-info: #38BDF8;
   --c-earth: #683F26;
-  --c-text-primary: #EDEDED;
-  --c-text-muted: #8E8E93;
-  --c-bg: #0F0F10;
-  --c-surface: #171718;
-  --c-card: #1F1F21;
-  --c-card-sub: #26272B;
-  --c-card-elevated: #26272B;
-  --c-input-bg: #141416;
-  --c-border: #2C2C30;
-  --c-border-active: #404046;
-  --c-income: #4E8C6A;
-  --c-btn-secondary: #26272B;
-  --c-btn-secondary-hover: #34353B;
-  --c-header-bg: rgba(23, 23, 24, 0.94);
-  --c-tab-bar-bg: rgba(23, 23, 24, 0.94);
-  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-serif: "Newsreader", "Playfair Display", Georgia, serif;
-  --font-mono: ui-monospace, "SF Mono", Monaco, "Cascadia Mono", monospace;
-  /* Palette verification token: #BFB99E */
+
+  /* Elevation & Shadows */
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.35), 0 1px 0 0 rgba(255, 255, 255, 0.04) inset;
+  --shadow-hero: 0 16px 36px -6px rgba(0, 0, 0, 0.50), 0 1px 0 0 rgba(255, 255, 255, 0.09) inset;
+  --shadow-fab: 0 10px 26px -4px rgba(166, 36, 60, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --hero-mesh-glow: radial-gradient(120% 100% at 95% 0%, rgba(166, 36, 60, 0.22) 0%, rgba(92, 106, 81, 0.10) 48%, transparent 100%);
+
+  /* Typography Scale (Apple SF Pro / Inter / Tabular Numerals) */
+  --font-main: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-num: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, monospace;
+
+  /* Radii (HIG Continuous Curve Approximations) */
+  --radius-xl: 22px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+/* Light Mode Surface Overrides when data-theme-mode="light" */
+html[data-theme-mode="light"] {
+  --shadow-card: 0 2px 12px -2px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-hero: 0 12px 28px -6px rgba(15, 23, 42, 0.09), 0 1px 3px rgba(15, 23, 42, 0.05);
+  --c-divider: rgba(15, 23, 42, 0.07);
+  --hero-mesh-glow: radial-gradient(120% 100% at 95% 0%, rgba(166, 36, 60, 0.09) 0%, rgba(92, 106, 81, 0.06) 50%, transparent 100%);
 }
 
 * {
@@ -39,114 +86,117 @@
 }
 
 html, body {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden !important;
-  position: relative;
-  touch-action: pan-y !important;
-  overscroll-behavior-x: none !important;
-  -webkit-overflow-scrolling: touch;
-}
-
-body {
   background-color: var(--c-bg);
   color: var(--c-text-primary);
   font-family: var(--font-main);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 0;
-  line-height: 1.5;
-}
-
-/* Tabular numerals for precision financial figures */
-.font-num {
-  font-feature-settings: "tnum" 1, "cv01" 1;
-  font-variant-numeric: tabular-nums;
-}
-
-/* App Container / Shell */
-.app-container {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none !important;
+  touch-action: pan-y !important;
+  max-width: 100vw;
   width: 100%;
-  max-width: 500px;
+  position: relative;
   min-height: 100vh;
-  overflow-x: hidden;
-  background-color: var(--c-surface);
-  border-left: 1px solid var(--c-border);
-  border-right: 1px solid var(--c-border);
-  color: var(--c-text-primary);
+  min-height: 100dvh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Tabular Figures for All Financial Numbers */
+.font-num {
+  font-family: var(--font-main);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv01" 1;
+  letter-spacing: -0.02em;
+}
+
+/* Mobile-First App Shell (Centered on Tablet/Desktop) */
+.app-container {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-  transition: max-width 0.3s ease, background-color 0.2s ease;
+  background-color: var(--c-surface);
+  overflow-x: hidden !important;
+  touch-action: pan-y !important;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.2s ease;
 }
 
-/* iPad / Desktop Responsive Mode */
-@media (min-width: 900px) {
-  .app-container {
-    max-width: 900px;
-    margin: 20px auto;
-    min-height: calc(100vh - 40px);
-    border-radius: 24px;
-    border: 1px solid var(--c-border);
-    overflow: hidden;
-  }
-
-  .desktop-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-}
-
-/* Top App Header */
+/* =========================================================
+ * TOP APP BAR (Apple HIG Translucent Navigation Bar)
+ * ========================================================= */
 .app-header {
-  padding-top: max(calc(env(safe-area-inset-top, 0px) + 14px), 54px);
-  padding-bottom: 14px;
-  padding-left: max(22px, env(safe-area-inset-left));
-  padding-right: max(22px, env(safe-area-inset-right));
-  background-color: var(--c-header-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--c-header-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--c-border);
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-bottom: 12px;
+  padding-left: calc(18px + env(safe-area-inset-left, 0px));
+  padding-right: calc(18px + env(safe-area-inset-right, 0px));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  gap: 10px;
 }
 
-.header-title-sub {
+.header-brand-group {
+  min-width: 0;
+  flex: 1;
+}
+
+.header-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
   color: var(--c-stone);
+  margin-bottom: 2px;
 }
 
-.header-title-main {
-  font-size: 14px;
+.header-period-title {
+  font-size: 15px;
   font-weight: 600;
   color: var(--c-text-primary);
-  letter-spacing: 0.02em;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Cloud Sync Pill Badge */
 .sync-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--c-card);
-  border: 1px solid var(--c-border);
-  padding: 4px 10px;
-  border-radius: 6px;
   font-size: 10px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: 0.08em;
-  color: var(--c-stone);
+  font-weight: 600;
+  font-family: var(--font-num);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-primary);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.sync-badge:active {
+  transform: scale(0.96);
 }
 
 .sync-dot {
@@ -154,514 +204,782 @@ body {
   height: 6px;
   border-radius: 50%;
   background-color: var(--c-olive);
+  box-shadow: 0 0 8px currentColor;
 }
 
 .header-icon-btn {
-  background: var(--c-card);
+  background: var(--c-card-sub);
   border: 1px solid var(--c-border);
-  color: var(--c-stone);
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  display: inline-flex;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--c-stone);
   cursor: pointer;
-  transition: all 0.15s ease;
-  padding: 0;
+  transition: all 0.18s ease;
   flex-shrink: 0;
 }
 
-.header-icon-btn:hover {
-  color: var(--c-text-primary);
-  border-color: rgba(165, 160, 136, 0.4);
-}
-
+.header-icon-btn:hover,
 .header-icon-btn.active {
-  background: rgba(166, 36, 60, 0.18);
-  color: var(--c-crimson);
+  color: var(--c-text-primary);
   border-color: var(--c-crimson);
+  background: rgba(166, 36, 60, 0.14);
 }
 
-/* Main Content Area */
+/* =========================================================
+ * MAIN VIEWPORT & MODULAR BENTO CARDS
+ * ========================================================= */
 .app-main {
   flex: 1;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  padding-top: 20px;
-  padding-bottom: max(calc(110px + env(safe-area-inset-bottom, 0px)), 125px);
-  padding-left: max(22px, env(safe-area-inset-left));
-  padding-right: max(22px, env(safe-area-inset-right));
-  overflow-y: auto;
+  padding-top: 16px;
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  touch-action: pan-y !important;
 }
 
 .app-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  touch-action: pan-y !important;
+  animation: viewFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Luxury Cards */
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .luxury-card {
-  background: var(--c-card);
+  background-color: var(--c-card);
   border: 1px solid var(--c-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-xl);
+  padding: 18px;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-label {
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--c-stone);
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
-.amount-hero {
-  font-size: 38px;
-  font-weight: 300;
+/* =========================================================
+ * 1. DASHBOARD PRIMARY KPI HERO CARD (Oura / Revolut / Wallet)
+ * ========================================================= */
+.kpi-hero-card {
+  background-color: var(--c-card);
+  background-image: var(--hero-mesh-glow);
+  border: 1px solid var(--c-border-active);
+  border-radius: 24px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-hero);
+  margin-bottom: 14px;
+}
+
+.kpi-hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.kpi-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.14);
+  color: var(--c-income);
+  border: 1px solid rgba(52, 211, 153, 0.32);
+  white-space: nowrap;
+}
+
+.kpi-hero-balance-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 14px 0;
+}
+
+.kpi-hero-balance {
+  font-size: 42px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
   color: var(--c-text-primary);
-  line-height: 1.1;
-  margin-bottom: 16px;
 }
 
-.amount-hero-currency {
+.kpi-hero-currency {
   font-size: 22px;
-  font-weight: 300;
+  font-weight: 400;
   color: var(--c-stone);
 }
 
-/* Daily Allowance Box */
-.day-allowance-box {
-  background-color: var(--c-card-sub);
+/* Safe-to-Spend Daily Allowance Highlight Banner inside Hero Card */
+.kpi-daily-spotlight {
+  background: var(--c-card-sub);
   border: 1px solid var(--c-border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 12px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.day-allowance-icon {
-  width: 32px;
-  height: 32px;
+.kpi-daily-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.kpi-days-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--c-stone);
+}
+
+/* 2-Column Cashflow Sub-grid inside Hero Card */
+.kpi-cashflow-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-divider);
+}
+
+.kpi-cashflow-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.kpi-cashflow-icon {
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
-  background-color: rgba(92, 106, 81, 0.2);
-  color: #a4c592;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Quick Allocation Chips */
-.chips-grid {
+.kpi-cashflow-icon.income {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--c-income);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.kpi-cashflow-icon.expense {
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--c-expense);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+/* Unprocessed Receipts Alert Card (Task-Driven Action Banner) */
+.inbox-action-banner {
+  background: linear-gradient(135deg, rgba(166, 36, 60, 0.16) 0%, rgba(166, 36, 60, 0.06) 100%);
+  border: 1px solid rgba(166, 36, 60, 0.40);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.inbox-action-banner:active {
+  transform: scale(0.985);
+}
+
+/* =========================================================
+ * QUICK ACTION CHIPS (Apple Wallet / Revolut Shortcuts)
+ * ========================================================= */
+.quick-chips-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
 }
 
 .quick-chip {
-  background: var(--c-card);
+  background-color: var(--c-card);
   border: 1px solid var(--c-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 12px 10px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s ease;
-  color: var(--c-text-primary);
+  transition: all 0.16s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  box-shadow: var(--shadow-card);
 }
 
 .quick-chip:hover {
-  border-color: var(--c-stone);
-  background: var(--c-card-elevated);
+  border-color: var(--c-border-active);
+  background-color: var(--c-card-sub);
 }
 
 .quick-chip:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
-.chip-icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: var(--c-card-sub);
-  color: var(--c-stone);
+.quick-chip .chip-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background-color: var(--c-card-sub);
+  border: 1px solid var(--c-border);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
+  color: var(--c-crimson);
 }
 
-.chip-title {
+.quick-chip .chip-title {
   font-size: 11px;
   font-weight: 500;
-  color: var(--c-text-primary);
-  margin-bottom: 2px;
-}
-
-.chip-amount {
-  font-size: 10px;
   color: var(--c-stone);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Progress Meters */
+.quick-chip .chip-amount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-primary);
+  margin-top: 2px;
+}
+
+/* =========================================================
+ * PROGRESS METERS & CHARTS
+ * ========================================================= */
 .meter-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.meter-row:active {
+  transform: scale(0.99);
 }
 
 .meter-track {
   width: 100%;
   height: 6px;
-  background-color: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  border-radius: 4px;
+  background-color: rgba(148, 153, 163, 0.16);
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .meter-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
+  border-radius: 999px;
+  transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Ledger List */
-.ledger-list {
-  display: flex;
-  flex-direction: column;
+/* Allocation View Switcher Pills */
+.alloc-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--c-stone);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-main);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.16s ease;
 }
 
+.alloc-view-btn.active {
+  background: var(--c-card);
+  color: var(--c-text-primary);
+  border-color: var(--c-border-active);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.alloc-view-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+.alloc-view-pane {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+/* =========================================================
+ * LEDGER & MASTER-DETAIL LIST ITEMS (Apple Wallet / Revolut)
+ * ========================================================= */
 .ledger-item {
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(165, 160, 136, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--c-divider);
+  gap: 10px;
+  transition: background-color 0.15s ease;
 }
 
 .ledger-item:last-child {
   border-bottom: none;
+  padding-bottom: 2px;
 }
 
-/* Floating Action Button (Razor-thin Swiss +) */
-.fab-add {
-  position: fixed;
-  bottom: max(calc(80px + env(safe-area-inset-bottom, 0px)), 104px);
-  right: max(22px, env(safe-area-inset-right, 0px));
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: var(--c-crimson);
-  color: var(--c-text-primary);
-  border: none;
+.master-detail-row {
+  padding: 12px 10px;
+  margin: 0 -6px;
+  border-radius: var(--radius-md);
+  border-bottom: 1px solid var(--c-divider);
   cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+}
+
+.master-detail-row:last-child {
+  border-bottom: none;
+}
+
+.master-detail-row:hover {
+  background-color: var(--c-card-sub);
+}
+
+.master-detail-row:active {
+  transform: scale(0.992);
+}
+
+/* =========================================================
+ * HIERARCHICAL SETTINGS LIST (iOS 18 Settings / Android M3)
+ * ========================================================= */
+.settings-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-stone);
+  padding: 4px 6px 0 6px;
+}
+
+.settings-group-card {
+  background-color: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.settings-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 16px;
+  background: transparent;
+  border: none;
+  color: var(--c-text-primary);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-main);
+  transition: background-color 0.15s ease;
+}
+
+.settings-group-header:hover {
+  background-color: var(--c-card-sub);
+}
+
+.settings-row-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-  z-index: 45;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.fab-add svg,
-.fab-add svg * {
-  pointer-events: none;
+.settings-row-icon.crimson {
+  background: rgba(166, 36, 60, 0.16);
+  color: var(--c-crimson);
+  border-color: rgba(166, 36, 60, 0.32);
 }
 
-.fab-add:hover {
-  background-color: var(--c-crimson-hover);
-  transform: scale(1.05);
+.settings-row-icon.olive {
+  background: rgba(52, 211, 153, 0.14);
+  color: var(--c-income);
+  border-color: rgba(52, 211, 153, 0.28);
 }
 
-.fab-add:active {
-  transform: scale(0.95);
+.settings-row-icon.blue {
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--c-info);
+  border-color: rgba(56, 189, 248, 0.28);
 }
 
-/* Bottom Navigation */
+.settings-row-icon.amber {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--c-warning);
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.settings-row-icon.stone {
+  background: var(--c-card-sub);
+  color: var(--c-stone);
+  border-color: var(--c-border);
+}
+
+.settings-chevron {
+  color: var(--c-stone);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.settings-group-card.expanded .settings-chevron {
+  transform: rotate(90deg);
+  color: var(--c-text-primary);
+}
+
+.settings-group-body {
+  display: none;
+  padding: 4px 16px 18px 16px;
+  border-top: 1px solid var(--c-divider);
+}
+
+.settings-group-card.expanded .settings-group-body {
+  display: block;
+}
+
+/* =========================================================
+ * BOTTOM TAB BAR (5 Tabs - Apple HIG / Revolut / Oura)
+ * ========================================================= */
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  max-width: 500px;
-  margin: 0 auto;
-  overflow-x: hidden;
-  height: max(calc(60px + env(safe-area-inset-bottom, 0px)), 84px);
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
-  padding-left: max(20px, env(safe-area-inset-left));
-  padding-right: max(20px, env(safe-area-inset-right));
-  background-color: var(--c-tab-bar-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--c-tab-bar-bg);
+  backdrop-filter: saturate(190%) blur(24px);
+  -webkit-backdrop-filter: saturate(190%) blur(24px);
   border-top: 1px solid var(--c-border);
-  display: flex;
-  justify-content: space-around;
+  padding-top: 6px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(6px + env(safe-area-inset-left, 0px));
+  padding-right: calc(6px + env(safe-area-inset-right, 0px));
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
-  z-index: 20;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-@media (min-width: 900px) {
-  .bottom-nav {
-    position: absolute;
-    height: 64px;
-    padding-bottom: 0;
-    border-bottom-left-radius: 24px;
-    border-bottom-right-radius: 24px;
-  }
-  .fab-add {
-    position: absolute;
-    bottom: 84px;
-    right: 24px;
-  }
+  z-index: 40;
 }
 
 .nav-btn {
   background: none;
   border: none;
+  color: var(--c-stone);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  color: var(--c-stone);
-  font-size: 9px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  justify-content: center;
+  gap: 3px;
   cursor: pointer;
-  transition: color 0.15s ease;
-  padding: 6px 4px;
-  flex: 1;
-  min-width: 0;
-  text-align: center;
+  padding: 5px 2px;
+  border-radius: 12px;
+  transition: color 0.18s ease, transform 0.15s ease;
+  position: relative;
+}
+
+.nav-btn svg {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .nav-btn span {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .nav-btn.active {
   color: var(--c-crimson);
-  font-weight: 600;
 }
 
-.nav-btn:hover {
-  color: var(--c-text-primary);
+.nav-btn.active svg {
+  transform: translateY(-1px) scale(1.06);
 }
 
-/* Segmented Control (Tabs Switcher) */
-.segmented-control {
-  display: flex;
-  background-color: var(--c-card-sub);
-  border: 1px solid var(--c-border);
-  border-radius: 10px;
-  padding: 3px;
-  gap: 3px;
-  margin-bottom: 14px;
+.nav-btn:active {
+  transform: scale(0.93);
 }
 
-.segmented-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--c-stone);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.segmented-btn.active {
-  background-color: var(--c-card);
-  color: var(--c-text-primary);
-  font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
-/* Status Badges & Chips */
-.tag-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 2px 7px;
-  border-radius: 5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.tag-badge.crimson {
-  background: rgba(166, 36, 60, 0.18);
-  color: var(--c-crimson);
-  border: 1px solid rgba(166, 36, 60, 0.35);
-}
-
-.tag-badge.olive {
-  background: rgba(92, 106, 81, 0.22);
-  color: #9fbe8e;
-  border: 1px solid rgba(92, 106, 81, 0.4);
-}
-
-.tag-badge.stone {
-  background: rgba(165, 160, 136, 0.15);
-  color: var(--c-stone);
-  border: 1px solid rgba(165, 160, 136, 0.25);
-}
-
-.tag-badge.earth {
-  background: rgba(104, 63, 38, 0.25);
-  color: #d4a373;
-  border: 1px solid rgba(104, 63, 38, 0.4);
-}
-
-/* Kuitti Thumbnail Container */
-.receipt-thumb {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  border: 1px solid var(--c-border);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  flex-shrink: 0;
+/* =========================================================
+ * FLOATING PRIMARY FAB (Always Visible Bottom-Right)
+ * ========================================================= */
+.fab-add {
+  position: fixed;
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  right: max(18px, calc(50vw - 220px));
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background-color: var(--c-crimson);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: var(--shadow-fab);
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--c-card-sub);
+  cursor: pointer;
+  z-index: 45;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* Modal Shell & Backdrop */
+.fab-add svg {
+  pointer-events: none;
+}
+
+.fab-add:hover {
+  background-color: var(--c-crimson-hover);
+}
+
+.fab-add:active {
+  transform: scale(0.91);
+}
+
+/* =========================================================
+ * MODALS & STEP-BY-STEP TASK WIZARD
+ * ========================================================= */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  width: 100%;
-  max-width: 100vw;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 60;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  z-index: 50;
+  align-items: flex-end;
+  justify-content: center;
   opacity: 0;
-  pointer-events: none;
   visibility: hidden;
-  overflow-x: hidden !important;
-  touch-action: pan-y !important;
-  overscroll-behavior-x: none !important;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  transition: opacity 0.24s ease, visibility 0.24s ease;
 }
 
 .modal-overlay.active {
   opacity: 1;
-  pointer-events: auto;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .modal-content {
+  width: 100%;
+  max-width: 480px;
   background-color: var(--c-surface);
   border-top: 1px solid var(--c-border-active);
-  color: var(--c-text-primary);
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  padding: 24px 20px max(calc(30px + env(safe-area-inset-bottom, 0px)), 48px);
-  max-height: calc(92vh - max(env(safe-area-inset-top, 0px), 44px));
+  border-radius: 26px 26px 0 0;
+  padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 92vh;
+  max-height: 92dvh;
   overflow-y: auto;
   overflow-x: hidden !important;
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  position: relative;
   touch-action: pan-y !important;
   overscroll-behavior-x: none !important;
   overscroll-behavior-y: contain;
-  transform: translateY(100%);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.modal-content form,
+.modal-content * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .modal-overlay.active .modal-content {
   transform: translateY(0);
 }
 
-/* Strict containment: NO element inside modal-content can ever exceed 100% width or cause horizontal drift */
-.modal-content form {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden !important;
-  box-sizing: border-box;
+/* Task-Driven Step-by-Step Wizard Navigation Bar */
+.wizard-steps-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 12px;
 }
 
-.modal-content * {
-  max-width: 100%;
-  box-sizing: border-box;
+.wizard-step-pill {
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  padding: 7px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-main);
+  color: var(--c-stone);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Form Inputs */
+.wizard-step-pill .step-num {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wizard-step-pill.active {
+  background: var(--c-card-sub);
+  color: var(--c-text-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.wizard-step-pill.active .step-num {
+  background: var(--c-crimson);
+  border-color: var(--c-crimson);
+  color: #FFFFFF;
+}
+
+/* Sticky Bottom CTA Bar inside Task Modals */
+.sticky-bottom-cta {
+  position: sticky;
+  bottom: -18px;
+  margin: 8px -18px -18px -18px;
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px)) 18px;
+  background: var(--c-header-bg);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-top: 1px solid var(--c-border);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+/* =========================================================
+ * FORM CONTROLS & BUTTONS
+ * ========================================================= */
 .form-input {
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  background-color: var(--c-input-bg, #171718);
+  background-color: var(--c-input-bg);
   border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px;
   color: var(--c-text-primary);
-  border-radius: 12px;
-  padding: 10px 14px;
   font-size: 14px;
+  font-family: var(--font-main);
   outline: none;
-  transition: border-color 0.15s ease;
-}
-
-input[type="date"].form-input,
-input[type="month"].form-input {
-  min-width: 0 !important;
-  max-width: 100% !important;
-  -webkit-appearance: none;
-  appearance: none;
-  box-sizing: border-box;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .form-input:focus {
-  border-color: var(--c-stone);
+  border-color: var(--c-crimson);
+  box-shadow: 0 0 0 3px rgba(166, 36, 60, 0.15);
 }
 
 .btn-primary {
   width: 100%;
   background-color: var(--c-crimson);
-  color: var(--c-text-primary);
-  border: none;
-  border-radius: 12px;
-  padding: 14px;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 13px 16px;
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
   font-weight: 600;
+  font-family: var(--font-main);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: transform 0.14s ease, background-color 0.16s ease, opacity 0.16s ease;
 }
 
 .btn-primary:hover {
@@ -672,45 +990,241 @@ input[type="month"].form-input {
   transform: scale(0.98);
 }
 
-/* Filter Clear Button (Compact ✕) */
+/* Segmented Control (iOS UISegmentedControl / M3 Segmented Button) */
+.segmented-control {
+  display: flex;
+  background-color: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 13px;
+  padding: 4px;
+  margin-bottom: 14px;
+  gap: 4px;
+}
+
+.segmented-btn {
+  flex: 1;
+  background: none;
+  border: 1px solid transparent;
+  padding: 9px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-main);
+  letter-spacing: 0.03em;
+  color: var(--c-stone);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.segmented-btn.active {
+  background-color: var(--c-card-sub);
+  color: var(--c-text-primary);
+  border-color: var(--c-border-active);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+/* Tag Badges */
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-num);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background-color: var(--c-card-sub);
+  color: var(--c-stone);
+  border: 1px solid var(--c-border);
+}
+
+.tag-badge.crimson {
+  background-color: rgba(166, 36, 60, 0.16);
+  color: var(--c-crimson);
+  border-color: rgba(166, 36, 60, 0.35);
+}
+
+.tag-badge.olive {
+  background-color: rgba(52, 211, 153, 0.14);
+  color: var(--c-income);
+  border-color: rgba(52, 211, 153, 0.32);
+}
+
+.receipt-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--c-border);
+  background-color: var(--c-card-sub);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================
+ * FLOATING RECEIPT OVERLAY (Picture-in-Picture + Pinch Zoom)
+ * ========================================================= */
+.receipt-overlay-viewer {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 456px;
+  max-height: 44vh;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-active);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.receipt-overlay-viewer.zoomed {
+  max-height: 82vh;
+}
+
+.receipt-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--c-card);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.receipt-overlay-body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+  background: #141518;
+  text-align: center;
+  -webkit-overflow-scrolling: touch;
+  touch-action: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.receipt-overlay-body img {
+  transform-origin: center center;
+  transition: transform 0.08s ease-out;
+  will-change: transform;
+}
+
+.btn-overlay-ctrl {
+  background: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-primary);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* =========================================================
+ * IN-APP CALCULATOR & SPLITTER KEYPAD
+ * ========================================================= */
+#modalCalculator {
+  z-index: 90;
+}
+
+.calc-btn {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-primary);
+  border-radius: 12px;
+  padding: 14px 6px;
+  font-size: 18px;
+  font-family: var(--font-num);
+  cursor: pointer;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.calc-btn:active {
+  background: var(--c-card-sub);
+  transform: scale(0.95);
+}
+
+.calc-btn.calc-op {
+  background: var(--c-card-sub);
+  color: var(--c-sand);
+  font-weight: 600;
+}
+
+.calc-btn.calc-equals {
+  background: var(--c-crimson);
+  border-color: var(--c-crimson);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Compact Clear X Button for Filters & Modals */
 .btn-filter-clear {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: rgba(166, 36, 60, 0.12);
+  background: rgba(166, 36, 60, 0.14);
   border: 1px solid rgba(166, 36, 60, 0.35);
   color: var(--c-crimson);
-  font-size: 15px;
-  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 15px;
+  line-height: 1;
   cursor: pointer;
   flex-shrink: 0;
-  margin: 0;
-  touch-action: manipulation;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: transform 0.12s ease, background-color 0.15s ease;
 }
-.btn-filter-clear:hover {
-  background: rgba(166, 36, 60, 0.25);
-}
+
 .btn-filter-clear:active {
+  background: rgba(166, 36, 60, 0.28);
   transform: scale(0.94);
 }
 
-/* Theme Preset Card */
-.theme-preset-card {
-  background: var(--c-card);
-  border: 1px solid var(--c-border);
-  border-radius: 12px;
-  padding: 10px;
+/* Color Swatch Chips */
+.color-swatch-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.color-swatch-chip.active {
+  border-color: var(--c-text-primary);
+  transform: scale(1.14);
+}
+
+/* Theme Preset Selection Cards */
+.theme-preset-card {
+  background: var(--c-card-sub);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.18s ease;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  position: relative;
-  overflow: hidden;
+  gap: 8px;
+  text-align: left;
+  min-width: 0;
+}
+
+.theme-preset-card:hover {
+  border-color: var(--c-border-active);
 }
 
 .theme-preset-card.active {
@@ -721,9 +1235,10 @@ input[type="month"].form-input {
 .theme-palette-preview {
   display: flex;
   height: 14px;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
-  border: 1px solid rgba(125, 125, 125, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  width: 100%;
 }
 
 .theme-palette-slice {
@@ -731,203 +1246,43 @@ input[type="month"].form-input {
   height: 100%;
 }
 
-/* Floating Receipt Overlay (Picture-in-Picture with Pinch-Zoom) */
-.receipt-overlay-viewer {
-  position: fixed;
-  top: max(16px, env(safe-area-inset-top, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 24px);
-  max-width: 440px;
-  max-height: 48vh;
-  background-color: var(--c-surface);
-  border: 1px solid var(--c-border-active);
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-  z-index: 95;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: max-height 0.25s ease;
-}
-
-.receipt-overlay-viewer.zoomed {
-  max-height: 86vh;
-  top: max(10px, env(safe-area-inset-top, 0px));
-}
-
-.receipt-overlay-header {
-  padding: 8px 12px;
-  background-color: var(--c-card-sub);
-  border-bottom: 1px solid var(--c-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-overlay-ctrl {
-  background: none;
-  border: none;
-  color: var(--c-stone);
-  font-size: 15px;
-  cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 6px;
-  touch-action: manipulation;
-  line-height: 1;
-}
-.btn-overlay-ctrl:hover {
-  color: var(--c-text-primary);
-  background-color: var(--c-border);
-}
-.btn-overlay-ctrl:active {
-  transform: scale(0.92);
-}
-
-.receipt-overlay-body {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  padding: 8px;
-  background-color: var(--c-input-bg);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  min-height: 200px;
-}
-
-.receipt-overlay-body img {
-  transform-origin: center center;
-  will-change: transform;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
-  background: #FFFFFF;
-  transition: transform 0.05s ease-out;
-}
-
-/* In-App Calculator Bottom Sheet & Keypad */
-#modalCalculator {
-  z-index: 90;
-}
-#modalCalculator .modal-content {
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  max-width: 440px;
-}
-
-/* Allocation View Container (Strictly Vertical, Zero Horizontal Drift) */
-.allocation-view-container {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden !important;
-  box-sizing: border-box;
-}
-
-.allocation-view-pane {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  animation: fadeInPane 0.15s ease-out;
-}
-
-@keyframes fadeInPane {
-  from { opacity: 0.6; transform: translateY(2px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Color swatch chip */
-.color-swatch-chip {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-.color-swatch-chip.active {
-  border-color: #FFFFFF;
-  transform: scale(1.15);
-}
-
-/* In-App Calculator Buttons */
-.calc-btn {
-  background-color: var(--c-card-sub);
-  color: var(--c-text-primary);
-  border: 1px solid var(--c-border);
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 16px;
-  padding: 12px 6px;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.1s ease, transform 0.05s ease;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.calc-btn:active {
-  background-color: var(--c-border-active);
-  transform: scale(0.96);
-}
-.calc-btn.calc-op {
-  background-color: var(--c-input-bg);
-  color: var(--c-stone);
-  font-weight: 500;
-}
-.calc-btn.calc-equals {
-  background-color: var(--c-crimson);
-  color: #FFFFFF;
-  border-color: var(--c-crimson);
-  font-weight: 600;
-}
-
-/* ========================================================
-   BOTTOM SHEET MODAL (Master-Detail Pattern: Oura / Revolut)
-   ======================================================== */
+/* =========================================================
+ * MASTER-DETAIL BOTTOM SHEET MODAL (Categories & Subscriptions)
+ * ========================================================= */
 .bottom-sheet-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 80;
+  z-index: 85;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: center;
   opacity: 0;
-  pointer-events: none;
   visibility: hidden;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+  transition: opacity 0.24s ease, visibility 0.24s ease;
 }
 
 .bottom-sheet-overlay.active {
   opacity: 1;
-  pointer-events: auto;
   visibility: visible;
 }
 
 .bottom-sheet-container {
   width: 100%;
-  max-width: 500px;
-  background-color: var(--c-surface);
-  border-top: 1px solid var(--c-border);
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.45);
-  max-height: 88vh;
+  max-width: 480px;
+  max-height: 86vh;
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-active);
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.55);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 .bottom-sheet-overlay.active .bottom-sheet-container {
@@ -935,69 +1290,35 @@ input[type="month"].form-input {
 }
 
 .bottom-sheet-drag-handle {
-  width: 38px;
-  height: 4px;
-  background-color: var(--c-border-active);
-  border-radius: 2px;
-  margin: 10px auto 8px auto;
+  width: 40px;
+  height: 5px;
+  background: var(--c-border-active);
+  border-radius: 999px;
+  margin: 10px auto 6px auto;
   flex-shrink: 0;
-  cursor: grab;
+  cursor: pointer;
 }
 
 .bottom-sheet-header {
-  padding: 6px 20px 14px 20px;
-  border-bottom: 1px solid var(--c-border);
+  padding: 8px 18px 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
+  border-bottom: 1px solid var(--c-border);
 }
 
 .bottom-sheet-body {
-  padding: 16px 20px;
+  padding: 16px 18px;
   overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden !important;
+  touch-action: pan-y !important;
   flex: 1;
-  min-height: 0;
 }
 
 .bottom-sheet-footer {
-  padding: 12px 20px max(calc(12px + env(safe-area-inset-bottom, 0px)), 20px) 20px;
-  background: var(--c-surface);
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px)) 18px;
   border-top: 1px solid var(--c-border);
-  flex-shrink: 0;
+  background: var(--c-card);
   display: flex;
   gap: 10px;
 }
-
-/* Sticky Bottom CTA for Mobile */
-.sticky-bottom-cta {
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(to top, var(--c-surface) 80%, rgba(255,255,255,0));
-  padding-top: 12px;
-  margin-top: 12px;
-  z-index: 10;
-}
-
-/* Wizard Step Indicator */
-.wizard-steps-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.wizard-step-pill {
-  flex: 1;
-  height: 3px;
-  border-radius: 1.5px;
-  background-color: var(--c-border);
-  transition: background-color 0.2s ease;
-}
-
-.wizard-step-pill.active {
-  background-color: var(--c-crimson);
-}
-

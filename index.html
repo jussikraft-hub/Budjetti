@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="fi" data-theme-mode="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <title>Budjetti – Pääkirja & Kassavirta</title>
 
   <!-- PWA & Mobile Web App Meta -->
@@ -13,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css?v=20261102_0940">
+  <link rel="stylesheet" href="style.css?v=20261102_1100">
 
   <!-- External Parsers & Visualizers (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -24,19 +25,25 @@
 
   <div class="app-container">
 
-    <!-- TOP HEADER -->
+    <!-- TOP HEADER (Apple HIG Translucent Navigation Bar) -->
     <header class="app-header">
-      <div>
-        <span class="header-title-sub">Pääkirja</span>
-        <h1 class="header-title-main" id="headerCurrentPeriod">Marraskuu 2026</h1>
+      <div class="header-brand-group">
+        <span class="header-eyebrow">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" rx="3"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          <span>Talous & Kassavirta</span>
+        </span>
+        <h1 class="header-period-title" id="headerCurrentPeriod">Marraskuu 2026</h1>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <div class="sync-badge" id="syncStatusBadge" onclick="app.switchView('viewAsetukset')" title="Klikkaa muokataksesi synkronointia">
+      <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+        <div class="sync-badge" id="syncStatusBadge" onclick="app.switchView('viewAsetukset')" title="Synkronoinnin tila – klikkaa avataksesi asetukset">
           <span class="sync-dot" id="syncDot"></span>
           <span id="syncStatusText">LOKAALI</span>
         </div>
         <button type="button" class="header-icon-btn" id="btnHeaderSettings" onclick="app.toggleSettingsView()" title="Asetukset">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
           </svg>
@@ -48,80 +55,109 @@
     <main class="app-main">
 
       <!-- ============================================== -->
-      <!-- VIEW 1: YHTEENVETO (DASHBOARD)                 -->
+      <!-- VIEW 1: YHTEENVETO (DASHBOARD-FIRST BENTO)     -->
       <!-- ============================================== -->
       <section id="viewKoti" class="app-view">
         
-        <!-- Hero Card: Käyttövara & Safe-to-Spend -->
-        <div class="luxury-card">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-            <span class="card-label">Käyttövara</span>
-            <span id="kpiStatusBadge" style="font-size: 10px; font-family: ui-monospace, monospace; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: rgba(92,106,81,0.2); color: #9fbe8e; border: 1px solid rgba(92,106,81,0.4);">
+        <!-- Primary KPI Hero Card: Vapaa Käyttövara, Puskuri & Safe-to-Spend -->
+        <div class="kpi-hero-card">
+          <div class="kpi-hero-top-row">
+            <div>
+              <span class="card-label" style="margin-bottom: 2px;">Vapaa käyttövara</span>
+              <span style="font-size: 11px; color: var(--c-stone);">Reaaliaikainen kassavirta & puskuri</span>
+            </div>
+            <span id="kpiStatusBadge" class="kpi-status-pill">
               Puskuri OK
             </span>
           </div>
 
-          <div class="amount-hero font-num">
-            <span id="kpiFreeBalance">0,00</span>
-            <span class="amount-hero-currency">€</span>
+          <div class="kpi-hero-balance-row font-num">
+            <span id="kpiFreeBalance" class="kpi-hero-balance">0,00</span>
+            <span class="kpi-hero-currency">€</span>
           </div>
 
-          <!-- Day Allowance Box -->
-          <div class="day-allowance-box">
+          <!-- Safe-to-Spend Daily Allowance Spotlight -->
+          <div class="kpi-daily-spotlight">
             <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-              <div class="day-allowance-icon" style="flex-shrink: 0;">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--c-card); border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center; color: var(--c-crimson); flex-shrink: 0;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="9"/>
                   <polyline points="12 7 12 12 15 15"/>
                 </svg>
               </div>
               <div style="min-width: 0;">
-                <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiPaydayLabel">Päiväallokaatio (20.11. saakka)</p>
-                <p style="font-size: 15px; font-weight: 500; color: var(--c-text-primary);" class="font-num">
-                  <span id="kpiDailyAllowance">0,00 €</span> <span style="font-size: 11px; color: var(--c-stone); font-weight: normal;">/ vrk</span>
+                <p style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-stone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpiPaydayLabel">Päiväallokaatio (20.11. saakka)</p>
+                <p class="kpi-daily-value font-num">
+                  <span id="kpiDailyAllowance">0,00 €</span> <span style="font-size: 11px; color: var(--c-stone); font-weight: 400;">/ vrk</span>
                 </p>
               </div>
             </div>
-            <div style="text-align: right; flex-shrink: 0; white-space: nowrap; padding-left: 12px;">
-              <span id="kpiDaysLeft" class="font-num" style="font-size: 18px; font-weight: 500; color: var(--c-text-primary); display: block; line-height: 1;">--</span>
-              <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-top: 2px;">pv jäljellä</span>
+            <div class="kpi-days-pill" style="flex-shrink: 0;">
+              <span id="kpiDaysLeft" class="font-num" style="font-size: 15px; font-weight: 600; color: var(--c-text-primary);">--</span>
+              <span style="font-size: 10px; color: var(--c-stone);">pv jäljellä</span>
             </div>
           </div>
 
-          <!-- Inflow vs Outflow Mini-Grid -->
-          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(165,160,136,0.14); display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" class="font-num">
-            <div>
-              <span style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); margin-bottom: 2px;">Tulot kaudella</span>
-              <span id="kpiMonthIncome" style="font-size: 13px; font-weight: 500; color: #9fbe8e;">+0,00 €</span>
+          <!-- Inflow vs Outflow Strip (With Directional Iconography per Accessibility Rule) -->
+          <div class="kpi-cashflow-strip font-num">
+            <div class="kpi-cashflow-cell">
+              <div class="kpi-cashflow-icon income" aria-hidden="true">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H8M17 7V16"/>
+                </svg>
+              </div>
+              <div style="min-width: 0;">
+                <span style="display: block; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-stone);">Tulot kaudella</span>
+                <span id="kpiMonthIncome" style="font-size: 13px; font-weight: 600; color: var(--c-income);">+0,00 €</span>
+              </div>
             </div>
-            <div style="text-align: right;">
-              <span style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); margin-bottom: 2px;">Toteutunut kulutus</span>
-              <span id="kpiMonthExpense" style="font-size: 13px; font-weight: 500; color: #d4566e;">-0,00 €</span>
+            <div class="kpi-cashflow-cell" style="justify-content: flex-end; text-align: right;">
+              <div style="min-width: 0;">
+                <span style="display: block; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-stone);">Toteutunut kulutus</span>
+                <span id="kpiMonthExpense" style="font-size: 13px; font-weight: 600; color: var(--c-expense);">-0,00 €</span>
+              </div>
+              <div class="kpi-cashflow-icon expense" aria-hidden="true">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 7L7 17M7 17H16M7 17V8"/>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Kuitti-Inbox Alert Banner (Visible when unprocessed receipts exist) -->
-        <div id="inboxAlertBanner" style="display: none; margin-top: 14px; background: rgba(166,36,60,0.12); border: 1px solid rgba(166,36,60,0.3); border-radius: 12px; padding: 10px 14px; align-items: center; justify-content: space-between; cursor: pointer;" onclick="app.switchView('viewTapahtumat', 'inbox')">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 14px;">📎</span>
-            <span style="font-size: 11px; font-weight: 500; color: var(--c-text-primary);">Kuitti-Inboxissa <span id="inboxAlertCount" class="font-num">0</span> käsittelemätöntä kuittia</span>
+        <!-- Card 2: Käsittelemättömien kuittien huomiokortti (Task-Driven Action Card) -->
+        <div id="inboxAlertBanner" class="inbox-action-banner" style="display: none;" onclick="app.switchView('viewInbox')">
+          <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+            <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--c-crimson); color: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div style="min-width: 0;">
+              <p style="font-size: 12px; font-weight: 600; color: var(--c-text-primary);">Kuitti-Inboxissa <span id="inboxAlertCount" class="font-num">0</span> avointa kuittia</p>
+              <p style="font-size: 10px; color: var(--c-stone);">Napauta täydentääksesi summan ja kategorian</p>
+            </div>
           </div>
-          <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-crimson); font-weight: 600;">Käsittele &rarr;</span>
+          <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-crimson); font-weight: 700; flex-shrink: 0;">Käsittele &rarr;</span>
         </div>
 
-        <!-- Quick Allocation Chips & Pikakuitti -->
-        <div style="margin-top: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 2px;">
-            <span class="card-label" style="margin: 0;">Pika-allokaatiot</span>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <button type="button" style="background: none; border: none; font-size: 11px; color: var(--c-crimson); cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;" onclick="app.openQuickReceiptModal()">
-                + Pikakuitti
+        <!-- Card 3: Pika-allokaatiot & Pikakuitti -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px;">
+            <span class="card-label" style="margin: 0;">Pikakirjaukset</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button type="button" style="background: none; border: none; font-size: 11px; color: var(--c-crimson); cursor: pointer; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" onclick="app.openQuickReceiptModal()">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Pikakuitti</span>
               </button>
               <span style="font-size: 11px; color: var(--c-stone); cursor: pointer;" onclick="app.switchView('viewBudjetit')">Muokkaa</span>
             </div>
           </div>
-          <div class="chips-grid" id="quickChipsContainer">
+          <div class="quick-chips-grid" id="quickChipsContainer">
             <!-- Dynamic Chips Injected Here -->
           </div>
         </div>
@@ -461,295 +497,381 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- VIEW 5: ASETUKSET (JÄRJESTELMÄ & SYNC)         -->
+      <!-- VIEW 5: ASETUKSET (HIERARCHICAL SETTINGS LIST) -->
       <!-- ============================================== -->
       <section id="viewAsetukset" class="app-view" style="display: none;">
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
           <div>
-            <span class="card-label" style="margin: 0;">Järjestelmä</span>
-            <h2 style="font-size: 15px; font-weight: 500;">Asetukset & Synkronointi</h2>
+            <span class="card-label" style="margin: 0;">Järjestelmä & Hallinta</span>
+            <h2 style="font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Asetukset & Synkronointi</h2>
           </div>
-          <button type="button" class="btn-primary" style="width: auto; padding: 6px 14px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.toggleSettingsView()">
-            &larr; Takaisin
+          <button type="button" class="btn-primary" style="width: auto; padding: 7px 14px; font-size: 11px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.toggleSettingsView()">
+            &larr; Sulje
           </button>
         </div>
 
-        <div class="luxury-card">
-          <span class="card-label">Synkronointi & Tallennus</span>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-            
-            <div>
-              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Tallennuskohde</label>
-              <select id="settingSyncTarget" class="form-input" onchange="app.handleSyncTargetChange()">
-                <option value="dropbox">Dropbox (Pilvi)</option>
-                <option value="gdrive">Google Drive (Pilvi)</option>
-                <option value="local">Vain lokaali laitemuisti (IndexedDB)</option>
-              </select>
-            </div>
+        <div class="settings-hierarchy">
 
-            <!-- Dropbox Config -->
-            <div id="dropboxConfigSection">
-              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Dropbox Access Token</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="password" id="settingDropboxToken" placeholder="Syötä Dropbox API Token..." class="form-input" style="font-family: monospace; font-size: 12px;">
-                <button class="btn-primary" style="width: auto; padding: 10px 16px; font-size: 10px;" onclick="app.saveDropboxConfig()">Tallenna</button>
+          <!-- HIERARCHY GROUP 1: ULKOASU, TEEMAT & VÄRIT (APPLE HIG / M3) -->
+          <span class="settings-section-title">1. Ulkoasu & Teemat</span>
+          <div class="settings-group-card expanded" id="settingsGroupTheme">
+            <button type="button" class="settings-group-header" onclick="app.toggleSettingsSection('settingsGroupTheme')">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="settings-row-icon crimson">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+                    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+                    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+                    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                  </svg>
+                </div>
+                <div style="min-width: 0;">
+                  <p style="font-size: 14px; font-weight: 600; color: var(--c-text-primary);">Teemat, Värit & Typografia</p>
+                  <p style="font-size: 11px; color: var(--c-stone);">Night / Day / Auto, Apple HIG & Material 3 -paletit</p>
+                </div>
               </div>
-              <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                Avain tallentuu ainoastaan selaimesi paikalliseen muistiin eikä koskaan päädy GitHubiin.
+              <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                <span id="activeThemeBadge" class="tag-badge crimson" style="font-size: 9px;">Original Kraft</span>
+                <svg class="settings-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </button>
+
+            <div class="settings-group-body">
+              <p style="font-size: 11px; color: var(--c-stone); margin: 10px 0 12px 0;">
+                Valitse ammattilaisteema tai räätälöi omat värit ja fontti. Kaikki teemat tukevat sekä tummaa (Night) että vaaleaa (Day) tilaa.
               </p>
 
-              <div style="margin-top: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                  <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block;">Dropbox-tallennuskansio</label>
-                  <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingDropboxFolder')">
-                    Valitse kansio &hellip;
+              <!-- Ulkoasutila: Night / Day / Auto (Modern Web Guidance 3-state toggle) -->
+              <div style="margin-bottom: 14px;">
+                <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Ulkoasutila (Color Scheme)</label>
+                <div class="segmented-control" style="margin: 0; padding: 3px;">
+                  <button type="button" class="segmented-btn active" id="btnThemeModeDark" onclick="app.setThemeMode('dark')">
+                    Tumma (Night)
+                  </button>
+                  <button type="button" class="segmented-btn" id="btnThemeModeLight" onclick="app.setThemeMode('light')">
+                    Vaalea (Day)
+                  </button>
+                  <button type="button" class="segmented-btn" id="btnThemeModeAuto" onclick="app.setThemeMode('auto')">
+                    Auto (Järjestelmä)
                   </button>
                 </div>
-                <input type="text" id="settingDropboxFolder" value="/Apps/Budjetti" placeholder="/Apps/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveDropboxFolder()">
-                <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                  Polku Dropboxissasi (esim. <code>/Apps/Budjetti</code> tai <code>/</code> jos token on rajattu suoraan sovelluskansioon). Voidaan valita selaimella tai kirjoittaa käsin.
-                </p>
               </div>
-            </div>
 
-            <!-- Google Drive Config -->
-            <div id="gdriveConfigSection" style="display: none;">
-              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Google Drive Access Token</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="password" id="settingGDriveToken" placeholder="Syötä Google Drive OAuth/API Token..." class="form-input" style="font-family: monospace; font-size: 12px;">
-                <button class="btn-primary" style="width: auto; padding: 10px 16px; font-size: 10px;" onclick="app.saveGDriveConfig()">Tallenna</button>
+              <!-- Pre-built Themes Selection Grid -->
+              <div id="themePresetsGrid" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 16px;">
+                <!-- Theme Cards Injected Here -->
               </div>
-              <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                Google Drive API v3 -yhteys. Avain pysyy ainoastaan laitteesi selaimessa.
-              </p>
 
-              <div style="margin-top: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                  <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block;">Google Drive -tallennuskansio</label>
-                  <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingGDriveFolder')">
-                    Valitse kansio &hellip;
+              <!-- Color Customizer Box -->
+              <div style="background: var(--c-card-sub); border: 1px solid var(--c-border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block;">Muokkaa teeman värejä</span>
+                
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px;">
+                  <div>
+                    <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Tausta</label>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <input type="color" id="themeColorBg" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                      <input type="text" id="themeColorBgHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorBg', this.value)">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Kortit</label>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <input type="color" id="themeColorCard" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                      <input type="text" id="themeColorCardHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorCard', this.value)">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Korostus (Meno)</label>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <input type="color" id="themeColorPrimary" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                      <input type="text" id="themeColorPrimaryHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorPrimary', this.value)">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Pääteksti</label>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <input type="color" id="themeColorText" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                      <input type="text" id="themeColorTextHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorText', this.value)">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Himmeä teksti</label>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <input type="color" id="themeColorMuted" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                      <input type="text" id="themeColorMutedHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorMuted', this.value)">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Tulot & Säästöt</label>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <input type="color" id="themeColorOlive" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
+                      <input type="text" id="themeColorOliveHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorOlive', this.value)">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Font Family Selection (Curated) -->
+                <div style="margin-top: 6px;">
+                  <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Typografia & Fontti</label>
+                  <select id="themeFontSelect" class="form-input" style="font-size: 12px;" onchange="app.handleThemeFontChange()">
+                    <option value="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Moderni System Sans (SF Pro / Inter / Roboto)</option>
+                    <option value="'Newsreader', 'Playfair Display', Charter, Georgia, serif">Editorial Luxury Serif (Charter / New York / Georgia)</option>
+                    <option value="'Helvetica Neue', Helvetica, Arial, sans-serif">Klassinen Sveitsiläinen Grotesk (Helvetica Neue)</option>
+                    <option value="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace">Tekninen Finanssi Mono (SF Mono / JetBrains Mono)</option>
+                  </select>
+                </div>
+
+                <!-- Actions Row -->
+                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn-primary" style="flex: 1; min-width: 140px; padding: 10px; font-size: 10px; background: var(--c-card); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.saveCurrentThemeAsNew()">
+                    + Tallenna omana teemana
+                  </button>
+                  <button type="button" class="btn-primary" style="flex: 1; min-width: 140px; padding: 10px; font-size: 10px; background: rgba(166,36,60,0.15); border: 1px solid rgba(166,36,60,0.35); color: var(--c-crimson);" onclick="app.resetToOriginalTheme()">
+                    Palauta Original Kraft
                   </button>
                 </div>
-                <input type="text" id="settingGDriveFolder" value="/Budjetti" placeholder="/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveGDriveFolder()">
-                <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                  Kansion nimi tai polku Google Drivessa. Voidaan valita selaimella tai kirjoittaa käsin.
-                </p>
               </div>
             </div>
-
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <button class="btn-primary" style="background-color: var(--c-card-elevated); border: 1px solid var(--c-border);" onclick="app.manualSync('download')">
-                Lataa pilvestä &darr;
-              </button>
-              <button class="btn-primary" style="background-color: var(--c-card-elevated); border: 1px solid var(--c-border);" onclick="app.manualSync('upload')">
-                Tallenna pilveen &uarr;
-              </button>
-            </div>
-
           </div>
-        </div>
 
-        <!-- Kuittien & Kuvien tallennuspaikka -->
-        <div class="luxury-card" style="margin-top: 16px;">
-          <span class="card-label">Kuittien & Kuvien tallennus</span>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-            <div>
-              <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuittien tallennuskohde</label>
-              <select id="settingReceiptsTarget" class="form-input" onchange="app.handleReceiptsConfigChange()">
-                <option value="dropbox">Dropbox (Pilvi)</option>
-                <option value="gdrive">Google Drive (Pilvi)</option>
-                <option value="local">Lokaali laitemuisti (IndexedDB)</option>
-              </select>
+          <!-- HIERARCHY GROUP 2: PILVISYNKRONOINTI & KUITTIEN TALLENNUS -->
+          <span class="settings-section-title">2. Pilvisynkronointi & Tallennus</span>
+          <div class="settings-group-card expanded" id="settingsGroupSync">
+            <button type="button" class="settings-group-header" onclick="app.toggleSettingsSection('settingsGroupSync')">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="settings-row-icon blue">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                  </svg>
+                </div>
+                <div style="min-width: 0;">
+                  <p style="font-size: 14px; font-weight: 600; color: var(--c-text-primary);">Pilvisynkronointi & Kuittikansiot</p>
+                  <p style="font-size: 11px; color: var(--c-stone);">Dropbox, Google Drive & lokaali IndexedDB</p>
+                </div>
+              </div>
+              <svg class="settings-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+
+            <div class="settings-group-body">
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <div>
+                  <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Datan tallennuskohde</label>
+                  <select id="settingSyncTarget" class="form-input" onchange="app.handleSyncTargetChange()">
+                    <option value="dropbox">Dropbox (Pilvi)</option>
+                    <option value="gdrive">Google Drive (Pilvi)</option>
+                    <option value="local">Vain lokaali laitemuisti (IndexedDB)</option>
+                  </select>
+                </div>
+
+                <!-- Dropbox Config -->
+                <div id="dropboxConfigSection">
+                  <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Dropbox Access Token</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="password" id="settingDropboxToken" placeholder="Syötä Dropbox API Token..." class="form-input" style="font-family: monospace; font-size: 12px;">
+                    <button class="btn-primary" style="width: auto; padding: 10px 16px; font-size: 10px;" onclick="app.saveDropboxConfig()">Tallenna</button>
+                  </div>
+                  <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
+                    Avain tallentuu ainoastaan selaimesi paikalliseen muistiin eikä koskaan päädy GitHubiin.
+                  </p>
+
+                  <div style="margin-top: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block;">Dropbox-tallennuskansio</label>
+                      <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingDropboxFolder')">
+                        Valitse kansio &hellip;
+                      </button>
+                    </div>
+                    <input type="text" id="settingDropboxFolder" value="/Apps/Budjetti" placeholder="/Apps/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveDropboxFolder()">
+                  </div>
+                </div>
+
+                <!-- Google Drive Config -->
+                <div id="gdriveConfigSection" style="display: none;">
+                  <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Google Drive Access Token</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="password" id="settingGDriveToken" placeholder="Syötä Google Drive OAuth/API Token..." class="form-input" style="font-family: monospace; font-size: 12px;">
+                    <button class="btn-primary" style="width: auto; padding: 10px 16px; font-size: 10px;" onclick="app.saveGDriveConfig()">Tallenna</button>
+                  </div>
+
+                  <div style="margin-top: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block;">Google Drive -tallennuskansio</label>
+                      <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingGDriveFolder')">
+                        Valitse kansio &hellip;
+                      </button>
+                    </div>
+                    <input type="text" id="settingGDriveFolder" value="/Budjetti" placeholder="/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveGDriveFolder()">
+                  </div>
+                </div>
+
+                <!-- Kuittien tallennuspaikka -->
+                <div style="padding-top: 10px; border-top: 1px solid var(--c-divider);">
+                  <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuittien & Kuvien tallennuskohde</label>
+                  <select id="settingReceiptsTarget" class="form-input" onchange="app.handleReceiptsConfigChange()">
+                    <option value="dropbox">Dropbox (Pilvi)</option>
+                    <option value="gdrive">Google Drive (Pilvi)</option>
+                    <option value="local">Lokaali laitemuisti (IndexedDB)</option>
+                  </select>
+                </div>
+
+                <div id="receiptsFolderSection">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block;">Kuittikansio pilvessä</label>
+                    <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingReceiptsFolder')">
+                      Valitse kansio &hellip;
+                    </button>
+                  </div>
+                  <input type="text" id="settingReceiptsFolder" placeholder="/Apps/Budjetti/Kuitit" class="form-input font-num" style="font-size: 12px;" onchange="app.handleReceiptsConfigChange()">
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                  <button class="btn-primary" style="background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.manualSync('download')">
+                    Lataa pilvestä &darr;
+                  </button>
+                  <button class="btn-primary" style="background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.manualSync('upload')">
+                    Tallenna pilveen &uarr;
+                  </button>
+                </div>
+              </div>
             </div>
-            <div id="receiptsFolderSection">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <label style="font-size: 11px; text-transform: uppercase; color: var(--c-stone); display: block;">Kuittikansio pilvessä</label>
-                <button type="button" style="background: none; border: none; color: var(--c-text-primary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; text-decoration: underline;" onclick="app.pickDirectory('settingReceiptsFolder')">
-                  Valitse kansio &hellip;
+          </div>
+
+          <!-- HIERARCHY GROUP 3: TILIT & MAKSUTAVAT -->
+          <span class="settings-section-title">3. Tilit & Maksukortit</span>
+          <div class="settings-group-card expanded" id="settingsGroupAccounts">
+            <button type="button" class="settings-group-header" onclick="app.toggleSettingsSection('settingsGroupAccounts')">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="settings-row-icon olive">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                  </svg>
+                </div>
+                <div style="min-width: 0;">
+                  <p style="font-size: 14px; font-weight: 600; color: var(--c-text-primary);">Tilit & Maksutavat</p>
+                  <p style="font-size: 11px; color: var(--c-stone);">Käyttötilit, luottokortit, käteinen & laskutus</p>
+                </div>
+              </div>
+              <svg class="settings-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+
+            <div class="settings-group-body">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+                <span style="font-size: 11px; color: var(--c-stone);">Määritä omat tilisi ja maksulähteesi:</span>
+                <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="app.openAccountModal()">
+                  + Uusi tili
                 </button>
               </div>
-              <input type="text" id="settingReceiptsFolder" placeholder="/Apps/Budjetti/Kuitit" class="form-input font-num" style="font-size: 12px;" onchange="app.handleReceiptsConfigChange()">
-              <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                Kuvat tallentuvat tiivistettyinä JPEG-tiedostoina tähän kansioon. Voidaan valita kansioselaimella tai kirjoittaa käsin.
-              </p>
+              <div id="accountsList" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Accounts Injected Here -->
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Tilit & Maksutavat (User-defined Accounts) -->
-        <div class="luxury-card" style="margin-top: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="card-label" style="margin: 0;">Tilit & Maksutavat</span>
-            <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="app.openAccountModal()">
-              + Uusi tili
+          <!-- HIERARCHY GROUP 4: BUDJETTISYKLI & PALKKA -->
+          <span class="settings-section-title">4. Budjettisykli & Alkusaldo</span>
+          <div class="settings-group-card expanded" id="settingsGroupCycle">
+            <button type="button" class="settings-group-header" onclick="app.toggleSettingsSection('settingsGroupCycle')">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="settings-row-icon amber">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <div style="min-width: 0;">
+                  <p style="font-size: 14px; font-weight: 600; color: var(--c-text-primary);">Palkkapäivä & Käyttövara</p>
+                  <p style="font-size: 11px; color: var(--c-stone);">Taitepäivä ja manuaalinen alkusaldo</p>
+                </div>
+              </div>
+              <svg class="settings-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
             </button>
-          </div>
-          <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 12px;">
-            Määritä omat tilisi (esim. käyttötili, käteinen, luottokortti, puhelinlaskulla maksettavat).
-          </p>
-          <div id="accountsList" style="display: flex; flex-direction: column; gap: 8px;">
-            <!-- Accounts Injected Here -->
-          </div>
-        </div>
 
-        <!-- Teemat & Ulkoasu (Theme Management) -->
-        <div class="luxury-card" style="margin-top: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="card-label" style="margin: 0;">Teemat & Ulkoasu</span>
-            <span id="activeThemeBadge" style="font-size: 10px; font-family: ui-monospace, monospace; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: rgba(165,160,136,0.15); color: var(--c-text-primary); border: 1px solid var(--c-border);">
-              Original Kraft
-            </span>
-          </div>
-          <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 12px;">
-            Valitse ammattilaisteema tai räätälöi omat värit ja fontti. Teemat tallentuvat automaattisesti laitteelle ja JSON-varmuuskopioon.
-          </p>
-
-          <!-- Ulkoasutila: Night / Day / Auto -->
-          <div style="margin-bottom: 14px;">
-            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Ulkoasutila (Mode)</label>
-            <div class="segmented-control" style="margin: 0; padding: 3px;">
-              <button type="button" class="segmented-btn active" id="btnThemeModeDark" onclick="app.setThemeMode('dark')">
-                🌙 Tumma (Night)
-              </button>
-              <button type="button" class="segmented-btn" id="btnThemeModeLight" onclick="app.setThemeMode('light')">
-                ☀️ Vaalea (Day)
-              </button>
-              <button type="button" class="segmented-btn" id="btnThemeModeAuto" onclick="app.setThemeMode('auto')">
-                ⚙️ Auto
-              </button>
-            </div>
-          </div>
-
-          <!-- Pre-built Themes Selection Grid -->
-          <div id="themePresetsGrid" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 16px;">
-            <!-- Theme Cards Injected Here -->
-          </div>
-
-          <!-- Color Customizer Box -->
-          <div style="background: var(--c-card-sub); border: 1px solid var(--c-border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
-            <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block;">Muokkaa teeman värejä</span>
-            
-            <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px;">
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Tausta</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <input type="color" id="themeColorBg" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
-                  <input type="text" id="themeColorBgHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorBg', this.value)">
+            <div class="settings-group-body">
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <p style="font-size: 13px; font-weight: 500;">Palkkapäivä (kuukauden pv)</p>
+                    <p style="font-size: 11px; color: var(--c-stone);">Määrittää päiväallokaation syklin</p>
+                  </div>
+                  <input type="number" id="settingPaydayDay" value="20" min="1" max="31" class="form-input font-num" style="width: 74px; text-align: center;" onchange="app.savePaydaySetting()">
                 </div>
-              </div>
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Kortit</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <input type="color" id="themeColorCard" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
-                  <input type="text" id="themeColorCardHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorCard', this.value)">
-                </div>
-              </div>
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Korostus (Meno)</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <input type="color" id="themeColorPrimary" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
-                  <input type="text" id="themeColorPrimaryHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorPrimary', this.value)">
-                </div>
-              </div>
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Pääteksti</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <input type="color" id="themeColorText" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
-                  <input type="text" id="themeColorTextHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorText', this.value)">
-                </div>
-              </div>
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Himmeä teksti</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <input type="color" id="themeColorMuted" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
-                  <input type="text" id="themeColorMutedHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorMuted', this.value)">
-                </div>
-              </div>
-              <div>
-                <label style="font-size: 9px; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 2px;">Tulot & Säästöt</label>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <input type="color" id="themeColorOlive" style="width: 32px; height: 32px; border: 1px solid var(--c-border); background: none; border-radius: 6px; cursor: pointer;" onchange="app.handleLiveColorChange()">
-                  <input type="text" id="themeColorOliveHex" class="form-input font-num" style="padding: 6px 8px; font-size: 11px; flex: 1; min-width: 0;" onchange="app.handleHexColorChange('themeColorOlive', this.value)">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--c-divider);">
+                  <div>
+                    <p style="font-size: 13px; font-weight: 500;">Käyttötilin alkusaldo (€)</p>
+                    <p style="font-size: 11px; color: var(--c-stone);">Valinnainen manuaalinen saldon asetus</p>
+                  </div>
+                  <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="settingFreeBalanceManual" placeholder="Automaattinen" class="form-input font-num" style="width: 118px; text-align: right;" onchange="app.saveBalanceSetting()">
                 </div>
               </div>
             </div>
-
-            <!-- Font Family Selection (Curated) -->
-            <div style="margin-top: 6px;">
-              <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Typografia & Fontti</label>
-              <select id="themeFontSelect" class="form-input" style="font-size: 12px;" onchange="app.handleThemeFontChange()">
-                <option value="sans">Moderni Swiss Sans (SF Pro / Inter / Helvetica)</option>
-                <option value="serif">Editorial Luxury Serif (Charter / New York / Georgia)</option>
-                <option value="grotesk">Klassinen Sveitsiläinen Grotesk (Helvetica Neue)</option>
-                <option value="mono">Tekninen Finanssi Mono (SF Mono / Menlo / Monospace)</option>
-              </select>
-            </div>
-
-            <!-- Actions Row -->
-            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-              <button type="button" class="btn-primary" style="flex: 1; min-width: 140px; padding: 10px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.saveCurrentThemeAsNew()">
-                + Tallenna omana teemana
-              </button>
-              <button type="button" class="btn-primary" style="flex: 1; min-width: 140px; padding: 10px; font-size: 10px; background: rgba(166,36,60,0.15); border: 1px solid rgba(166,36,60,0.35); color: var(--c-crimson);" onclick="app.resetToOriginalTheme()">
-                Palauta Original Kraft
-              </button>
-            </div>
           </div>
-        </div>
 
-        <!-- Budget & Payday Settings -->
-        <div class="luxury-card" style="margin-top: 16px;">
-          <span class="card-label">Kauden & Palkkapäivän asetukset</span>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <p style="font-size: 13px; font-weight: 500;">Palkkapäivä (kuukauden pv)</p>
-                <p style="font-size: 11px; color: var(--c-stone);">Määrittää päiväallokaation syklin</p>
+          <!-- HIERARCHY GROUP 5: VARMUUSKOPIOINTI, VIENTI & NOLLAUS -->
+          <span class="settings-section-title">5. Varmuuskopiointi & Datan hallinta</span>
+          <div class="settings-group-card expanded" id="settingsGroupData">
+            <button type="button" class="settings-group-header" onclick="app.toggleSettingsSection('settingsGroupData')">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                <div class="settings-row-icon stone">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </div>
+                <div style="min-width: 0;">
+                  <p style="font-size: 14px; font-weight: 600; color: var(--c-text-primary);">Vienti, Tuonti & Nollaus</p>
+                  <p style="font-size: 11px; color: var(--c-stone);">JSON-varmuuskopiot, CSV-taulukot ja perustila</p>
+                </div>
               </div>
-              <input type="number" id="settingPaydayDay" value="20" min="1" max="31" class="form-input font-num" style="width: 70px; text-align: center;" onchange="app.savePaydaySetting()">
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(165,160,136,0.12);">
-              <div>
-                <p style="font-size: 13px; font-weight: 500;">Käyttötilin alkusaldo (€)</p>
-                <p style="font-size: 11px; color: var(--c-stone);">Valinnainen manuaalinen saldon asetus</p>
-              </div>
-              <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="off" id="settingFreeBalanceManual" placeholder="Automaattinen" class="form-input font-num" style="width: 110px; text-align: right;" onchange="app.saveBalanceSetting()">
-            </div>
-          </div>
-        </div>
-
-        <!-- Data Import / Export -->
-        <div class="luxury-card" style="margin-top: 16px;">
-          <span class="card-label">Tiedonsiirto (Vienti & Tuonti)</span>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
-            <button class="btn-primary" style="background-color: var(--c-card-elevated); border: 1px solid var(--c-border);" onclick="app.exportJSON()">
-              Vie JSON
+              <svg class="settings-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
             </button>
-            <button class="btn-primary" style="background-color: var(--c-card-elevated); border: 1px solid var(--c-border);" onclick="app.exportCSV()">
-              Vie CSV
-            </button>
-            <button class="btn-primary" style="background-color: var(--c-card-elevated); border: 1px solid var(--c-border);" onclick="document.getElementById('fileInputJSON').click()">
-              Tuo JSON
-            </button>
-            <button class="btn-primary" style="background-color: var(--c-card-elevated); border: 1px solid var(--c-border);" onclick="document.getElementById('fileInputCSV').click()">
-              Tuo CSV
-            </button>
-          </div>
-          <input type="file" id="fileInputJSON" accept=".json" style="display: none;" onchange="app.handleJSONFileSelect(event)">
-          <input type="file" id="fileInputCSV" accept=".csv" style="display: none;" onchange="app.handleCSVFileSelect(event)">
-        </div>
 
-        <!-- Data Management & Reset -->
-        <div class="luxury-card" style="margin-top: 16px;">
-          <span class="card-label">Datan hallinta</span>
-          <p style="font-size: 11px; color: var(--c-stone); margin-top: 6px;">
-            Aseta sovellus puhtaaseen perustilaan nollaamalla kaikki kuukausitavoitteet nollaksi (0 €).
-          </p>
-          <button class="btn-primary" style="margin-top: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.resetBudgetsToZero()">
-            Nollaa kaikki tavoitteet puhtaaksi (0 €)
-          </button>
+            <div class="settings-group-body">
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 10px;">
+                <button class="btn-primary" style="background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.exportJSON()">
+                  Vie JSON
+                </button>
+                <button class="btn-primary" style="background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="app.exportCSV()">
+                  Vie CSV
+                </button>
+                <button class="btn-primary" style="background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="document.getElementById('fileInputJSON').click()">
+                  Tuo JSON
+                </button>
+                <button class="btn-primary" style="background-color: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary);" onclick="document.getElementById('fileInputCSV').click()">
+                  Tuo CSV
+                </button>
+              </div>
+              <input type="file" id="fileInputJSON" accept=".json" style="display: none;" onchange="app.handleJSONFileSelect(event)">
+              <input type="file" id="fileInputCSV" accept=".csv" style="display: none;" onchange="app.handleCSVFileSelect(event)">
+
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--c-divider);">
+                <p style="font-size: 11px; color: var(--c-stone); margin-bottom: 8px;">
+                  Aseta sovellus puhtaaseen perustilaan nollaamalla kaikki kuukausitavoitteet nollaksi (0 €).
+                </p>
+                <button class="btn-primary" style="background: rgba(166,36,60,0.12); border: 1px solid rgba(166,36,60,0.3); color: var(--c-crimson);" onclick="app.resetBudgetsToZero()">
+                  Nollaa kaikki tavoitteet puhtaaksi (0 €)
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </section>
@@ -953,148 +1075,179 @@
   </div>
 
   <!-- ============================================== -->
-  <!-- MODAL: UUSI KIRJAUS                            -->
+  <!-- MODAL: UUSI KIRJAUS (TASK-DRIVEN STEP WIZARD)  -->
   <!-- ============================================== -->
   <div class="modal-overlay" id="modalQuickAdd" onclick="if(event.target === this) app.closeModal('modalQuickAdd')">
     <div class="modal-content">
       
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(165,160,136,0.15); margin-bottom: 16px; width: 100%; min-width: 0;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--c-divider); margin-bottom: 12px; width: 100%; min-width: 0;">
         <div style="min-width: 0;">
-          <span class="card-label" style="margin: 0;">Allokoi kulu</span>
-          <h3 style="font-size: 14px; font-weight: 500;" id="modalFormTitle">Uusi kirjaus</h3>
+          <span class="card-label" style="margin: 0;">Task-Driven Wizard</span>
+          <h3 style="font-size: 16px; font-weight: 600;" id="modalFormTitle">Uusi kirjaus</h3>
         </div>
         <button onclick="app.closeModal('modalQuickAdd')" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 4px; flex-shrink: 0;">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
           </svg>
+        </button>
+      </div>
+
+      <!-- Step-by-Step Wizard Navigation Bar -->
+      <div class="wizard-steps-bar" id="wizardStepsBar">
+        <button type="button" class="wizard-step-pill active" id="wizardStepBtn1" onclick="app.setWizardStep(1)">
+          <span class="step-num">1</span>
+          <span>Summa & Kuitti</span>
+        </button>
+        <button type="button" class="wizard-step-pill" id="wizardStepBtn2" onclick="app.setWizardStep(2)">
+          <span class="step-num">2</span>
+          <span>Kategoria</span>
+        </button>
+        <button type="button" class="wizard-step-pill" id="wizardStepBtn3" onclick="app.setWizardStep(3)">
+          <span class="step-num">3</span>
+          <span>Tili & Jako</span>
         </button>
       </div>
 
       <form id="txForm" onsubmit="app.handleFormSubmit(event)" style="display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 100%; overflow-x: hidden !important; touch-action: pan-y !important;">
         <input type="hidden" id="formTxId">
 
-        <!-- Type Selector (Expense vs Income) -->
-        <div style="display: flex; gap: 8px; width: 100%;">
-          <button type="button" id="btnTypeExpense" class="btn-primary" style="flex: 1; min-width: 0; padding: 8px; font-size: 10px; background-color: var(--c-crimson);" onclick="app.setFormType('expense')">
-            Meno
-          </button>
-          <button type="button" id="btnTypeIncome" class="btn-primary" style="flex: 1; min-width: 0; padding: 8px; font-size: 10px; background-color: var(--c-card); border: 1px solid var(--c-border); color: var(--c-stone);" onclick="app.setFormType('income')">
-            Tulo
-          </button>
-        </div>
-
-        <!-- Big Amount Field -->
-        <div style="width: 100%;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; width: 100%; min-width: 0;">
-            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone);">Määrä (€)</label>
-            <button type="button" class="btn-primary" style="width: auto; padding: 4px 8px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;" onclick="app.openCalculatorModal()" title="Avaa laskin ja kulujen jakaja">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
-                <rect x="4" y="2" width="16" height="20" rx="2"/>
-                <line x1="8" y1="6" x2="16" y2="6"/>
-                <line x1="8" y1="10" x2="10" y2="10"/>
-                <line x1="14" y1="10" x2="16" y2="10"/>
-                <line x1="8" y1="14" x2="10" y2="14"/>
-                <line x1="14" y1="14" x2="16" y2="14"/>
-                <line x1="8" y1="18" x2="10" y2="18"/>
-                <line x1="14" y1="18" x2="16" y2="18"/>
-              </svg>
-              <span>Laskin / Jaa</span>
+        <!-- STEP 1: SUMMA, TYYPPI & KUITTI -->
+        <div id="wizardStepPane1" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+          <!-- Type Selector (Expense vs Income) -->
+          <div style="display: flex; gap: 8px; width: 100%;">
+            <button type="button" id="btnTypeExpense" class="btn-primary" style="flex: 1; min-width: 0; padding: 9px; font-size: 10px; background-color: var(--c-crimson);" onclick="app.setFormType('expense')">
+              Meno
+            </button>
+            <button type="button" id="btnTypeIncome" class="btn-primary" style="flex: 1; min-width: 0; padding: 9px; font-size: 10px; background-color: var(--c-card); border: 1px solid var(--c-border); color: var(--c-stone);" onclick="app.setFormType('income')">
+              Tulo
             </button>
           </div>
-          <div style="position: relative; width: 100%;">
-            <input type="text" readonly inputmode="none" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 30px; font-weight: 300; padding: 10px 38px 10px 14px; cursor: pointer; caret-color: transparent; width: 100%; max-width: 100%;" onclick="app.openCalculatorModal()" title="Napauta syöttääksesi summan laskinnäppäimistöllä">
-            <span style="position: absolute; right: 14px; top: 12px; font-size: 24px; color: var(--c-stone); font-weight: 300; pointer-events: none;">€</span>
-          </div>
-        </div>
 
-        <!-- Category Selector -->
-        <div style="width: 100%;">
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Kategoria</label>
-          <div id="modalCategoryPills" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; max-height: 140px; overflow-y: auto; overflow-x: hidden !important; width: 100%; max-width: 100%; touch-action: pan-y !important; overscroll-behavior-x: none !important;">
-            <!-- Category Radio Chips Injected Here -->
-          </div>
-        </div>
-
-        <!-- Vendor & Date -->
-        <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%;">
-          <div style="min-width: 0;">
-            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kauppa / Saaja</label>
-            <input type="text" id="formVendor" placeholder="esim. Alepa" class="form-input" style="width: 100%; min-width: 0;">
-          </div>
-          <div style="min-width: 0;">
-            <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Päivämäärä</label>
-            <input type="date" id="formDate" required class="form-input font-num" style="width: 100%; min-width: 0; -webkit-appearance: none; appearance: none;">
-          </div>
-        </div>
-
-        <!-- Account / Payment Method Selector -->
-        <div style="width: 100%;">
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Maksutapa / Tili</label>
-          <select id="formAccount" class="form-input font-num" style="font-size: 12px; width: 100%; max-width: 100%;">
-            <!-- Accounts Injected Here -->
-          </select>
-        </div>
-
-        <!-- Description -->
-        <div style="width: 100%;">
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuvaus (Valinnainen)</label>
-          <input type="text" id="formDesc" placeholder="Lisätiedot ostoksesta..." class="form-input" style="width: 100%; max-width: 100%;">
-        </div>
-
-        <!-- Receipt Camera / Image Attachment -->
-        <div style="background: var(--c-card-sub); border: 1px solid var(--c-border); border-radius: 12px; padding: 12px; width: 100%; max-width: 100%; overflow: hidden;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; width: 100%; min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; overflow: hidden;">
-              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24" style="color: var(--c-stone); flex-shrink: 0;">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              <span style="font-size: 11px; color: var(--c-stone); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="receiptFileName">Liitä kuitti (valinnainen)</span>
+          <!-- Big Hero Amount Field -->
+          <div style="width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; width: 100%; min-width: 0;">
+              <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone);">Määrä (€)</label>
+              <button type="button" class="btn-primary" style="width: auto; padding: 5px 10px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;" onclick="app.openCalculatorModal()" title="Avaa laskin ja kulujen jakaja">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <line x1="8" y1="6" x2="16" y2="6"/>
+                  <line x1="8" y1="10" x2="10" y2="10"/>
+                  <line x1="14" y1="10" x2="16" y2="10"/>
+                  <line x1="8" y1="14" x2="10" y2="14"/>
+                  <line x1="14" y1="14" x2="16" y2="14"/>
+                  <line x1="8" y1="18" x2="10" y2="18"/>
+                  <line x1="14" y1="18" x2="16" y2="18"/>
+                </svg>
+                <span>Laskin / Jaa</span>
+              </button>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-              <button type="button" id="btnViewFormReceipt" onclick="app.openReceiptOverlay(app.currentReceiptId || app.tempReceiptData, 'Liitetty kuitti')" style="display: none; background: none; border: none; color: var(--c-sand); font-size: 11px; cursor: pointer; text-decoration: underline; white-space: nowrap;">
-                Avaa kuitti ⤢
-              </button>
-              <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-crimson); font-size: 11px; cursor: pointer; white-space: nowrap;">
-                Poista
-              </button>
+            <div style="position: relative; width: 100%;">
+              <input type="text" readonly inputmode="none" id="formAmount" required placeholder="0,00" class="form-input font-num" style="font-size: 32px; font-weight: 600; padding: 12px 40px 12px 16px; cursor: pointer; caret-color: transparent; width: 100%; max-width: 100%;" onclick="app.openCalculatorModal()" title="Napauta syöttääksesi summan laskinnäppäimistöllä">
+              <span style="position: absolute; right: 16px; top: 14px; font-size: 24px; color: var(--c-stone); font-weight: 400; pointer-events: none;">€</span>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%;">
-            <!-- Ota kuva kameralla -->
-            <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 10px; background: var(--c-input-bg); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptCamera').click()">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24" style="flex-shrink: 0;">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-              <span style="overflow: hidden; text-overflow: ellipsis;">Ota kuva</span>
-            </button>
-            <input type="file" id="formReceiptCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handleReceiptSelect(event)">
+          <!-- Receipt Camera / Image Attachment -->
+          <div style="background: var(--c-card); border: 1px solid var(--c-border); border-radius: 14px; padding: 12px; width: 100%; max-width: 100%; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; width: 100%; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; overflow: hidden;">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--c-stone); flex-shrink: 0;">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span style="font-size: 11px; color: var(--c-stone); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="receiptFileName">Liitä kuitti (valinnainen)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                <button type="button" id="btnViewFormReceipt" onclick="app.openReceiptOverlay(app.currentReceiptId || app.tempReceiptData, 'Liitetty kuitti')" style="display: none; background: none; border: none; color: var(--c-sand); font-size: 11px; cursor: pointer; text-decoration: underline; white-space: nowrap;">
+                  Avaa kuitti ⤢
+                </button>
+                <button type="button" id="btnRemoveReceipt" onclick="app.clearReceipt()" style="display: none; background: none; border: none; color: var(--c-crimson); font-size: 11px; cursor: pointer; white-space: nowrap;">
+                  Poista
+                </button>
+              </div>
+            </div>
 
-            <!-- Valitse tiedosto / Galleria -->
-            <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 10px; background: var(--c-input-bg); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptFile').click()">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.35" viewBox="0 0 24 24" style="flex-shrink: 0;">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              <span style="overflow: hidden; text-overflow: ellipsis;">Valitse tiedosto</span>
-            </button>
-            <input type="file" id="formReceiptFile" accept="image/*,application/pdf" style="display: none;" onchange="app.handleReceiptSelect(event)">
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%;">
+              <!-- Ota kuva kameralla -->
+              <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptCamera').click()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span style="overflow: hidden; text-overflow: ellipsis;">Ota kuva</span>
+              </button>
+              <input type="file" id="formReceiptCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handleReceiptSelect(event)">
+
+              <!-- Valitse tiedosto / Galleria -->
+              <button type="button" class="btn-primary" style="padding: 10px 6px; font-size: 10px; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden;" onclick="document.getElementById('formReceiptFile').click()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span style="overflow: hidden; text-overflow: ellipsis;">Valitse tiedosto</span>
+              </button>
+              <input type="file" id="formReceiptFile" accept="image/*,application/pdf" style="display: none;" onchange="app.handleReceiptSelect(event)">
+            </div>
           </div>
         </div>
 
-        <!-- Split Expense Action Button (Visible when editing an existing transaction) -->
-        <div id="splitExpenseActionRow" style="display: none; width: 100%;">
-          <button type="button" class="btn-primary" style="background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); padding: 10px; font-size: 10px; width: 100%;" onclick="app.openSplitModalForCurrentTx()">
-            Jaa tämä kulu toisen kanssa &rarr;
-          </button>
+        <!-- STEP 2: KATEGORIA, KAUPPA & PÄIVÄMÄÄRÄ -->
+        <div id="wizardStepPane2" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+          <!-- Category Selector -->
+          <div style="width: 100%;">
+            <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Kategoria</label>
+            <div id="modalCategoryPills" style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; max-height: 145px; overflow-y: auto; overflow-x: hidden !important; width: 100%; max-width: 100%; touch-action: pan-y !important; overscroll-behavior-x: none !important;">
+              <!-- Category Radio Chips Injected Here -->
+            </div>
+          </div>
+
+          <!-- Vendor & Date -->
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%;">
+            <div style="min-width: 0;">
+              <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kauppa / Saaja</label>
+              <input type="text" id="formVendor" placeholder="esim. Alepa" class="form-input" style="width: 100%; min-width: 0;">
+            </div>
+            <div style="min-width: 0;">
+              <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Päivämäärä</label>
+              <input type="date" id="formDate" required class="form-input font-num" style="width: 100%; min-width: 0; -webkit-appearance: none; appearance: none;">
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn-primary" style="margin-top: 6px; width: 100%;">
-          Tallenna kirjaus
-        </button>
+        <!-- STEP 3: TILI, KUVAUS & KULUJEN JAKO -->
+        <div id="wizardStepPane3" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+          <!-- Account / Payment Method Selector -->
+          <div style="width: 100%;">
+            <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Maksutapa / Tili</label>
+            <select id="formAccount" class="form-input font-num" style="font-size: 12px; width: 100%; max-width: 100%;">
+              <!-- Accounts Injected Here -->
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div style="width: 100%;">
+            <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kuvaus & Jakotiedot (Valinnainen)</label>
+            <input type="text" id="formDesc" placeholder="Lisätiedot ostoksesta..." class="form-input" style="width: 100%; max-width: 100%;">
+          </div>
+
+          <!-- Split Expense Action Button (Visible when editing an existing transaction) -->
+          <div id="splitExpenseActionRow" style="display: none; width: 100%;">
+            <button type="button" class="btn-primary" style="background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); padding: 10px; font-size: 10px; width: 100%;" onclick="app.openSplitModalForCurrentTx()">
+              Jaa tämä kulu toisen kanssa (P2P) &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- Sticky Bottom CTA Bar (Always Pinned at Bottom of Wizard) -->
+        <div class="sticky-bottom-cta">
+          <button type="button" class="btn-primary" style="flex: 1; background: var(--c-card-sub); border: 1px solid var(--c-border); color: var(--c-text-primary); padding: 12px 10px; font-size: 10px;" onclick="app.openCalculatorModal()">
+            Jaa kulu / Laskin
+          </button>
+          <button type="submit" class="btn-primary" style="flex: 2; padding: 12px 14px; font-size: 11px;">
+            Tallenna kirjaus
+          </button>
+        </div>
       </form>
 
     </div>
@@ -1578,10 +1731,10 @@
   </div>
 
   <!-- Application Logic Modules -->
-  <script src="js/storage.js?v=20261102_0940"></script>
-  <script src="js/categories.js?v=20261102_0940"></script>
-  <script src="js/calculator.js?v=20261102_0940"></script>
-  <script src="js/exportImport.js?v=20261102_0940"></script>
-  <script src="app.js?v=20261102_0940"></script>
+  <script src="js/storage.js?v=20261102_1100"></script>
+  <script src="js/categories.js?v=20261102_1100"></script>
+  <script src="js/calculator.js?v=20261102_1100"></script>
+  <script src="js/exportImport.js?v=20261102_1100"></script>
+  <script src="app.js?v=20261102_1100"></script>
 </body>
 </html>
