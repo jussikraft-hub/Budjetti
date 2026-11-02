@@ -283,21 +283,16 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("OK", res.stdout)
 
     def test_10_revision_5_navigation_and_safe_export(self):
-        """Varmistaa Revisio 5:n 4-painikkeisen alanavigaation, yläpalkin ratasikonin, budjettinäkymän ja 100% anonymiteetin (Safe Export)."""
+        """Varmistaa alanavigaation 5 ydinvälilehteä (Yhteenveto, Budjetit, Velat, Kuitit, Asetukset), yläpalkin ratasikonin ja 100% anonymiteetin (Safe Export)."""
         with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
             html = f.read()
 
-        # 1. Alanavigaation 4 ydinvälilehteä
+        # 1. Alanavigaation 5 ydinvälilehteä
         self.assertIn('id="navKoti"', html)
-        self.assertIn('id="navTapahtumat"', html)
+        self.assertTrue('id="navInbox"' in html or 'id="navTapahtumat"' in html)
         self.assertIn('id="navBudjetit"', html)
         self.assertIn('id="navVelat"', html)
-
-        # 2. Varmistetaan että navAsetukset EI ole alanavigaatiossa, vaan ratasikoni yläpalkissa
-        bottom_nav_match = re.search(r'<nav class="bottom-nav">([\s\S]*?)</nav>', html)
-        self.assertIsNotNone(bottom_nav_match, "Alanavigaatiota ei löytynyt index.html:stä")
-        bottom_nav_content = bottom_nav_match.group(1)
-        self.assertNotIn('id="navAsetukset"', bottom_nav_content, "Asetukset-painike ei saa olla alanavigaatiossa!")
+        self.assertIn('id="navAsetukset"', html)
         self.assertIn('id="btnHeaderSettings"', html, "Yläpalkin ratasikoni (btnHeaderSettings) puuttuu!")
 
         # 3. viewBudjetit yhdistetyt näkymät
@@ -694,6 +689,38 @@ class TestBudjettiApp(unittest.TestCase):
 
         # 5. storage.js vie ja tuo themeMode-asetuksen
         self.assertIn("themeMode", storage_js, "storage.js ei vie tai tuo themeMode-tietoa!")
+
+    def test_17_revision_13_dashboard_first_5_tabs_bottom_sheet(self):
+        """Varmistaa Revisio 13:n Dashboard-first -rakenteen, 5-välilehtisen Bottom Tab Barin, Master-Detail Bottom Sheetin ja Primary FABin."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "style.css"), "r", encoding="utf-8") as f:
+            css = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+
+        # 1. 5 välilehteä Bottom Tab Barissa ja Primary FAB
+        self.assertIn('id="navKoti"', html)
+        self.assertIn('id="navBudjetit"', html)
+        self.assertIn('id="navVelat"', html)
+        self.assertIn('id="navInbox"', html)
+        self.assertIn('id="navAsetukset"', html)
+        self.assertIn('id="fabAddBtn"', html)
+        self.assertIn('.fab-add', css)
+
+        # 2. Master-Detail Bottom Sheet modal
+        self.assertIn('id="modalCategoryDetailBottomSheet"', html)
+        self.assertIn('.bottom-sheet-overlay', css)
+        self.assertIn('.bottom-sheet-container', css)
+        self.assertIn('.bottom-sheet-drag-handle', css)
+        self.assertIn('openCategoryDetailBottomSheet', app_js)
+        self.assertIn('closeCategoryDetailBottomSheet', app_js)
+        self.assertIn('quickAdjustCategoryBudget', app_js)
+
+        # 3. Yhteenveto Modular Dashboard KPI:t
+        self.assertIn('id="kpiFreeBalance"', html)
+        self.assertIn('id="kpiDailyAllowance"', html)
+        self.assertIn('id="inboxAlertBanner"', html)
 
 if __name__ == "__main__":
     unittest.main()

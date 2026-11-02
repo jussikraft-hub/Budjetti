@@ -45,6 +45,9 @@ class BudjettiApp {
     this.customThemes = [];
     this.themeMode = "dark"; // "dark" | "light" | "auto"
 
+    // Master-Detail Bottom Sheet
+    this.activeBottomSheetCategoryId = null;
+
     // Järjestelmädialogit (In-App Modals)
     this.activeDialogType = null;
     this.dialogResolver = null;
@@ -1360,6 +1363,7 @@ class BudjettiApp {
     const banner = document.getElementById("inboxAlertBanner");
     const countEl = document.getElementById("inboxAlertCount");
     const ledgerBadge = document.getElementById("ledgerInboxBadge");
+    const navBadge = document.getElementById("navInboxBadge");
 
     if (banner && countEl) {
       banner.style.display = count > 0 ? "flex" : "none";
@@ -1368,6 +1372,10 @@ class BudjettiApp {
     if (ledgerBadge) {
       ledgerBadge.style.display = count > 0 ? "inline-block" : "none";
       ledgerBadge.innerText = count;
+    }
+    if (navBadge) {
+      navBadge.style.display = count > 0 ? "inline-block" : "none";
+      navBadge.innerText = count;
     }
   }
 
@@ -1697,13 +1705,13 @@ class BudjettiApp {
         catsHtml += `
           <div style="padding: 10px 0; border-bottom: 1px solid rgba(165,160,136,0.1);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
+              <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="app.openCategoryDetailBottomSheet('${c.id}')">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${c.color}; flex-shrink: 0;"></span>
                 <span style="font-size: 13px; font-weight: 500;">${c.name}</span>
                 ${c.quickAction ? '<span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(166,36,60,0.2); color: var(--c-crimson); font-family: ui-monospace, monospace;">PIKA</span>' : ''}
               </div>
               <div style="display: flex; align-items: center; gap: 8px;" class="font-num">
-                <span style="font-size: 12px; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'}; cursor: pointer;" onclick="app.openCategoryModal('${c.id}')">
+                <span style="font-size: 12px; color: ${hasBudget ? 'var(--c-text-primary)' : 'var(--c-stone)'}; cursor: pointer;" onclick="app.openCategoryDetailBottomSheet('${c.id}')">
                   ${spent.toFixed(2).replace(".", ",")} € ${hasBudget ? '<span style="color: var(--c-stone); font-size: 11px;">/ ' + budget.toFixed(0) + ' €</span>' : '<span style="color: rgba(165,160,136,0.5); font-size: 10px;">(ei tavoitetta)</span>'}
                 </span>
                 <button onclick="app.openCategoryModal('${c.id}')" title="Muokkaa kategoriaa ja tavoitetta" style="background: none; border: none; color: var(--c-stone); cursor: pointer; padding: 3px;">
@@ -1748,6 +1756,136 @@ class BudjettiApp {
       `;
       container.appendChild(groupCard);
     });
+  }
+
+  // --- MASTER-DETAIL BOTTOM SHEET (KATEGORIOIDEN SYVÄSUKELLUS) ---
+  openCategoryDetailBottomSheet(categoryId) {
+    this.activeBottomSheetCategoryId = categoryId;
+    const cat = this.categories.get(categoryId);
+    if (!cat) return;
+
+    const group = this.categories.getGroup(cat.groupId);
+    const colorDot = document.getElementById("bsCatColorDot");
+    const nameEl = document.getElementById("bsCatName");
+    const groupLabel = document.getElementById("bsCatGroupLabel");
+    const spentEl = document.getElementById("bsCatSpent");
+    const budgetEl = document.getElementById("bsCatBudget");
+    const remainingEl = document.getElementById("bsCatRemaining");
+    const meterFill = document.getElementById("bsCatMeterFill");
+    const txList = document.getElementById("bsCatTxList");
+    const emptyTx = document.getElementById("bsCatEmptyTx");
+
+    if (colorDot) colorDot.style.backgroundColor = cat.color || "var(--c-olive)";
+    if (nameEl) nameEl.innerText = cat.name;
+    if (groupLabel) groupLabel.innerText = group ? group.name : "Kategoria";
+
+    const now = new Date();
+    const periodRange = FinanceCalculator.getCurrentPeriodRange(this.paydayDay, now);
+    const stats = FinanceCalculator.calculateStats(
+      this.transactions,
+      this.categories.getAll(),
+      undefined,
+      undefined,
+      periodRange
+    );
+
+    const spent = (stats.categoryTotals && stats.categoryTotals[categoryId]) || 0;
+    const budget = cat.budgetMonthly || 0;
+    const remaining = Math.max(0, budget - spent);
+    const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : (spent > 0 ? 100 : 0);
+
+    if (spentEl) spentEl.innerText = FinanceCalculator.formatCurrency(spent);
+    if (budgetEl) budgetEl.innerText = budget > 0 ? FinanceCalculator.formatCurrency(budget) : "Ei kattoa";
+    if (remainingEl) {
+      if (budget > 0) {
+        remainingEl.innerHTML = `<b>${FinanceCalculator.formatCurrency(remaining)}</b> jäljellä (${pct} %)`;
+        remainingEl.style.color = pct > 90 ? "var(--c-crimson)" : "var(--c-stone)";
+      } else {
+        remainingEl.innerText = "Kattoa ei määritelty";
+        remainingEl.style.color = "var(--c-stone)";
+      }
+    }
+
+    if (meterFill) {
+      meterFill.style.width = pct + "%";
+      meterFill.style.backgroundColor = pct > 90 ? "var(--c-crimson)" : (cat.color || "var(--c-olive)");
+    }
+
+    // Suodatetaan tämän kategorian kirjaukset kuluvalta kaudelta
+    const catTxs = this.transactions.filter(t => {
+      if (t.categoryId !== categoryId) return false;
+      if (periodRange && t.date) {
+        return t.date >= periodRange.startDate && t.date <= periodRange.endDate;
+      }
+      return true;
+    }).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0));
+
+    if (txList) {
+      txList.innerHTML = "";
+      if (catTxs.length === 0) {
+        if (emptyTx) emptyTx.style.display = "block";
+      } else {
+        if (emptyTx) emptyTx.style.display = "none";
+        catTxs.forEach(t => {
+          const row = document.createElement("div");
+          row.style.display = "flex";
+          row.style.justifyContent = "space-between";
+          row.style.alignItems = "center";
+          row.style.padding = "10px 12px";
+          row.style.background = "var(--c-card)";
+          row.style.border = "1px solid var(--c-border)";
+          row.style.borderRadius = "10px";
+
+          const dParts = (t.date || "").split("-");
+          const dateStr = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.` : (t.date || "");
+
+          row.innerHTML = `
+            <div style="min-width: 0; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: var(--c-stone); font-family: ui-monospace, monospace; flex-shrink: 0;">${dateStr}</span>
+              <span style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.payee || t.title || 'Kirjaus'}</span>
+              ${t.receiptId ? '<span title="Kuitti liitetty" style="font-size: 11px;">📎</span>' : ''}
+              ${t.splitWith ? '<span style="font-size: 9px; padding: 1px 4px; border-radius: 4px; background: rgba(78,140,106,0.15); color: var(--c-income);">JAETTU</span>' : ''}
+            </div>
+            <span class="font-num" style="font-size: 13px; font-weight: 600; color: ${t.type === 'income' ? 'var(--c-income)' : 'var(--c-crimson)'}; flex-shrink: 0;">
+              ${t.type === 'income' ? '+' : '-'}${Math.abs(t.amount).toFixed(2).replace('.', ',')} €
+            </span>
+          `;
+          txList.appendChild(row);
+        });
+      }
+    }
+
+    const modal = document.getElementById("modalCategoryDetailBottomSheet");
+    if (modal) modal.classList.add("active");
+  }
+
+  closeCategoryDetailBottomSheet() {
+    const modal = document.getElementById("modalCategoryDetailBottomSheet");
+    if (modal) modal.classList.remove("active");
+    this.activeBottomSheetCategoryId = null;
+  }
+
+  async quickAdjustCategoryBudget(addAmount) {
+    if (!this.activeBottomSheetCategoryId) return;
+    const cat = this.categories.get(this.activeBottomSheetCategoryId);
+    if (!cat) return;
+
+    const current = cat.budgetMonthly || 0;
+    const updated = Math.max(0, current + addAmount);
+    await this.categories.update(cat.id, { budgetMonthly: updated });
+    await this.storage.saveCategories(this.categories.getAll());
+
+    this.renderCategoryGroups();
+    this.updateStats();
+    this.openCategoryDetailBottomSheet(cat.id);
+  }
+
+  openCategoryModalFromBottomSheet() {
+    const catId = this.activeBottomSheetCategoryId;
+    this.closeCategoryDetailBottomSheet();
+    if (catId) {
+      this.openCategoryModal(catId);
+    }
   }
 
   // --- VELAT & SITOUMUKSET ---
@@ -2405,21 +2543,30 @@ class BudjettiApp {
     }
   }
 
-  // --- VIEWS & NAVIGATION ---
+  // --- VIEWS & NAVIGATION (5 TABS: OURA / REVOLUT / APPLE WALLET BENCHMARK) ---
   switchView(viewId, subTab = null) {
+    if (viewId === "viewInbox") {
+      viewId = "viewTapahtumat";
+      if (!subTab) subTab = "inbox";
+    }
+
     const views = ["viewKoti", "viewTapahtumat", "viewBudjetit", "viewVelat", "viewAsetukset"];
     views.forEach(v => {
       const el = document.getElementById(v);
       if (el) el.style.display = v === viewId ? "block" : "none";
     });
 
-    const navs = ["navKoti", "navTapahtumat", "navBudjetit", "navVelat"];
+    const navs = ["navKoti", "navBudjetit", "navVelat", "navInbox", "navAsetukset", "navTapahtumat"];
     navs.forEach(n => {
       const el = document.getElementById(n);
       if (el) el.classList.remove("active");
     });
 
-    const activeNav = document.getElementById("nav" + viewId.replace("view", ""));
+    let targetNavId = "nav" + viewId.replace("view", "");
+    if (viewId === "viewTapahtumat") {
+      targetNavId = "navInbox";
+    }
+    const activeNav = document.getElementById(targetNavId);
     if (activeNav) activeNav.classList.add("active");
 
     const btnSettings = document.getElementById("btnHeaderSettings");
@@ -2448,8 +2595,14 @@ class BudjettiApp {
       if (viewId === "viewBudjetit") {
         if (!this.currentBudgetsTab) this.currentBudgetsTab = "categories";
         this.switchBudgetsTab(this.currentBudgetsTab);
+      } else if (viewId === "viewTapahtumat") {
+        if (!this.currentLedgerTab) this.currentLedgerTab = "inbox";
+        this.switchLedgerTab(this.currentLedgerTab);
       }
     }
+
+    // Scrollataan näkymä ylös välilehden vaihdossa
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   toggleSettingsView() {
