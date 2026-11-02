@@ -361,12 +361,12 @@ class BudjettiApp {
         dbxDot.style.backgroundColor = "#D97706";
         dbxText.innerText = "Väliaikainen token (Vanhenee 4h kuluttua)";
         dbxText.style.color = "#D97706";
-        if (dbxBtn) dbxBtn.innerText = "Aktivoi Refresh Token &rarr;";
+        if (dbxBtn) dbxBtn.innerText = "Aktivoi Refresh Token";
       } else {
         dbxDot.style.backgroundColor = "var(--c-stone)";
         dbxText.innerText = "Ei yhdistetty Dropboxiin";
         dbxText.style.color = "var(--c-stone)";
-        if (dbxBtn) dbxBtn.innerText = "Yhdistä Dropbox &rarr;";
+        if (dbxBtn) dbxBtn.innerText = "Yhdistä Dropbox";
       }
     }
   }
