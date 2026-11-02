@@ -493,7 +493,16 @@ class StorageProvider {
     sessionStorage.setItem(DROPBOX_PKCE_VERIFIER_KEY, codeVerifier);
 
     const codeChallenge = await StorageProvider.sha256Base64Url(codeVerifier);
-    const redirectUri = window.location.origin + window.location.pathname;
+    // Normalisoidaan redirectUri ilman "index.html" -päätettä, jotta se vastaa Dropboxiin tyypillisesti syötettyä kansion osoitetta
+    let cleanPath = window.location.pathname;
+    if (cleanPath.endsWith("index.html")) {
+      cleanPath = cleanPath.slice(0, -"index.html".length);
+    }
+    if (!cleanPath.endsWith("/")) {
+      cleanPath += "/";
+    }
+    const redirectUri = window.location.origin + cleanPath;
+    sessionStorage.setItem("budjetti_dropbox_redirect_uri", redirectUri);
 
     const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${encodeURIComponent(key)}` +
       `&response_type=code` +
@@ -513,7 +522,17 @@ class StorageProvider {
 
     const codeVerifier = sessionStorage.getItem(DROPBOX_PKCE_VERIFIER_KEY);
     const appKey = this.getDropboxAppKey();
-    const redirectUri = window.location.origin + window.location.pathname;
+    let redirectUri = sessionStorage.getItem("budjetti_dropbox_redirect_uri");
+    if (!redirectUri) {
+      let cleanPath = window.location.pathname;
+      if (cleanPath.endsWith("index.html")) {
+        cleanPath = cleanPath.slice(0, -"index.html".length);
+      }
+      if (!cleanPath.endsWith("/")) {
+        cleanPath += "/";
+      }
+      redirectUri = window.location.origin + cleanPath;
+    }
 
     if (!codeVerifier || !appKey) {
       console.warn("PKCE auth callback puutteellinen: verifier tai appKey puuttuu.");
