@@ -1,4 +1,4 @@
-# 💳 Budjetti – Pääkirja & Kassavirta
+# 💳 Budu – Pääkirja & Kassavirta
 
 Minimalistinen, yksityinen ja nopea budjetti- ja talousseurantasovellus (PWA / Web App) mobiilille, iPadille ja työpöydälle.
 

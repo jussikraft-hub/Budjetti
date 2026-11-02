@@ -19,7 +19,8 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertTrue(os.path.isfile(manifest_path), "manifest.json puuttuu!")
         with open(manifest_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        self.assertEqual(data.get("name"), "Budjetti – Pääkirja & Kassavirta")
+        self.assertEqual(data.get("name"), "Budu – Pääkirja & Kassavirta")
+        self.assertEqual(data.get("short_name"), "Budu")
         self.assertEqual(data.get("theme_color"), "#1F1F20")
         self.assertEqual(data.get("display"), "standalone")
 

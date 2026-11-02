@@ -1,6 +1,6 @@
 {
-  "name": "Budjetti – Pääkirja & Kassavirta",
-  "short_name": "Budjetti",
+  "name": "Budu – Pääkirja & Kassavirta",
+  "short_name": "Budu",
   "description": "Minimalistinen ja yksityinen budjettisovellus arjen kassavirran ja ostosten hallintaan.",
   "start_url": "./index.html",
   "display": "standalone",
