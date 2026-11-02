@@ -442,13 +442,36 @@ class StorageProvider {
 
   // --- ENTITY HELPERS (Accounts, Subscriptions, Debts, P2P, Receipt Inbox) ---
   async getAccounts() {
+    const legacyAccountColorMap = {
+      "#BFB99E": "#7DD3FC",
+      "#bfb99e": "#7DD3FC",
+      "#5C6A51": "#86EFAC",
+      "#5c6a51": "#86EFAC",
+      "#A6243C": "#C4B5FD",
+      "#a6243c": "#C4B5FD",
+      "#683F26": "#FDBA74",
+      "#683f26": "#FDBA74"
+    };
     const defaultAccounts = [
-      { id: "acc_kayttotili", name: "Käyttötili", type: "bank", color: "#BFB99E" },
-      { id: "acc_kateinen", name: "Käteinen", type: "cash", color: "#5C6A51" },
-      { id: "acc_luottokortti", name: "Luottokortti", type: "credit", color: "#A6243C" },
-      { id: "acc_puhelinlasku", name: "Puhelinlasku", type: "bill", color: "#683F26" }
+      { id: "acc_kayttotili", name: "Käyttötili", type: "bank", color: "#7DD3FC" },
+      { id: "acc_kateinen", name: "Käteinen", type: "cash", color: "#86EFAC" },
+      { id: "acc_luottokortti", name: "Luottokortti", type: "credit", color: "#C4B5FD" },
+      { id: "acc_puhelinlasku", name: "Puhelinlasku", type: "bill", color: "#FDBA74" }
     ];
-    return await this.getSetting("accounts", defaultAccounts);
+    const accounts = await this.getSetting("accounts", defaultAccounts);
+    if (Array.isArray(accounts)) {
+      let migrated = false;
+      accounts.forEach(acc => {
+        if (acc && legacyAccountColorMap[acc.color]) {
+          acc.color = legacyAccountColorMap[acc.color];
+          migrated = true;
+        }
+      });
+      if (migrated) {
+        await this.setSetting("accounts", accounts);
+      }
+    }
+    return accounts;
   }
 
   async saveAccounts(accounts) {

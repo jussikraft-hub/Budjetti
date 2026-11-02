@@ -886,6 +886,8 @@ class BudjettiApp {
 
     recent.forEach(t => {
       const cat = this.categories.getById(t.category);
+      const acc = this.accounts.find(a => a.id === t.accountId) || this.accounts[0] || { name: "Käyttötili", color: "#7DD3FC" };
+      const accColor = acc.color || "#7DD3FC";
       const isIncome = t.type === "income";
       const isCredit = t.amount < 0;
       const sign = (isIncome || isCredit) ? "+" : "-";
@@ -907,7 +909,13 @@ class BudjettiApp {
             </svg>
           </div>
           <div class="wallet-row-text">
-            <span class="wallet-row-title">${t.vendor || cat.name}</span>
+            <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+              <span class="wallet-row-title">${t.vendor || cat.name}</span>
+              <span class="account-pastel-pill" style="background-color: ${this.hexToRgba(accColor, 0.2)}; border-color: ${this.hexToRgba(accColor, 0.45)};">
+                <span class="account-pastel-dot" style="background-color: ${accColor};"></span>
+                ${acc.name}
+              </span>
+            </div>
             <span class="wallet-row-sub">${shortDate} · ${cat.name}${t.receiptId ? ' · Kuitti' : ''}${t.splitInfo ? ' · Jaettu' : ''}</span>
           </div>
         </div>
@@ -1027,6 +1035,8 @@ class BudjettiApp {
 
     filtered.forEach(t => {
       const cat = this.categories.getById(t.category);
+      const acc = this.accounts.find(a => a.id === t.accountId) || this.accounts[0] || { name: "Käyttötili", color: "#7DD3FC" };
+      const accColor = acc.color || "#7DD3FC";
       const isIncome = t.type === "income";
       const isCredit = t.amount < 0;
       const sign = (isIncome || isCredit) ? "+" : "-";
@@ -1053,7 +1063,13 @@ class BudjettiApp {
             </svg>
           </div>
           <div class="wallet-row-text">
-            <span class="wallet-row-title">${t.vendor || cat.name}</span>
+            <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+              <span class="wallet-row-title">${t.vendor || cat.name}</span>
+              <span class="account-pastel-pill" style="background-color: ${this.hexToRgba(accColor, 0.2)}; border-color: ${this.hexToRgba(accColor, 0.45)};">
+                <span class="account-pastel-dot" style="background-color: ${accColor};"></span>
+                ${acc.name}
+              </span>
+            </div>
             <span class="wallet-row-sub">${subtitleParts.join(" · ")}</span>
           </div>
         </div>
@@ -2254,7 +2270,37 @@ class BudjettiApp {
     });
   }
 
-  // --- TILIT & MAKSUTAVAT (Accounts) ---
+  // --- TILIT & MAKSUTAVAT (Accounts - Pastellisävyt erotettuna kategorioista) ---
+  getAccountPastelPalette() {
+    return [
+      "#7DD3FC", // Pastellin jäänsininen (Käyttötili)
+      "#86EFAC", // Pastellin mintunvihreä (Käteinen)
+      "#C4B5FD", // Pastellin laventeli (Luottokortti)
+      "#FDBA74", // Pastellin persikka (Laskutus / Puhelinlasku)
+      "#F9A8D4", // Pastellin roosa (Yhteistili / Säästötili)
+      "#99F6E4", // Pastellin turkoosi (Matkatili)
+      "#FDE047", // Pastellin sitruuna (Etu- / Lounaskortti)
+      "#A5B4FC", // Pastellin periwinkle-indigo (Sijoitustili)
+      "#CBD5E1", // Pastellin hopeanharmaa (Varatili)
+      "#FCA5A5"  // Pastellin koralli (Joustoluotto)
+    ];
+  }
+
+  selectAccountColor(colorHex) {
+    if (!colorHex) return;
+    const clean = colorHex.trim();
+    const colorInput = document.getElementById("accountFormColor");
+    const hexInput = document.getElementById("accountFormColorHex");
+    const swatchesContainer = document.getElementById("accountColorSwatches");
+    if (colorInput && /^#[0-9A-Fa-f]{6}$/.test(clean)) colorInput.value = clean;
+    if (hexInput) hexInput.value = clean;
+    if (swatchesContainer) {
+      swatchesContainer.querySelectorAll(".color-swatch-chip").forEach(el => {
+        el.classList.toggle("active", (el.dataset.color || "").toLowerCase() === clean.toLowerCase());
+      });
+    }
+  }
+
   populateAccountDropdowns() {
     const formAcc = document.getElementById("formAccount");
     const subAcc = document.getElementById("subFormAccount");
@@ -2292,6 +2338,7 @@ class BudjettiApp {
     };
 
     this.accounts.forEach(acc => {
+      const accColor = acc.color || "#7DD3FC";
       const row = document.createElement("div");
       row.className = "luxury-card";
       row.style.display = "flex";
@@ -2300,9 +2347,11 @@ class BudjettiApp {
       row.style.padding = "10px 14px";
 
       row.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${acc.color || '#BFB99E'};"></span>
-          <span style="font-size: 13px; font-weight: 500;">${acc.name}</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="account-pastel-pill" style="background-color: ${this.hexToRgba(accColor, 0.22)}; border-color: ${this.hexToRgba(accColor, 0.5)}; padding: 4px 10px; font-size: 12px;">
+            <span class="account-pastel-dot" style="width: 8px; height: 8px; background-color: ${accColor};"></span>
+            ${acc.name}
+          </span>
           <span class="tag-badge stone">${typeLabels[acc.type] || 'Tili'}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -2323,25 +2372,41 @@ class BudjettiApp {
     const idInput = document.getElementById("accountFormId");
     const nameInput = document.getElementById("accountFormName");
     const typeSelect = document.getElementById("accountFormType");
-    const colorInput = document.getElementById("accountFormColor");
-    const hexInput = document.getElementById("accountFormColorHex");
+    const swatchesContainer = document.getElementById("accountColorSwatches");
+
+    const palette = this.getAccountPastelPalette();
+    let activeColor = palette[0];
 
     if (accId) {
       const acc = this.accounts.find(a => a.id === accId);
-      if (titleEl) titleEl.innerText = "Muokkaa tiliä / maksutapaa";
-      if (idInput) idInput.value = acc.id;
-      if (nameInput) nameInput.value = acc.name;
-      if (typeSelect) typeSelect.value = acc.type || "bank";
-      if (colorInput) colorInput.value = acc.color || "#BFB99E";
-      if (hexInput) hexInput.value = acc.color || "#BFB99E";
+      if (acc) {
+        if (titleEl) titleEl.innerText = "Muokkaa tiliä / maksutapaa";
+        if (idInput) idInput.value = acc.id;
+        if (nameInput) nameInput.value = acc.name;
+        if (typeSelect) typeSelect.value = acc.type || "bank";
+        activeColor = acc.color || palette[0];
+      }
     } else {
       if (titleEl) titleEl.innerText = "Uusi tili / maksutapa";
       if (idInput) idInput.value = "";
       if (nameInput) nameInput.value = "";
       if (typeSelect) typeSelect.value = "bank";
-      if (colorInput) colorInput.value = "#BFB99E";
-      if (hexInput) hexInput.value = "#BFB99E";
+      activeColor = palette[this.accounts.length % palette.length] || palette[0];
     }
+
+    if (swatchesContainer) {
+      swatchesContainer.innerHTML = "";
+      palette.forEach(c => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.dataset.color = c;
+        chip.className = `color-swatch-chip ${c.toLowerCase() === activeColor.toLowerCase() ? "active" : ""}`;
+        chip.style.backgroundColor = c;
+        chip.onclick = () => this.selectAccountColor(c);
+        swatchesContainer.appendChild(chip);
+      });
+    }
+    this.selectAccountColor(activeColor);
 
     const modal = document.getElementById("modalAccount");
     if (modal) modal.classList.add("active");
@@ -3652,7 +3717,7 @@ class BudjettiApp {
         <div style="display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 8px; align-items: center;">
           <div>
             ${isP2P ? `
-              <input type="text" class="form-input" style="padding: 8px 10px; font-size: 13px;" placeholder="Henkilö (esim. Marika)" value="${(alloc.person || '').replace(/"/g, '&quot;')}" oninput="app.handleSplitAllocChange('${alloc.id}', 'person', this.value)">
+              <input type="text" class="form-input" style="padding: 8px 10px; font-size: 13px;" placeholder="Saajan / maksajan nimi" value="${(alloc.person || '').replace(/"/g, '&quot;')}" oninput="app.handleSplitAllocChange('${alloc.id}', 'person', this.value)">
             ` : `
               <select class="form-input" style="padding: 8px 10px; font-size: 13px;" onchange="app.handleSplitAllocChange('${alloc.id}', 'categoryId', this.value)">
                 ${catOptions}

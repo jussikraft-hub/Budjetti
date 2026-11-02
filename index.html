@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Production Styles -->
-  <link rel="stylesheet" href="style.css?v=20261102_1300">
+  <link rel="stylesheet" href="style.css?v=20261102_1340">
 
   <!-- External Parsers, Visualizers & OCR (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -1568,7 +1568,7 @@
         </div>
         <div>
           <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Henkilö</label>
-          <input type="text" id="p2pFormPerson" required placeholder="esim. Matti Meikäläinen" class="form-input">
+          <input type="text" id="p2pFormPerson" required placeholder="Saajan tai maksajan nimi" class="form-input">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
@@ -1615,7 +1615,7 @@
 
         <div>
           <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Kenen kanssa jaat?</label>
-          <input type="text" id="splitPersonName" placeholder="esim. Mikko" class="form-input">
+          <input type="text" id="splitPersonName" placeholder="Henkilön nimi" class="form-input">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -1675,10 +1675,13 @@
           </select>
         </div>
         <div>
-          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 4px;">Teemaväri</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="color" id="accountFormColor" value="#2563EB" style="width: 44px; height: 38px; border: 1px solid var(--c-border); background: none; border-radius: 8px; cursor: pointer;">
-            <input type="text" id="accountFormColorHex" value="#2563EB" class="form-input font-num" style="flex: 1;" onchange="document.getElementById('accountFormColor').value = this.value">
+          <label style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--c-stone); display: block; margin-bottom: 6px;">Tilin teemaväri (Pastellisävyt)</label>
+          <div id="accountColorSwatches" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+            <!-- Pastel Swatches Injected Here -->
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="color" id="accountFormColor" value="#7DD3FC" style="width: 44px; height: 38px; border: 1px solid var(--c-border); background: none; border-radius: 8px; cursor: pointer;" oninput="app.selectAccountColor(this.value)">
+            <input type="text" id="accountFormColorHex" value="#7DD3FC" class="form-input font-num" style="flex: 1;" onchange="app.selectAccountColor(this.value)">
           </div>
         </div>
         <button type="submit" class="btn-primary" style="margin-top: 6px;">Tallenna tili</button>
@@ -1733,10 +1736,10 @@
   </div>
 
   <!-- Application Logic Modules -->
-  <script src="js/storage.js?v=20261102_1300"></script>
-  <script src="js/categories.js?v=20261102_1300"></script>
-  <script src="js/calculator.js?v=20261102_1300"></script>
-  <script src="js/exportImport.js?v=20261102_1300"></script>
-  <script src="app.js?v=20261102_1300"></script>
+  <script src="js/storage.js?v=20261102_1340"></script>
+  <script src="js/categories.js?v=20261102_1340"></script>
+  <script src="js/calculator.js?v=20261102_1340"></script>
+  <script src="js/exportImport.js?v=20261102_1340"></script>
+  <script src="app.js?v=20261102_1340"></script>
 </body>
 </html>

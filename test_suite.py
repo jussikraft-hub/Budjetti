@@ -870,5 +870,21 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("container-type: inline-size;", css)
         self.assertIn("receipt-split-active", css)
 
+        # 8. Ei henkilönimiä esimerkkinä käyttöliittymässä & pankkitilien pastellivärit
+        with open(os.path.join(SCRIPT_DIR, "js/storage.js"), "r", encoding="utf-8") as f:
+            storage_js = f.read()
+        self.assertNotIn("Marika", html)
+        self.assertNotIn("Marika", app_js)
+        self.assertNotIn("Matti Meikäläinen", html)
+        self.assertNotIn("esim. Mikko", html)
+        self.assertIn('id="accountColorSwatches"', html)
+        self.assertIn("getAccountPastelPalette(", app_js)
+        self.assertIn("selectAccountColor(", app_js)
+        self.assertIn(".account-pastel-pill", css)
+        self.assertIn("#7DD3FC", storage_js)
+        self.assertIn("#86EFAC", storage_js)
+        self.assertIn("#C4B5FD", storage_js)
+        self.assertIn("#FDBA74", storage_js)
+
 if __name__ == "__main__":
     unittest.main()
