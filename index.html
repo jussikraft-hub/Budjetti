@@ -567,48 +567,30 @@
 
                 <!-- Dropbox Config -->
                 <div id="dropboxConfigSection">
-                  <!-- Dropbox Connection Status Badge -->
-                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 10px 12px; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span id="dropboxStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--c-stone);"></span>
-                      <span id="dropboxStatusText" style="font-size: 12px; font-weight: 600;">Tarkistetaan tilaa...</span>
+                  <!-- Dropbox Connection Status Card -->
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 12px 14px; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span id="dropboxStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--c-stone); flex-shrink: 0;"></span>
+                      <div>
+                        <span id="dropboxStatusText" style="font-size: 13px; font-weight: 600; color: var(--c-text-primary); display: block;">Tarkistetaan tilaa...</span>
+                        <span style="font-size: 11px; color: var(--c-stone);">Pysyvä taustasynkronointi (Offline Access)</span>
+                      </div>
                     </div>
-                    <button type="button" class="btn-primary" id="btnDropboxConnectPKCE" style="width: auto; padding: 6px 12px; font-size: 11px; border-radius: 8px;" onclick="app.connectDropboxPKCE()">
+                    <button type="button" class="btn-primary" id="btnDropboxConnectPKCE" style="width: auto; padding: 8px 14px; font-size: 12px; border-radius: 10px;" onclick="app.connectDropboxPKCE()">
                       Yhdistä Dropbox &rarr;
                     </button>
                   </div>
 
-                  <!-- Tapa 1: App Key & 1-Click PKCE Login -->
+                  <!-- App Key (Ainoa tarvittava tunnus) -->
                   <div style="margin-bottom: 12px;">
                     <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Dropbox App Key (Client ID)</label>
-                    <input type="text" id="settingDropboxAppKey" placeholder="Syötä App Key..." class="form-input" style="font-family: monospace; font-size: 12px;" onchange="app.saveDropboxAppKey()">
+                    <input type="text" id="settingDropboxAppKey" placeholder="Syötä App Key..." class="form-input" style="font-family: monospace; font-size: 13px;" onchange="app.saveDropboxAppKey()">
                     <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                      Löytyy Dropbox App Consolen Settings-sivulta. Tarvitaan pysyvää <code>refresh_token</code> -yhteyttä varten.
+                      Löytyy Dropbox App Consolen Settings-sivulta. Avain tallentuu vain tälle laitteelle.
                     </p>
                   </div>
 
-                  <!-- Tapa 2: Manuaalinen Refresh Token & Secret (Offline Access) -->
-                  <div style="margin-bottom: 12px; padding: 10px 12px; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px;">
-                    <span style="font-size: 11px; font-weight: 700; color: var(--c-text-primary); display: block; margin-bottom: 6px;">Pysyvä Refresh Token (Offline Access)</span>
-                    <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Refresh Token</label>
-                    <input type="password" id="settingDropboxRefreshToken" placeholder="Syötä pysyvä refresh_token..." class="form-input" style="font-family: monospace; font-size: 12px; margin-bottom: 8px;" onchange="app.saveDropboxRefreshToken()">
-                    
-                    <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">App Secret (valinnainen / cURL-virityksiin)</label>
-                    <input type="password" id="settingDropboxAppSecret" placeholder="Syötä App Secret (jos käytät Secret-pohjaista tokenia)..." class="form-input" style="font-family: monospace; font-size: 12px;" onchange="app.saveDropboxAppSecret()">
-                  </div>
-
-                  <!-- Tapa 3: Lyhytkestoinen Access Token (Varayhteys) -->
-                  <div style="margin-bottom: 12px;">
-                    <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Dropbox Access Token (Väliaikainen 4h avain)</label>
-                    <div style="display: flex; gap: 8px;">
-                      <input type="password" id="settingDropboxToken" placeholder="Syötä suora Access Token..." class="form-input" style="font-family: monospace; font-size: 12px;">
-                      <button class="btn-primary" style="width: auto; padding: 10px 16px; font-size: 10px;" onclick="app.saveDropboxConfig()">Tallenna</button>
-                    </div>
-                    <p style="font-size: 10px; color: var(--c-stone); margin-top: 4px;">
-                      Kaikki avaimet tallentuvat ainoastaan selaimesi paikalliseen muistiin eivätkä koskaan päädy GitHubiin.
-                    </p>
-                  </div>
-
+                  <!-- Tallennuskansio -->
                   <div style="margin-top: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                       <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block;">Dropbox-tallennuskansio</label>
@@ -616,7 +598,22 @@
                         Valitse kansio &hellip;
                       </button>
                     </div>
-                    <input type="text" id="settingDropboxFolder" value="/Apps/Budjetti" placeholder="/Apps/Budjetti" class="form-input font-num" style="font-size: 12px;" onchange="app.saveDropboxFolder()">
+                    <input type="text" id="settingDropboxFolder" value="/Apps/Budjetti" placeholder="/Apps/Budjetti" class="form-input font-num" style="font-size: 13px;" onchange="app.saveDropboxFolder()">
+                  </div>
+
+                  <!-- Piilotetut edistyneet kentät taustayhteensopivuudelle -->
+                  <div style="margin-top: 10px;">
+                    <button type="button" style="background: none; border: none; color: var(--c-stone); font-size: 11px; cursor: pointer; padding: 4px 0; text-decoration: underline;" onclick="document.getElementById('dropboxAdvancedFields').style.display = document.getElementById('dropboxAdvancedFields').style.display === 'none' ? 'block' : 'none'">
+                      Edistyneet / Manuaaliset avaimet &hellip;
+                    </button>
+                    <div id="dropboxAdvancedFields" style="display: none; margin-top: 8px; padding: 10px; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 10px;">
+                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Manuaalinen Refresh Token</label>
+                      <input type="password" id="settingDropboxRefreshToken" placeholder="Syötä refresh_token..." class="form-input" style="font-family: monospace; font-size: 11px; margin-bottom: 6px;" onchange="app.saveDropboxRefreshToken()">
+                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">App Secret (valinnainen)</label>
+                      <input type="password" id="settingDropboxAppSecret" placeholder="Syötä App Secret..." class="form-input" style="font-family: monospace; font-size: 11px; margin-bottom: 6px;" onchange="app.saveDropboxAppSecret()">
+                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Vanha väliaikainen Access Token</label>
+                      <input type="password" id="settingDropboxToken" placeholder="Syötä suora token..." class="form-input" style="font-family: monospace; font-size: 11px;" onchange="app.saveDropboxConfig()">
+                    </div>
                   </div>
                 </div>
 
