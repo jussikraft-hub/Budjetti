@@ -260,8 +260,8 @@ class BudjettiApp {
             await this.storage.syncFromCloud(false);
             await this.refreshData();
             await this.showDialog({
-              title: "Dropbox yhdistetty!",
-              message: "Pysyvä yhteys Dropboxiin muodostettu (Offline Refresh Token). Tiedot ja kuitit synkronoituvat nyt automaattisesti ilman 4h vanhenemista!",
+              title: "Dropbox yhdistetty",
+              message: "Yhteys Dropboxiin on valmis ja tiedot synkronoituvat.",
               type: "alert",
               icon: "cloud"
             });
@@ -328,20 +328,20 @@ class BudjettiApp {
     if (textEl && dotEl) {
       if (target === "dropbox") {
         if (dropRefreshToken) {
-          textEl.innerText = "DROPBOX (AUTO-REFRESH)";
+          textEl.innerText = "DROPBOX";
           dotEl.style.backgroundColor = "var(--c-olive)";
         } else if (dropToken) {
-          textEl.innerText = "DROPBOX (4H TOKEN)";
+          textEl.innerText = "DROPBOX (VARATOKEN)";
           dotEl.style.backgroundColor = "#D97706"; // oranssi varoitus vanhenemisesta
         } else {
-          textEl.innerText = "DROPBOX (EI AVAINTA)";
+          textEl.innerText = "DROPBOX (EI YHTEYTTÄ)";
           dotEl.style.backgroundColor = "var(--c-crimson)";
         }
       } else if (target === "gdrive") {
-        textEl.innerText = gdriveToken ? "GOOGLE DRIVE" : "G-DRIVE (EI AVAINTA)";
+        textEl.innerText = gdriveToken ? "GOOGLE DRIVE" : "G-DRIVE (EI YHTEYTTÄ)";
         dotEl.style.backgroundColor = gdriveToken ? "var(--c-olive)" : "var(--c-crimson)";
       } else {
-        textEl.innerText = "LOKAALI";
+        textEl.innerText = "PAIKALLINEN";
         dotEl.style.backgroundColor = "var(--c-stone)";
       }
     }
@@ -354,14 +354,14 @@ class BudjettiApp {
     if (dbxDot && dbxText) {
       if (dropRefreshToken) {
         dbxDot.style.backgroundColor = "var(--c-olive)";
-        dbxText.innerText = "Pysyvä yhteys aktiivinen (Refresh Token)";
+        dbxText.innerText = "Yhteys aktiivinen";
         dbxText.style.color = "var(--c-income)";
         if (dbxBtn) dbxBtn.innerText = "Yhdistä uudelleen";
       } else if (dropToken) {
         dbxDot.style.backgroundColor = "#D97706";
-        dbxText.innerText = "Väliaikainen token (Vanhenee 4h kuluttua)";
+        dbxText.innerText = "Väliaikainen varatoken käytössä";
         dbxText.style.color = "#D97706";
-        if (dbxBtn) dbxBtn.innerText = "Aktivoi Refresh Token";
+        if (dbxBtn) dbxBtn.innerText = "Yhdistä Dropbox";
       } else {
         dbxDot.style.backgroundColor = "var(--c-stone)";
         dbxText.innerText = "Ei yhdistetty Dropboxiin";

@@ -917,7 +917,7 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("saveDropboxAppKey(", app_js)
         self.assertIn("saveDropboxRefreshToken(", app_js)
         self.assertIn("handleDropboxAuthCallback", app_js)
-        self.assertIn("DROPBOX (AUTO-REFRESH)", app_js)
+        self.assertIn('textEl.innerText = "DROPBOX";', app_js)
 
 if __name__ == "__main__":
     unittest.main()

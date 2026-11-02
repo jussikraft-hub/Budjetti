@@ -440,7 +440,7 @@ class StorageProvider {
     const data = await res.json();
     if (data.access_token) {
       this.setDropboxToken(data.access_token, data.expires_in || 14400);
-      console.log("✅ Dropbox access token päivitetty onnistuneesti taustalla! (voimassa 4h)");
+      console.log("✅ Dropbox access token päivitetty onnistuneesti taustalla.");
       return data.access_token;
     }
     throw new Error("Dropbox ei palauttanut uutta access_tokenia.");

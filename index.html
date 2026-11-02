@@ -576,7 +576,7 @@
                       <span id="dropboxStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--c-stone); flex-shrink: 0;"></span>
                       <div>
                         <span id="dropboxStatusText" style="font-size: 13px; font-weight: 600; color: var(--c-text-primary); display: block;">Tarkistetaan tilaa...</span>
-                        <span style="font-size: 11px; color: var(--c-stone);">Pysyvä taustasynkronointi (Offline Access)</span>
+                        <span style="font-size: 11px; color: var(--c-stone);">Pysyvä pilvisynkronointi</span>
                       </div>
                     </div>
                     <button type="button" class="btn-primary" id="btnDropboxConnectPKCE" style="width: auto; padding: 8px 14px; font-size: 12px; border-radius: 10px;" onclick="app.connectDropboxPKCE()">
@@ -614,7 +614,7 @@
                       <input type="password" id="settingDropboxRefreshToken" placeholder="Syötä refresh_token..." class="form-input" style="font-family: monospace; font-size: 11px; margin-bottom: 6px;" onchange="app.saveDropboxRefreshToken()">
                       <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">App Secret (valinnainen)</label>
                       <input type="password" id="settingDropboxAppSecret" placeholder="Syötä App Secret..." class="form-input" style="font-family: monospace; font-size: 11px; margin-bottom: 6px;" onchange="app.saveDropboxAppSecret()">
-                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Vanha väliaikainen Access Token</label>
+                      <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--c-stone); display: block; margin-bottom: 4px;">Vanha varatoken (Access Token)</label>
                       <input type="password" id="settingDropboxToken" placeholder="Syötä suora token..." class="form-input" style="font-family: monospace; font-size: 11px;" onchange="app.saveDropboxConfig()">
                     </div>
                   </div>
