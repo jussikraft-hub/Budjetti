@@ -1216,7 +1216,38 @@ html, body {
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+}
+
+.split-alloc-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.split-alloc-header-text {
+  min-width: 0;
+}
+
+.split-alloc-add-btn {
+  width: 100% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 12px;
+  background-color: var(--c-primary);
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.12s ease;
+}
+
+.split-alloc-add-btn:active {
+  transform: scale(0.98);
 }
 
 .split-alloc-row {
