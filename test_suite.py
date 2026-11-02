@@ -886,5 +886,37 @@ class TestBudjettiApp(unittest.TestCase):
         self.assertIn("#C4B5FD", storage_js)
         self.assertIn("#FDBA74", storage_js)
 
+    def test_21_revision_18_dropbox_offline_refresh_token_and_pkce(self):
+        """Varmistaa Revisio 18:n: Dropboxin pysyvän Offline Refresh Tokenin, PKCE OAuth 2.0 -integraation ja automaattisen token-virkistyksen."""
+        with open(os.path.join(SCRIPT_DIR, "index.html"), "r", encoding="utf-8") as f:
+            html = f.read()
+        with open(os.path.join(SCRIPT_DIR, "js/storage.js"), "r", encoding="utf-8") as f:
+            storage_js = f.read()
+        with open(os.path.join(SCRIPT_DIR, "app.js"), "r", encoding="utf-8") as f:
+            app_js = f.read()
+
+        # 1. HTML Asetus-elementit (App Key, Refresh Token, App Secret, PKCE-nappi, status-badge)
+        self.assertIn('id="settingDropboxAppKey"', html)
+        self.assertIn('id="settingDropboxRefreshToken"', html)
+        self.assertIn('id="settingDropboxAppSecret"', html)
+        self.assertIn('id="btnDropboxConnectPKCE"', html)
+        self.assertIn('id="dropboxStatusText"', html)
+
+        # 2. storage.js Refresh Token & PKCE API
+        self.assertIn("DROPBOX_REFRESH_TOKEN_KEY", storage_js)
+        self.assertIn("DROPBOX_APP_KEY", storage_js)
+        self.assertIn("getValidDropboxToken(", storage_js)
+        self.assertIn("refreshDropboxToken(", storage_js)
+        self.assertIn("startDropboxPKCEAuth(", storage_js)
+        self.assertIn("handleDropboxAuthCallback(", storage_js)
+        self.assertIn("token_access_type=offline", storage_js)
+
+        # 3. app.js integraatio ja automaattinen tilapäivitys
+        self.assertIn("connectDropboxPKCE(", app_js)
+        self.assertIn("saveDropboxAppKey(", app_js)
+        self.assertIn("saveDropboxRefreshToken(", app_js)
+        self.assertIn("handleDropboxAuthCallback", app_js)
+        self.assertIn("DROPBOX (AUTO-REFRESH)", app_js)
+
 if __name__ == "__main__":
     unittest.main()

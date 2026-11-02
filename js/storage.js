@@ -7,6 +7,11 @@ const DB_NAME = "BudjettiDB";
 const DB_VERSION = 1;
 const DROPBOX_TOKEN_KEY = "budjetti_dropbox_token";
 const DROPBOX_FOLDER_KEY = "budjetti_dropbox_folder";
+const DROPBOX_REFRESH_TOKEN_KEY = "budjetti_dropbox_refresh_token";
+const DROPBOX_APP_KEY = "budjetti_dropbox_app_key";
+const DROPBOX_APP_SECRET = "budjetti_dropbox_app_secret";
+const DROPBOX_TOKEN_EXPIRY_KEY = "budjetti_dropbox_token_expires_at";
+const DROPBOX_PKCE_VERIFIER_KEY = "budjetti_dropbox_pkce_verifier";
 const GDRIVE_TOKEN_KEY = "budjetti_gdrive_token";
 const GDRIVE_FOLDER_KEY = "budjetti_gdrive_folder";
 const SYNC_TARGET_KEY = "budjetti_sync_target"; // 'local', 'dropbox', 'gdrive'
@@ -175,13 +180,22 @@ class StorageProvider {
   }
 
   async uploadReceiptToDropbox(id, dataUrl) {
-    const token = this.getDropboxToken();
+    const token = await this.getValidDropboxToken();
     if (!token) return null;
     try {
       const u8 = StorageProvider.dataUrlToUint8Array(dataUrl);
       const folder = this.getReceiptsFolder();
       const path = `${folder}/${id}.jpg`;
-      const res = await this.uploadDropboxFile(token, path, u8);
+      let res = await this.uploadDropboxFile(token, path, u8);
+
+      // Jos 401 Unauthorized, kokeillaan refreshata token kerran ja yritetään uudelleen
+      if (res && res.status === 401 && this.getDropboxRefreshToken()) {
+        const freshToken = await this.refreshDropboxToken();
+        if (freshToken) {
+          res = await this.uploadDropboxFile(freshToken, path, u8);
+        }
+      }
+
       if (!res.ok) {
         console.warn(`Kuittikuvan Dropbox-tallennus (${path}) epäonnistui:`, res.status);
       } else {
@@ -306,13 +320,247 @@ class StorageProvider {
     });
   }
 
-  // --- DROPBOX API V2 SYNC ---
+  // --- DROPBOX API V2 SYNC & REFRESH TOKEN OAUTH ---
   getDropboxToken() {
     return localStorage.getItem(DROPBOX_TOKEN_KEY) || "";
   }
 
-  setDropboxToken(token) {
+  setDropboxToken(token, expiresIn = null) {
+    if (!token) {
+      localStorage.removeItem(DROPBOX_TOKEN_KEY);
+      localStorage.removeItem(DROPBOX_TOKEN_EXPIRY_KEY);
+      return;
+    }
     localStorage.setItem(DROPBOX_TOKEN_KEY, token.trim());
+    if (expiresIn && !isNaN(expiresIn)) {
+      const expiresAt = Date.now() + (parseInt(expiresIn, 10) * 1000);
+      localStorage.setItem(DROPBOX_TOKEN_EXPIRY_KEY, String(expiresAt));
+    }
+  }
+
+  getDropboxTokenExpiry() {
+    const val = localStorage.getItem(DROPBOX_TOKEN_EXPIRY_KEY);
+    return val ? parseInt(val, 10) : 0;
+  }
+
+  getDropboxRefreshToken() {
+    return localStorage.getItem(DROPBOX_REFRESH_TOKEN_KEY) || "";
+  }
+
+  setDropboxRefreshToken(token) {
+    if (!token) {
+      localStorage.removeItem(DROPBOX_REFRESH_TOKEN_KEY);
+    } else {
+      localStorage.setItem(DROPBOX_REFRESH_TOKEN_KEY, token.trim());
+    }
+  }
+
+  getDropboxAppKey() {
+    return localStorage.getItem(DROPBOX_APP_KEY) || "";
+  }
+
+  setDropboxAppKey(key) {
+    if (!key) {
+      localStorage.removeItem(DROPBOX_APP_KEY);
+    } else {
+      localStorage.setItem(DROPBOX_APP_KEY, key.trim());
+    }
+  }
+
+  getDropboxAppSecret() {
+    return localStorage.getItem(DROPBOX_APP_SECRET) || "";
+  }
+
+  setDropboxAppSecret(secret) {
+    if (!secret) {
+      localStorage.removeItem(DROPBOX_APP_SECRET);
+    } else {
+      localStorage.setItem(DROPBOX_APP_SECRET, secret.trim());
+    }
+  }
+
+  isDropboxTokenExpired() {
+    const expiresAt = this.getDropboxTokenExpiry();
+    if (!expiresAt) return false; // Jos vanhenemisaikaa ei ole tallennettu, luotetaan tokeniin kunnes saadaan 401
+    // Virkistetään 5 min ennen todellista vanhenemista
+    return Date.now() >= (expiresAt - 5 * 60 * 1000);
+  }
+
+  async getValidDropboxToken() {
+    const refreshToken = this.getDropboxRefreshToken();
+    const currentToken = this.getDropboxToken();
+
+    // Jos meillä on refresh token ja nykyinen token puuttuu tai on vanhentumassa
+    if (refreshToken && (!currentToken || this.isDropboxTokenExpired())) {
+      try {
+        const refreshed = await this.refreshDropboxToken();
+        if (refreshed) return refreshed;
+      } catch (err) {
+        console.warn("Automaattinen Dropbox-tokenin virkistys epäonnistui:", err);
+      }
+    }
+    return currentToken;
+  }
+
+  async refreshDropboxToken() {
+    const refreshToken = this.getDropboxRefreshToken();
+    const appKey = this.getDropboxAppKey();
+    const appSecret = this.getDropboxAppSecret();
+
+    if (!refreshToken) {
+      throw new Error("Dropbox refresh_token puuttuu.");
+    }
+    if (!appKey) {
+      throw new Error("Dropbox App Key puuttuu refresh_token-päivitystä varten.");
+    }
+
+    const params = new URLSearchParams();
+    params.append("grant_type", "refresh_token");
+    params.append("refresh_token", refreshToken);
+    params.append("client_id", appKey);
+    if (appSecret) {
+      params.append("client_secret", appSecret);
+    }
+
+    const res = await fetch("https://api.dropbox.com/oauth2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: params.toString()
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err.error_description || err.error || res.statusText;
+      console.error("Dropbox token refresh epäonnistui:", msg);
+      throw new Error("Tokenin virkistys epäonnistui: " + msg);
+    }
+
+    const data = await res.json();
+    if (data.access_token) {
+      this.setDropboxToken(data.access_token, data.expires_in || 14400);
+      console.log("✅ Dropbox access token päivitetty onnistuneesti taustalla! (voimassa 4h)");
+      return data.access_token;
+    }
+    throw new Error("Dropbox ei palauttanut uutta access_tokenia.");
+  }
+
+  // --- DROPBOX PKCE OAUTH 2.0 HELPERS (1-Click Browser Connect) ---
+  static generateRandomString(length = 64) {
+    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+    let text = "";
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const values = new Uint8Array(length);
+      crypto.getRandomValues(values);
+      for (let i = 0; i < length; i++) {
+        text += possible[values[i] % possible.length];
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+    }
+    return text;
+  }
+
+  static async sha256Base64Url(plain) {
+    if (typeof crypto !== "undefined" && crypto.subtle) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(plain);
+      const hash = await crypto.subtle.digest("SHA-256", data);
+      const bytes = new Uint8Array(hash);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+    }
+    return plain;
+  }
+
+  async startDropboxPKCEAuth(appKey = null) {
+    const key = appKey || this.getDropboxAppKey();
+    if (!key) {
+      throw new Error("Syötä Dropbox App Key ennen valtuutuksen aloittamista.");
+    }
+    this.setDropboxAppKey(key);
+
+    const codeVerifier = StorageProvider.generateRandomString(64);
+    sessionStorage.setItem(DROPBOX_PKCE_VERIFIER_KEY, codeVerifier);
+
+    const codeChallenge = await StorageProvider.sha256Base64Url(codeVerifier);
+    const redirectUri = window.location.origin + window.location.pathname;
+
+    const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${encodeURIComponent(key)}` +
+      `&response_type=code` +
+      `&token_access_type=offline` +
+      `&code_challenge=${encodeURIComponent(codeChallenge)}` +
+      `&code_challenge_method=S256` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+    window.location.href = authUrl;
+  }
+
+  async handleDropboxAuthCallback() {
+    if (typeof window === "undefined") return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (!code) return false;
+
+    const codeVerifier = sessionStorage.getItem(DROPBOX_PKCE_VERIFIER_KEY);
+    const appKey = this.getDropboxAppKey();
+    const redirectUri = window.location.origin + window.location.pathname;
+
+    if (!codeVerifier || !appKey) {
+      console.warn("PKCE auth callback puutteellinen: verifier tai appKey puuttuu.");
+      return false;
+    }
+
+    try {
+      const params = new URLSearchParams();
+      params.append("grant_type", "authorization_code");
+      params.append("code", code);
+      params.append("client_id", appKey);
+      params.append("code_verifier", codeVerifier);
+      params.append("redirect_uri", redirectUri);
+
+      const res = await fetch("https://api.dropbox.com/oauth2/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: params.toString()
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error_description || err.error || "Token-vaihto epäonnistui");
+      }
+
+      const data = await res.json();
+      if (data.access_token) {
+        this.setDropboxToken(data.access_token, data.expires_in || 14400);
+      }
+      if (data.refresh_token) {
+        this.setDropboxRefreshToken(data.refresh_token);
+        console.log("✅ Pysyvä Dropbox refresh_token tallennettu onnistuneesti!");
+      }
+
+      sessionStorage.removeItem(DROPBOX_PKCE_VERIFIER_KEY);
+
+      // Siivotaan URL parametreista
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return true;
+    } catch (e) {
+      console.error("Dropbox OAuth token-vaihdon virhe:", e);
+      sessionStorage.removeItem(DROPBOX_PKCE_VERIFIER_KEY);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      throw e;
+    }
   }
 
   getDropboxFolder() {
@@ -633,7 +881,7 @@ class StorageProvider {
 
   // --- DROPBOX SYNC IMPLEMENTATION ---
   async syncToDropbox(silent = false) {
-    const token = this.getDropboxToken();
+    const token = await this.getValidDropboxToken();
     if (!token) {
       if (!silent) console.warn("Dropbox-avainta ei ole määritetty asetuksissa.");
       return;
@@ -645,6 +893,14 @@ class StorageProvider {
       let targetPath = this.getDataFilePath();
 
       let res = await this.uploadDropboxFile(token, targetPath, content);
+
+      // Jos 401 Unauthorized ja meillä on refresh token, virkistetään ja kokeillaan uudelleen
+      if (res && res.status === 401 && this.getDropboxRefreshToken()) {
+        const freshToken = await this.refreshDropboxToken();
+        if (freshToken) {
+          res = await this.uploadDropboxFile(freshToken, targetPath, content);
+        }
+      }
 
       // Jos polkuvirhe (esim. App folder -tokenilla kansio on jo sovellusjuuri)
       if (!res.ok) {
@@ -671,12 +927,20 @@ class StorageProvider {
   }
 
   async syncFromDropbox(silent = false) {
-    const token = this.getDropboxToken();
+    const token = await this.getValidDropboxToken();
     if (!token) return;
 
     try {
       let targetPath = this.getDataFilePath();
       let res = await this.downloadDropboxFile(token, targetPath);
+
+      // Jos 401 Unauthorized ja meillä on refresh token, virkistetään ja kokeillaan uudelleen
+      if (res && res.status === 401 && this.getDropboxRefreshToken()) {
+        const freshToken = await this.refreshDropboxToken();
+        if (freshToken) {
+          res = await this.downloadDropboxFile(freshToken, targetPath);
+        }
+      }
 
       // Jos polku ei löytynyt, kokeillaan juurta /budjetti_data.json
       if (!res.ok && targetPath !== "/budjetti_data.json") {

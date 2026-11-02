@@ -187,6 +187,9 @@ class BudjettiApp {
       const target = this.storage.getSyncTarget();
       const dropToken = this.storage.getDropboxToken();
       const dropFolder = this.storage.getDropboxFolder();
+      const dropAppKey = this.storage.getDropboxAppKey();
+      const dropRefreshToken = this.storage.getDropboxRefreshToken();
+      const dropAppSecret = this.storage.getDropboxAppSecret();
       const gdriveToken = this.storage.getGDriveToken();
       const gdriveFolder = this.storage.getGDriveFolder();
 
@@ -195,6 +198,15 @@ class BudjettiApp {
 
       const dropTokenEl = document.getElementById("settingDropboxToken");
       if (dropTokenEl && dropToken) dropTokenEl.value = dropToken;
+
+      const dropAppKeyEl = document.getElementById("settingDropboxAppKey");
+      if (dropAppKeyEl && dropAppKey) dropAppKeyEl.value = dropAppKey;
+
+      const dropRefreshTokenEl = document.getElementById("settingDropboxRefreshToken");
+      if (dropRefreshTokenEl && dropRefreshToken) dropRefreshTokenEl.value = dropRefreshToken;
+
+      const dropAppSecretEl = document.getElementById("settingDropboxAppSecret");
+      if (dropAppSecretEl && dropAppSecret) dropAppSecretEl.value = dropAppSecret;
 
       const dropFolderEl = document.getElementById("settingDropboxFolder");
       if (dropFolderEl && dropFolder) dropFolderEl.value = dropFolder;
@@ -240,6 +252,31 @@ class BudjettiApp {
 
       this.updateSyncBadge();
 
+      // Tarkistetaan mahdollisesti palattu Dropbox OAuth PKCE -valtuutuskoodi
+      if (typeof window !== "undefined" && window.location && window.location.search && window.location.search.includes("code=")) {
+        this.storage.handleDropboxAuthCallback().then(async (success) => {
+          if (success) {
+            this.updateSyncBadge();
+            await this.storage.syncFromCloud(false);
+            await this.refreshData();
+            await this.showDialog({
+              title: "Dropbox yhdistetty!",
+              message: "Pysyvä yhteys Dropboxiin muodostettu (Offline Refresh Token). Tiedot ja kuitit synkronoituvat nyt automaattisesti ilman 4h vanhenemista!",
+              type: "alert",
+              icon: "cloud"
+            });
+          }
+        }).catch(async (err) => {
+          console.warn("Dropbox OAuth callback -virhe:", err);
+          await this.showDialog({
+            title: "Dropbox-valtuutus epäonnistui",
+            message: err.message || String(err),
+            type: "alert",
+            icon: "warning"
+          });
+        });
+      }
+
       // Taustasynkka pilvestä (jos määritetty)
       if (target !== "local") {
         this.storage.syncFromCloud(true).then(() => {
@@ -283,19 +320,54 @@ class BudjettiApp {
   updateSyncBadge() {
     const target = this.storage.getSyncTarget();
     const dropToken = this.storage.getDropboxToken();
+    const dropRefreshToken = this.storage.getDropboxRefreshToken();
     const gdriveToken = this.storage.getGDriveToken();
     const textEl = document.getElementById("syncStatusText");
     const dotEl = document.getElementById("syncDot");
 
-    if (target === "dropbox") {
-      textEl.innerText = dropToken ? "DROPBOX" : "DROPBOX (EI AVAINTA)";
-      dotEl.style.backgroundColor = dropToken ? "var(--c-olive)" : "var(--c-crimson)";
-    } else if (target === "gdrive") {
-      textEl.innerText = gdriveToken ? "GOOGLE DRIVE" : "G-DRIVE (EI AVAINTA)";
-      dotEl.style.backgroundColor = gdriveToken ? "var(--c-olive)" : "var(--c-crimson)";
-    } else {
-      textEl.innerText = "LOKAALI";
-      dotEl.style.backgroundColor = "var(--c-stone)";
+    if (textEl && dotEl) {
+      if (target === "dropbox") {
+        if (dropRefreshToken) {
+          textEl.innerText = "DROPBOX (AUTO-REFRESH)";
+          dotEl.style.backgroundColor = "var(--c-olive)";
+        } else if (dropToken) {
+          textEl.innerText = "DROPBOX (4H TOKEN)";
+          dotEl.style.backgroundColor = "#D97706"; // oranssi varoitus vanhenemisesta
+        } else {
+          textEl.innerText = "DROPBOX (EI AVAINTA)";
+          dotEl.style.backgroundColor = "var(--c-crimson)";
+        }
+      } else if (target === "gdrive") {
+        textEl.innerText = gdriveToken ? "GOOGLE DRIVE" : "G-DRIVE (EI AVAINTA)";
+        dotEl.style.backgroundColor = gdriveToken ? "var(--c-olive)" : "var(--c-crimson)";
+      } else {
+        textEl.innerText = "LOKAALI";
+        dotEl.style.backgroundColor = "var(--c-stone)";
+      }
+    }
+
+    // Päivitetään myös Asetus-sivun Dropbox-tilabox
+    const dbxDot = document.getElementById("dropboxStatusDot");
+    const dbxText = document.getElementById("dropboxStatusText");
+    const dbxBtn = document.getElementById("btnDropboxConnectPKCE");
+
+    if (dbxDot && dbxText) {
+      if (dropRefreshToken) {
+        dbxDot.style.backgroundColor = "var(--c-olive)";
+        dbxText.innerText = "Pysyvä yhteys aktiivinen (Refresh Token)";
+        dbxText.style.color = "var(--c-income)";
+        if (dbxBtn) dbxBtn.innerText = "Yhdistä uudelleen";
+      } else if (dropToken) {
+        dbxDot.style.backgroundColor = "#D97706";
+        dbxText.innerText = "Väliaikainen token (Vanhenee 4h kuluttua)";
+        dbxText.style.color = "#D97706";
+        if (dbxBtn) dbxBtn.innerText = "Aktivoi Refresh Token &rarr;";
+      } else {
+        dbxDot.style.backgroundColor = "var(--c-stone)";
+        dbxText.innerText = "Ei yhdistetty Dropboxiin";
+        dbxText.style.color = "var(--c-stone)";
+        if (dbxBtn) dbxBtn.innerText = "Yhdistä Dropbox &rarr;";
+      }
     }
   }
 
@@ -4725,8 +4797,21 @@ class BudjettiApp {
   async saveDropboxConfig() {
     const tokenEl = document.getElementById("settingDropboxToken");
     const folderEl = document.getElementById("settingDropboxFolder");
+    const appKeyEl = document.getElementById("settingDropboxAppKey");
+    const refreshTokenEl = document.getElementById("settingDropboxRefreshToken");
+    const appSecretEl = document.getElementById("settingDropboxAppSecret");
+
     if (tokenEl) {
       this.storage.setDropboxToken(tokenEl.value.trim());
+    }
+    if (appKeyEl) {
+      this.storage.setDropboxAppKey(appKeyEl.value.trim());
+    }
+    if (refreshTokenEl) {
+      this.storage.setDropboxRefreshToken(refreshTokenEl.value.trim());
+    }
+    if (appSecretEl) {
+      this.storage.setDropboxAppSecret(appSecretEl.value.trim());
     }
     if (folderEl) {
       this.storage.setDropboxFolder(folderEl.value.trim());
@@ -4740,6 +4825,55 @@ class BudjettiApp {
       type: "alert",
       icon: "cloud"
     });
+  }
+
+  saveDropboxAppKey() {
+    const el = document.getElementById("settingDropboxAppKey");
+    if (el) this.storage.setDropboxAppKey(el.value.trim());
+    this.updateSyncBadge();
+  }
+
+  saveDropboxRefreshToken() {
+    const el = document.getElementById("settingDropboxRefreshToken");
+    if (el) this.storage.setDropboxRefreshToken(el.value.trim());
+    this.updateSyncBadge();
+    this.storage.syncToCloud(true);
+  }
+
+  saveDropboxAppSecret() {
+    const el = document.getElementById("settingDropboxAppSecret");
+    if (el) this.storage.setDropboxAppSecret(el.value.trim());
+  }
+
+  async connectDropboxPKCE() {
+    const appKey = (document.getElementById("settingDropboxAppKey")?.value || this.storage.getDropboxAppKey()).trim();
+    if (!appKey) {
+      const input = await this.showDialog({
+        title: "Dropbox App Key",
+        message: "Syötä Dropbox App Key (löydät sen Dropbox App Consolen Settings-välilehdeltä):",
+        type: "prompt",
+        icon: "cloud",
+        defaultValue: "",
+        suffix: "",
+        confirmText: "Jatka valtuutukseen",
+        cancelText: "Peruuta"
+      });
+      if (!input) return;
+      this.storage.setDropboxAppKey(input.trim());
+      const keyEl = document.getElementById("settingDropboxAppKey");
+      if (keyEl) keyEl.value = input.trim();
+    }
+
+    try {
+      await this.storage.startDropboxPKCEAuth();
+    } catch (e) {
+      await this.showDialog({
+        title: "Valtuutusvirhe",
+        message: e.message || String(e),
+        type: "alert",
+        icon: "warning"
+      });
+    }
   }
 
   saveDropboxFolder() {
